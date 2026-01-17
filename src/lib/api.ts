@@ -263,6 +263,27 @@ export const dashboardApi = {
       { date: 'Jul', visitors: 2580, uniqueVisitors: 1850, pageViews: 7100 },
     ];
   },
+  getWebsiteTraffic: async (): Promise<{
+    totalVisitors: number;
+    todayVisitors: number;
+    uniqueVisitors: number;
+    trafficTrend: Array<{ date: string; visitors: number }>;
+  }> => {
+    return {
+      totalVisitors: 15840,
+      todayVisitors: 342,
+      uniqueVisitors: 8920,
+      trafficTrend: [
+        { date: 'Mon', visitors: 312 },
+        { date: 'Tue', visitors: 285 },
+        { date: 'Wed', visitors: 356 },
+        { date: 'Thu', visitors: 298 },
+        { date: 'Fri', visitors: 378 },
+        { date: 'Sat', visitors: 445 },
+        { date: 'Sun', visitors: 342 },
+      ],
+    };
+  },
 };
 
 // Products API

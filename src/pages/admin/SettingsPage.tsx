@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { Save, Phone, Mail, MapPin, Clock, Settings2 } from 'lucide-react';
+import { Save, Phone, Mail, MapPin, Clock, Settings2, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface SiteSettings {
   contactNumbers: string[];
@@ -26,6 +27,8 @@ interface FeatureToggles {
 
 export function SettingsPage() {
   const { toast } = useToast();
+  const { canEdit } = usePermissions();
+  const canEditSettings = canEdit('settings');
   const [isSaving, setIsSaving] = useState(false);
 
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
@@ -44,8 +47,8 @@ export function SettingsPage() {
   });
 
   async function handleSave() {
+    if (!canEditSettings) return;
     setIsSaving(true);
-    // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setIsSaving(false);
     toast({
@@ -64,15 +67,26 @@ export function SettingsPage() {
             Manage site configuration and feature toggles
           </p>
         </div>
-        <Button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="gradient-accent text-accent-foreground"
-        >
-          <Save className="mr-2 h-4 w-4" />
-          {isSaving ? 'Saving...' : 'Save Changes'}
-        </Button>
+        {canEditSettings && (
+          <Button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="gradient-accent text-accent-foreground"
+          >
+            <Save className="mr-2 h-4 w-4" />
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        )}
       </div>
+
+      {!canEditSettings && (
+        <Alert>
+          <Lock className="h-4 w-4" />
+          <AlertDescription>
+            You have read-only access to settings. Contact a Master Admin to make changes.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Contact Information */}
