@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { TCOSection, type TCOItem } from '@/components/admin/TCOSection';
 import { productsApi, type Product } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
@@ -34,6 +35,7 @@ const initialFormData: ProductFormData = {
   isActive: true,
   seoTitle: '',
   seoDescription: '',
+  tcoItems: [],
 };
 
 export function ProductFormPage() {
@@ -73,6 +75,7 @@ export function ProductFormPage() {
           isActive: product.isActive,
           seoTitle: product.seoTitle,
           seoDescription: product.seoDescription,
+          tcoItems: product.tcoItems || [],
         });
       }
     } catch (error) {
@@ -288,6 +291,12 @@ export function ProductFormPage() {
                 )}
               </CardContent>
             </Card>
+
+            {/* TCO Section */}
+            <TCOSection
+              tcoItems={formData.tcoItems || []}
+              onChange={(tcoItems) => setFormData({ ...formData, tcoItems })}
+            />
 
             {/* Images */}
             <Card>

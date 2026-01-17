@@ -9,6 +9,7 @@ import {
   Car,
   ArrowRight,
   TrendingUp,
+  Globe,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,8 @@ import {
   PieChart,
   Pie,
   Cell,
+  LineChart,
+  Line,
 } from 'recharts';
 
 export function DashboardPage() {
@@ -34,21 +37,29 @@ export function DashboardPage() {
   const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
   const [leadsOverTime, setLeadsOverTime] = useState<Array<{ date: string; leads: number }>>([]);
   const [financeStatus, setFinanceStatus] = useState<Array<{ status: string; count: number; fill: string }>>([]);
+  const [trafficData, setTrafficData] = useState<{
+    totalVisitors: number;
+    todayVisitors: number;
+    uniqueVisitors: number;
+    trafficTrend: Array<{ date: string; visitors: number }>;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [statsData, leadsData, leadsTimeData, financeData] = await Promise.all([
+        const [statsData, leadsData, leadsTimeData, financeData, traffic] = await Promise.all([
           dashboardApi.getStats(),
           dashboardApi.getRecentLeads(),
           dashboardApi.getLeadsOverTime(),
           dashboardApi.getFinanceStatus(),
+          dashboardApi.getWebsiteTraffic(),
         ]);
         setStats(statsData);
         setRecentLeads(leadsData);
         setLeadsOverTime(leadsTimeData);
         setFinanceStatus(financeData);
+        setTrafficData(traffic);
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
       } finally {
@@ -61,8 +72,8 @@ export function DashboardPage() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 7 }).map((_, i) => (
             <Card key={i}>
               <CardContent className="p-6">
                 <Skeleton className="h-4 w-24 mb-2" />
@@ -86,7 +97,7 @@ export function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Leads"
           value={stats?.totalLeads || 0}
@@ -124,6 +135,13 @@ export function DashboardPage() {
           value={stats?.activeUsedVehicles || 0}
           icon={Car}
           variant="warning"
+        />
+        <StatCard
+          title="Website Visitors"
+          value={trafficData?.totalVisitors || 0}
+          icon={Globe}
+          trend={{ value: 15, isPositive: true }}
+          variant="info"
         />
       </div>
 
@@ -207,6 +225,44 @@ export function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Website Traffic Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5 text-accent" />
+            Website Traffic Trend
+          </CardTitle>
+          <CardDescription>
+            Today: {trafficData?.todayVisitors || 0} visitors • Unique: {trafficData?.uniqueVisitors || 0}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[250px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={trafficData?.trafficTrend || []}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="date" className="text-xs" />
+                <YAxis className="text-xs" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="visitors"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  dot={{ fill: 'hsl(var(--primary))' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Recent Activity */}
       <Card>

@@ -10,26 +10,33 @@ import {
   Image,
   Settings,
   LogOut,
+  MapPin,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 const menuItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
-  { icon: Package, label: 'Products', path: '/admin/products' },
-  { icon: Car, label: 'Used Vehicles', path: '/admin/used-vehicles' },
-  { icon: Users, label: 'Leads', path: '/admin/leads' },
-  { icon: CreditCard, label: 'Finance', path: '/admin/finance' },
-  { icon: FileCheck, label: 'CIBIL Checks', path: '/admin/cibil' },
-  { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
-  { icon: Image, label: 'Banners', path: '/admin/banners' },
-  { icon: Settings, label: 'Settings', path: '/admin/settings' },
+  { icon: LayoutDashboard, label: 'Dashboard', path: '/admin', module: 'dashboard' as const },
+  { icon: Package, label: 'Products', path: '/admin/products', module: 'products' as const },
+  { icon: Car, label: 'Used Vehicles', path: '/admin/used-vehicles', module: 'usedVehicles' as const },
+  { icon: Users, label: 'Leads', path: '/admin/leads', module: 'leads' as const },
+  { icon: CreditCard, label: 'Finance', path: '/admin/finance', module: 'finance' as const },
+  { icon: FileCheck, label: 'CIBIL Checks', path: '/admin/cibil', module: 'cibil' as const },
+  { icon: MapPin, label: 'Dealers', path: '/admin/dealers', module: 'dealers' as const },
+  { icon: BarChart3, label: 'Analytics', path: '/admin/analytics', module: 'analytics' as const },
+  { icon: Image, label: 'Banners', path: '/admin/banners', module: 'banners' as const },
+  { icon: Settings, label: 'Settings', path: '/admin/settings', module: 'settings' as const },
 ];
 
 export function AdminSidebarMobile() {
   const { logout, user } = useAuth();
+  const { canView } = usePermissions();
   const location = useLocation();
+
+  const filteredMenuItems = menuItems.filter((item) => canView(item.module));
 
   return (
     <div className="flex h-full flex-col bg-sidebar">
@@ -45,7 +52,7 @@ export function AdminSidebarMobile() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-2 py-4 overflow-y-auto">
-        {menuItems.map((item) => {
+        {filteredMenuItems.map((item) => {
           const isActive = location.pathname === item.path || 
             (item.path !== '/admin' && location.pathname.startsWith(item.path));
           
@@ -79,9 +86,9 @@ export function AdminSidebarMobile() {
             <p className="text-sm font-medium text-sidebar-foreground truncate">
               {user?.name || 'Admin'}
             </p>
-            <p className="text-xs text-sidebar-muted truncate">
-              {user?.email}
-            </p>
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 capitalize">
+              {user?.role || 'admin'}
+            </Badge>
           </div>
           <Button
             variant="ghost"

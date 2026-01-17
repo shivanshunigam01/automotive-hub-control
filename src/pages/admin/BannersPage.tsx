@@ -5,6 +5,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Banner {
   id: string;
@@ -38,9 +55,121 @@ const initialBanners: Banner[] = [
   },
 ];
 
+function SortableBannerItem({
+  banner,
+  onToggle,
+  onDelete,
+}: {
+  banner: Banner;
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: banner.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-4 p-4 rounded-lg border bg-card hover:shadow-sm transition-shadow"
+    >
+      {/* Drag Handle */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing touch-none"
+      >
+        <GripVertical className="h-5 w-5 text-muted-foreground" />
+      </div>
+
+      {/* Banner Preview */}
+      <div className="h-16 w-28 rounded-md overflow-hidden bg-muted flex-shrink-0">
+        <img
+          src={banner.imageUrl}
+          alt={banner.title}
+          className="h-full w-full object-cover"
+        />
+      </div>
+
+      {/* Banner Info */}
+      <div className="flex-1 min-w-0">
+        <h4 className="font-medium truncate">{banner.title}</h4>
+        <div className="flex items-center gap-2 mt-1">
+          <Badge variant={banner.isActive ? 'default' : 'secondary'}>
+            {banner.isActive ? 'Active' : 'Inactive'}
+          </Badge>
+          <span className="text-sm text-muted-foreground">
+            Position: {banner.order}
+          </span>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          {banner.isActive ? (
+            <Eye className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <EyeOff className="h-4 w-4 text-muted-foreground" />
+          )}
+          <Switch
+            checked={banner.isActive}
+            onCheckedChange={() => onToggle(banner.id)}
+          />
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onDelete(banner.id)}
+          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function BannersPage() {
   const [banners, setBanners] = useState<Banner[]>(initialBanners);
   const { toast } = useToast();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setBanners((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        const newItems = arrayMove(items, oldIndex, newIndex);
+        // Update order numbers
+        return newItems.map((item, index) => ({ ...item, order: index + 1 }));
+      });
+      toast({
+        title: 'Order updated',
+        description: 'Banner order has been saved.',
+      });
+    }
+  }
 
   function toggleBanner(id: string) {
     setBanners((prev) =>
@@ -53,7 +182,10 @@ export function BannersPage() {
   }
 
   function deleteBanner(id: string) {
-    setBanners((prev) => prev.filter((b) => b.id !== id));
+    setBanners((prev) => {
+      const filtered = prev.filter((b) => b.id !== id);
+      return filtered.map((item, index) => ({ ...item, order: index + 1 }));
+    });
     toast({
       title: 'Banner deleted',
       description: 'The banner has been removed.',
@@ -102,70 +234,33 @@ export function BannersPage() {
           <CardDescription>Drag to reorder banners. Changes are saved automatically.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {banners.map((banner) => (
-              <div
-                key={banner.id}
-                className="flex items-center gap-4 p-4 rounded-lg border bg-card hover:shadow-sm transition-shadow"
-              >
-                {/* Drag Handle */}
-                <div className="cursor-grab">
-                  <GripVertical className="h-5 w-5 text-muted-foreground" />
-                </div>
-
-                {/* Banner Preview */}
-                <div className="h-16 w-28 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                  <img
-                    src={banner.imageUrl}
-                    alt={banner.title}
-                    className="h-full w-full object-cover"
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={banners.map((b) => b.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-4">
+                {banners.map((banner) => (
+                  <SortableBannerItem
+                    key={banner.id}
+                    banner={banner}
+                    onToggle={toggleBanner}
+                    onDelete={deleteBanner}
                   />
-                </div>
+                ))}
 
-                {/* Banner Info */}
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium truncate">{banner.title}</h4>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge variant={banner.isActive ? 'default' : 'secondary'}>
-                      {banner.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      Position: {banner.order}
-                    </span>
+                {banners.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No banners configured. Upload your first banner above.
                   </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    {banner.isActive ? (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
-                    )}
-                    <Switch
-                      checked={banner.isActive}
-                      onCheckedChange={() => toggleBanner(banner.id)}
-                    />
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => deleteBanner(banner.id)}
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                )}
               </div>
-            ))}
-
-            {banners.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                No banners configured. Upload your first banner above.
-              </div>
-            )}
-          </div>
+            </SortableContext>
+          </DndContext>
         </CardContent>
       </Card>
     </div>
