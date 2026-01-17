@@ -18,6 +18,7 @@ import { CibilPage } from "@/pages/admin/CibilPage";
 import { AnalyticsPage } from "@/pages/admin/AnalyticsPage";
 import { BannersPage } from "@/pages/admin/BannersPage";
 import { SettingsPage } from "@/pages/admin/SettingsPage";
+import { DealersPage } from "@/pages/admin/DealersPage";
 
 import NotFound from "./pages/NotFound";
 
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="finance" element={<FinancePage />} />
               <Route path="cibil" element={<CibilPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
+              <Route path="dealers" element={<DealersPage />} />
               <Route path="banners" element={<BannersPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>

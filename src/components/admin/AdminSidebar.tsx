@@ -13,32 +13,49 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  MapPin,
+  UserCog,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
+import { getRoleDisplayName } from '@/lib/rbac';
 
-const menuItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
-  { icon: Package, label: 'Products', path: '/admin/products' },
-  { icon: Car, label: 'Used Vehicles', path: '/admin/used-vehicles' },
-  { icon: Users, label: 'Leads', path: '/admin/leads' },
-  { icon: CreditCard, label: 'Finance', path: '/admin/finance' },
-  { icon: FileCheck, label: 'CIBIL Checks', path: '/admin/cibil' },
-  { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
-  { icon: Image, label: 'Banners', path: '/admin/banners' },
-  { icon: Settings, label: 'Settings', path: '/admin/settings' },
+interface MenuItem {
+  icon: typeof LayoutDashboard;
+  label: string;
+  path: string;
+  module: 'dashboard' | 'products' | 'usedVehicles' | 'leads' | 'finance' | 'cibil' | 'analytics' | 'banners' | 'settings' | 'dealers' | 'users';
+}
+
+const allMenuItems: MenuItem[] = [
+  { icon: LayoutDashboard, label: 'Dashboard', path: '/admin', module: 'dashboard' },
+  { icon: Package, label: 'Products', path: '/admin/products', module: 'products' },
+  { icon: Car, label: 'Used Vehicles', path: '/admin/used-vehicles', module: 'usedVehicles' },
+  { icon: Users, label: 'Leads', path: '/admin/leads', module: 'leads' },
+  { icon: CreditCard, label: 'Finance', path: '/admin/finance', module: 'finance' },
+  { icon: FileCheck, label: 'CIBIL Checks', path: '/admin/cibil', module: 'cibil' },
+  { icon: BarChart3, label: 'Analytics', path: '/admin/analytics', module: 'analytics' },
+  { icon: MapPin, label: 'Dealers', path: '/admin/dealers', module: 'dealers' },
+  { icon: Image, label: 'Banners', path: '/admin/banners', module: 'banners' },
+  { icon: Settings, label: 'Settings', path: '/admin/settings', module: 'settings' },
 ];
 
 export function AdminSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const { logout, user } = useAuth();
+  const { canView, role } = usePermissions();
   const location = useLocation();
+
+  // Filter menu items based on role permissions
+  const menuItems = allMenuItems.filter((item) => canView(item.module));
 
   return (
     <aside
@@ -116,9 +133,9 @@ export function AdminSidebar() {
               <p className="text-sm font-medium text-sidebar-foreground truncate">
                 {user?.name || 'Admin'}
               </p>
-              <p className="text-xs text-sidebar-muted truncate">
-                {user?.email}
-              </p>
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 mt-0.5">
+                {getRoleDisplayName(role)}
+              </Badge>
             </div>
             <Button
               variant="ghost"

@@ -2,6 +2,13 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // Types
+export interface TCOItem {
+  key: string;
+  label: string;
+  value: number;
+  unit: 'monthly' | 'yearly' | 'one-time';
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -17,6 +24,7 @@ export interface Product {
   isActive: boolean;
   seoTitle?: string;
   seoDescription?: string;
+  tcoItems?: TCOItem[];
   createdAt: string;
   updatedAt: string;
 }
@@ -46,6 +54,7 @@ export interface UsedVehicle {
   };
   images: string[];
   isActive: boolean;
+  tcoItems?: TCOItem[];
   createdAt: string;
   updatedAt: string;
 }
@@ -108,6 +117,30 @@ export interface CibilCheck {
   checkedAt: string;
 }
 
+export interface Dealer {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  district: string;
+  state: string;
+  pincode: string;
+  phone: string;
+  email: string;
+  latitude: number;
+  longitude: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TrafficData {
+  date: string;
+  visitors: number;
+  uniqueVisitors: number;
+  pageViews: number;
+}
+
 export interface DashboardStats {
   totalLeads: number;
   newLeadsToday: number;
@@ -115,6 +148,9 @@ export interface DashboardStats {
   cibilChecks: number;
   activeProducts: number;
   activeUsedVehicles: number;
+  totalVisitors: number;
+  todayVisitors: number;
+  uniqueVisitors: number;
 }
 
 export interface ComparisonAnalytics {
@@ -189,6 +225,9 @@ export const dashboardApi = {
       cibilChecks: 156,
       activeProducts: 45,
       activeUsedVehicles: 28,
+      totalVisitors: 15840,
+      todayVisitors: 342,
+      uniqueVisitors: 8920,
     };
   },
   getRecentLeads: async (): Promise<Lead[]> => {
@@ -211,6 +250,17 @@ export const dashboardApi = {
       { status: 'Under Review', count: 28, fill: 'hsl(var(--warning))' },
       { status: 'Rejected', count: 12, fill: 'hsl(var(--destructive))' },
       { status: 'New', count: 15, fill: 'hsl(var(--info))' },
+    ];
+  },
+  getTrafficOverTime: async (): Promise<TrafficData[]> => {
+    return [
+      { date: 'Jan', visitors: 1200, uniqueVisitors: 890, pageViews: 3400 },
+      { date: 'Feb', visitors: 1450, uniqueVisitors: 1020, pageViews: 4100 },
+      { date: 'Mar', visitors: 1680, uniqueVisitors: 1180, pageViews: 4800 },
+      { date: 'Apr', visitors: 1890, uniqueVisitors: 1340, pageViews: 5200 },
+      { date: 'May', visitors: 2100, uniqueVisitors: 1520, pageViews: 5800 },
+      { date: 'Jun', visitors: 2350, uniqueVisitors: 1680, pageViews: 6400 },
+      { date: 'Jul', visitors: 2580, uniqueVisitors: 1850, pageViews: 7100 },
     ];
   },
 };
@@ -394,6 +444,85 @@ export const comparisonApi = {
         { brand: 'Switch EV', count: 178 },
       ],
     };
+  },
+};
+
+// Dealers API
+const mockDealers: Dealer[] = [
+  {
+    id: 'dealer_1',
+    name: 'Patliputra Motors - Main Branch',
+    address: '123 Main Road, Near Railway Station',
+    city: 'Patna',
+    district: 'Patna',
+    state: 'Bihar',
+    pincode: '800001',
+    phone: '+91 9876543210',
+    email: 'main@patliputra-motors.com',
+    latitude: 25.6102,
+    longitude: 85.1415,
+    isActive: true,
+    createdAt: '2024-01-01T10:00:00Z',
+    updatedAt: '2024-01-01T10:00:00Z',
+  },
+  {
+    id: 'dealer_2',
+    name: 'Patliputra Motors - Muzaffarpur',
+    address: '45 Station Road, Opposite Bus Stand',
+    city: 'Muzaffarpur',
+    district: 'Muzaffarpur',
+    state: 'Bihar',
+    pincode: '842001',
+    phone: '+91 9876543211',
+    email: 'mzp@patliputra-motors.com',
+    latitude: 26.1209,
+    longitude: 85.3647,
+    isActive: true,
+    createdAt: '2024-02-15T10:00:00Z',
+    updatedAt: '2024-02-15T10:00:00Z',
+  },
+  {
+    id: 'dealer_3',
+    name: 'Patliputra Motors - Gaya',
+    address: '78 GT Road, Industrial Area',
+    city: 'Gaya',
+    district: 'Gaya',
+    state: 'Bihar',
+    pincode: '823001',
+    phone: '+91 9876543212',
+    email: 'gaya@patliputra-motors.com',
+    latitude: 24.7955,
+    longitude: 85.0128,
+    isActive: false,
+    createdAt: '2024-03-10T10:00:00Z',
+    updatedAt: '2024-03-10T10:00:00Z',
+  },
+];
+
+export const dealersApi = {
+  getAll: async (): Promise<Dealer[]> => mockDealers,
+  getById: async (id: string): Promise<Dealer | undefined> => {
+    return mockDealers.find(d => d.id === id);
+  },
+  create: async (dealer: Omit<Dealer, 'id' | 'createdAt' | 'updatedAt'>): Promise<Dealer> => {
+    const newDealer: Dealer = {
+      ...dealer,
+      id: 'dealer_' + Date.now(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    mockDealers.push(newDealer);
+    return newDealer;
+  },
+  update: async (id: string, dealer: Partial<Dealer>): Promise<Dealer> => {
+    const index = mockDealers.findIndex(d => d.id === id);
+    if (index === -1) throw new Error('Dealer not found');
+    mockDealers[index] = { ...mockDealers[index], ...dealer, updatedAt: new Date().toISOString() };
+    return mockDealers[index];
+  },
+  delete: async (id: string): Promise<void> => {
+    const index = mockDealers.findIndex(d => d.id === id);
+    if (index !== -1) mockDealers.splice(index, 1);
   },
 };
 
