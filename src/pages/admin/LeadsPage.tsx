@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Filter, Phone, Mail, Eye } from 'lucide-react';
+import { Search, Filter, Phone, Mail, Eye, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,6 +32,7 @@ import { Separator } from '@/components/ui/separator';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { DataTableSkeleton } from '@/components/admin/DataTableSkeleton';
 import { leadsApi, type Lead } from '@/lib/api';
+import { exportLeadsToCSV } from '@/lib/csvExport';
 import { useToast } from '@/hooks/use-toast';
 
 export function LeadsPage() {
@@ -41,7 +42,27 @@ export function LeadsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [newNote, setNewNote] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
+
+  function handleExportCSV() {
+    setIsExporting(true);
+    try {
+      exportLeadsToCSV(leads);
+      toast({
+        title: 'Export successful',
+        description: `Exported ${leads.length} leads to CSV.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Export failed',
+        description: 'Failed to export leads.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  }
 
   useEffect(() => {
     fetchLeads();
@@ -144,6 +165,14 @@ export function LeadsPage() {
                   <SelectItem value="lost">Lost</SelectItem>
                 </SelectContent>
               </Select>
+              <Button
+                variant="outline"
+                onClick={handleExportCSV}
+                disabled={isExporting || leads.length === 0}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                {isExporting ? 'Exporting...' : 'Export CSV'}
+              </Button>
             </div>
           </div>
         </CardContent>
