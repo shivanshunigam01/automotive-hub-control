@@ -79,13 +79,13 @@ export function UsedVehiclesPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Used Vehicles</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Certified Refurbished</h1>
           <p className="text-muted-foreground">
-            Manage your used vehicle inventory
+            Manage your certified refurbished vehicle inventory
           </p>
         </div>
         <Button asChild className="gradient-accent text-accent-foreground">
-          <Link to="/admin/used-vehicles/new">
+          <Link to="/admin/certified-refurbished/new">
             <Plus className="mr-2 h-4 w-4" />
             Add Vehicle
           </Link>
@@ -112,7 +112,7 @@ export function UsedVehiclesPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Car className="h-5 w-5" />
-            All Vehicles ({filteredVehicles.length})
+            Certified Refurbished Vehicles ({filteredVehicles.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -208,13 +208,13 @@ export function UsedVehiclesPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem asChild>
-                                <Link to={`/admin/used-vehicles/${vehicle.id}`}>
+                                <Link to={`/admin/certified-refurbished/${vehicle.id}`}>
                                   <Eye className="mr-2 h-4 w-4" />
                                   View
                                 </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem asChild>
-                                <Link to={`/admin/used-vehicles/${vehicle.id}/edit`}>
+                                <Link to={`/admin/certified-refurbished/${vehicle.id}/edit`}>
                                   <Pencil className="mr-2 h-4 w-4" />
                                   Edit
                                 </Link>

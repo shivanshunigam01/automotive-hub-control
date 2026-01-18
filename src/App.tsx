@@ -19,6 +19,11 @@ import { AnalyticsPage } from "@/pages/admin/AnalyticsPage";
 import { BannersPage } from "@/pages/admin/BannersPage";
 import { SettingsPage } from "@/pages/admin/SettingsPage";
 import { DealersPage } from "@/pages/admin/DealersPage";
+import { UsersPage } from "@/pages/admin/UsersPage";
+import { MediaLibraryPage } from "@/pages/admin/MediaLibraryPage";
+import { OffersSchemesPage } from "@/pages/admin/OffersSchemesPage";
+import { ContentPagesPage } from "@/pages/admin/ContentPagesPage";
+import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
 
 import NotFound from "./pages/NotFound";
 
@@ -45,10 +50,10 @@ const App = () => (
               <Route path="products/new" element={<ProductFormPage />} />
               <Route path="products/:id" element={<ProductFormPage />} />
               <Route path="products/:id/edit" element={<ProductFormPage />} />
-              <Route path="used-vehicles" element={<UsedVehiclesPage />} />
-              <Route path="used-vehicles/new" element={<ProductFormPage />} />
-              <Route path="used-vehicles/:id" element={<ProductFormPage />} />
-              <Route path="used-vehicles/:id/edit" element={<ProductFormPage />} />
+              <Route path="certified-refurbished" element={<UsedVehiclesPage />} />
+              <Route path="certified-refurbished/new" element={<ProductFormPage />} />
+              <Route path="certified-refurbished/:id" element={<ProductFormPage />} />
+              <Route path="certified-refurbished/:id/edit" element={<ProductFormPage />} />
               <Route path="leads" element={<LeadsPage />} />
               <Route path="finance" element={<FinancePage />} />
               <Route path="cibil" element={<CibilPage />} />
@@ -56,6 +61,10 @@ const App = () => (
               <Route path="dealers" element={<DealersPage />} />
               <Route path="banners" element={<BannersPage />} />
               <Route path="settings" element={<SettingsPage />} />
+              <Route path="users" element={<ProtectedRoute module="users"><UsersPage /></ProtectedRoute>} />
+              <Route path="media-library" element={<MediaLibraryPage />} />
+              <Route path="offers-schemes" element={<OffersSchemesPage />} />
+              <Route path="content-pages" element={<ContentPagesPage />} />
             </Route>
             
             {/* 404 */}

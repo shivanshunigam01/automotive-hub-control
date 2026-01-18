@@ -32,13 +32,13 @@ interface MenuItem {
   icon: typeof LayoutDashboard;
   label: string;
   path: string;
-  module: 'dashboard' | 'products' | 'usedVehicles' | 'leads' | 'finance' | 'cibil' | 'analytics' | 'banners' | 'settings' | 'dealers' | 'users';
+  module: 'dashboard' | 'products' | 'certifiedRefurbished' | 'leads' | 'finance' | 'cibil' | 'analytics' | 'banners' | 'settings' | 'dealers' | 'users' | 'mediaLibrary' | 'offersSchemes' | 'contentPages';
 }
 
 const allMenuItems: MenuItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/admin', module: 'dashboard' },
   { icon: Package, label: 'Products', path: '/admin/products', module: 'products' },
-  { icon: Car, label: 'Used Vehicles', path: '/admin/used-vehicles', module: 'usedVehicles' },
+  { icon: Car, label: 'Certified Refurbished', path: '/admin/certified-refurbished', module: 'certifiedRefurbished' },
   { icon: Users, label: 'Leads', path: '/admin/leads', module: 'leads' },
   { icon: CreditCard, label: 'Finance', path: '/admin/finance', module: 'finance' },
   { icon: FileCheck, label: 'CIBIL Checks', path: '/admin/cibil', module: 'cibil' },

@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/admin', module: 'dashboard' as const },
   { icon: Package, label: 'Products', path: '/admin/products', module: 'products' as const },
-  { icon: Car, label: 'Used Vehicles', path: '/admin/used-vehicles', module: 'usedVehicles' as const },
+  { icon: Car, label: 'Certified Refurbished', path: '/admin/certified-refurbished', module: 'certifiedRefurbished' as const },
   { icon: Users, label: 'Leads', path: '/admin/leads', module: 'leads' as const },
   { icon: CreditCard, label: 'Finance', path: '/admin/finance', module: 'finance' as const },
   { icon: FileCheck, label: 'CIBIL Checks', path: '/admin/cibil', module: 'cibil' as const },
