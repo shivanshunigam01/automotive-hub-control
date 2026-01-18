@@ -1,6 +1,8 @@
 // API Configuration - Replace BASE_URL with actual API endpoint
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
+import type { UserRole } from './rbac';
+
 // Types
 export interface TCOItem {
   key: string;
@@ -14,6 +16,11 @@ export interface Product {
   name: string;
   brand: 'JCB' | 'Ashok Leyland' | 'Switch EV';
   category: string;
+  segment?: string;
+  subcategory?: string;
+  applicationTags?: string[];
+  brochureUrl?: string;
+  brochureUpdatedAt?: string;
   price: number;
   shortDescription: string;
   specifications: Record<string, string>;
@@ -111,7 +118,9 @@ export interface CibilCheck {
   customerName: string;
   mobile: string;
   panNumber: string;
-  dateOfBirth: string;
+  dateOfBirth?: string;
+  aadhaarUrl?: string;
+  panUrl?: string;
   score: number;
   scoreBand: 'Excellent' | 'Good' | 'Fair' | 'Poor';
   checkedAt: string;
@@ -126,12 +135,72 @@ export interface Dealer {
   state: string;
   pincode: string;
   phone: string;
+  whatsapp?: string;
   email: string;
   latitude: number;
   longitude: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  mobile: string;
+  role: UserRole;
+  isActive: boolean;
+  lastLogin?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MediaItem {
+  id: string;
+  titleEn: string;
+  titleHi: string;
+  mediaType: 'image' | 'video';
+  url: string;
+  category: 'gallery' | 'events' | 'testimonials';
+  isFeatured: boolean;
+  isActive: boolean;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Offer {
+  id: string;
+  titleEn: string;
+  titleHi: string;
+  descriptionEn: string;
+  descriptionHi: string;
+  startDate: string;
+  endDate: string;
+  applicableBrand?: string;
+  applicableCategory?: string;
+  isActive: boolean;
+  priority: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ContentPage {
+  id: string;
+  key: string;
+  titleEn: string;
+  titleHi: string;
+  contentEn: string;
+  contentHi: string;
+  updatedAt: string;
+}
+
+export interface SocialLinks {
+  facebook: string;
+  instagram: string;
+  youtube: string;
+  linkedin: string;
 }
 
 export interface TrafficData {
@@ -544,6 +613,164 @@ export const dealersApi = {
   delete: async (id: string): Promise<void> => {
     const index = mockDealers.findIndex(d => d.id === id);
     if (index !== -1) mockDealers.splice(index, 1);
+  },
+};
+
+// Users API
+const mockUsers: AdminUser[] = [
+  {
+    id: 'user_1',
+    name: 'Master Admin',
+    email: 'admin@patliputra.com',
+    mobile: '+91 9876543210',
+    role: 'master_admin',
+    isActive: true,
+    lastLogin: '2024-03-15T10:00:00Z',
+    createdAt: '2024-01-01T10:00:00Z',
+    updatedAt: '2024-01-01T10:00:00Z',
+  },
+  {
+    id: 'user_2',
+    name: 'Sales Manager',
+    email: 'sales@patliputra.com',
+    mobile: '+91 9876543211',
+    role: 'admin',
+    isActive: true,
+    lastLogin: '2024-03-14T15:00:00Z',
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-01-15T10:00:00Z',
+  },
+  {
+    id: 'user_3',
+    name: 'Sales Executive',
+    email: 'exec@patliputra.com',
+    mobile: '+91 9876543212',
+    role: 'sales_user',
+    isActive: true,
+    createdAt: '2024-02-01T10:00:00Z',
+    updatedAt: '2024-02-01T10:00:00Z',
+  },
+];
+
+export const usersApi = {
+  getAll: async (): Promise<AdminUser[]> => mockUsers,
+  getById: async (id: string): Promise<AdminUser | undefined> => mockUsers.find(u => u.id === id),
+  create: async (user: Omit<AdminUser, 'id' | 'createdAt' | 'updatedAt'>): Promise<AdminUser> => {
+    const newUser: AdminUser = {
+      ...user,
+      id: 'user_' + Date.now(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    mockUsers.push(newUser);
+    return newUser;
+  },
+  update: async (id: string, user: Partial<AdminUser>): Promise<AdminUser> => {
+    const index = mockUsers.findIndex(u => u.id === id);
+    if (index === -1) throw new Error('User not found');
+    mockUsers[index] = { ...mockUsers[index], ...user, updatedAt: new Date().toISOString() };
+    return mockUsers[index];
+  },
+  delete: async (id: string): Promise<void> => {
+    const index = mockUsers.findIndex(u => u.id === id);
+    if (index !== -1) mockUsers.splice(index, 1);
+  },
+};
+
+// Media API
+const mockMedia: MediaItem[] = [
+  {
+    id: 'media_1',
+    titleEn: 'JCB Product Showcase',
+    titleHi: 'JCB उत्पाद प्रदर्शन',
+    mediaType: 'image',
+    url: '/placeholder.svg',
+    category: 'gallery',
+    isFeatured: true,
+    isActive: true,
+    order: 1,
+    createdAt: '2024-01-01T10:00:00Z',
+    updatedAt: '2024-01-01T10:00:00Z',
+  },
+];
+
+export const mediaApi = {
+  getAll: async (): Promise<MediaItem[]> => mockMedia,
+  create: async (item: Omit<MediaItem, 'id' | 'order' | 'createdAt' | 'updatedAt'>): Promise<MediaItem> => {
+    const newItem: MediaItem = { ...item, id: 'media_' + Date.now(), order: mockMedia.length + 1, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    mockMedia.push(newItem);
+    return newItem;
+  },
+  update: async (id: string, item: Partial<MediaItem>): Promise<MediaItem> => {
+    const index = mockMedia.findIndex(m => m.id === id);
+    if (index === -1) throw new Error('Media not found');
+    mockMedia[index] = { ...mockMedia[index], ...item, updatedAt: new Date().toISOString() };
+    return mockMedia[index];
+  },
+  delete: async (id: string): Promise<void> => {
+    const index = mockMedia.findIndex(m => m.id === id);
+    if (index !== -1) mockMedia.splice(index, 1);
+  },
+};
+
+// Offers API
+const mockOffers: Offer[] = [
+  {
+    id: 'offer_1',
+    titleEn: 'Summer Sale',
+    titleHi: 'गर्मियों की बिक्री',
+    descriptionEn: 'Get special discounts on all JCB products',
+    descriptionHi: 'सभी JCB उत्पादों पर विशेष छूट प्राप्त करें',
+    startDate: '2024-03-01T00:00:00Z',
+    endDate: '2024-06-30T23:59:59Z',
+    applicableBrand: 'JCB',
+    isActive: true,
+    priority: 1,
+    createdAt: '2024-03-01T10:00:00Z',
+    updatedAt: '2024-03-01T10:00:00Z',
+  },
+];
+
+export const offersApi = {
+  getAll: async (): Promise<Offer[]> => mockOffers,
+  create: async (offer: Omit<Offer, 'id' | 'createdAt' | 'updatedAt'>): Promise<Offer> => {
+    const newOffer: Offer = { ...offer, id: 'offer_' + Date.now(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    mockOffers.push(newOffer);
+    return newOffer;
+  },
+  update: async (id: string, offer: Partial<Offer>): Promise<Offer> => {
+    const index = mockOffers.findIndex(o => o.id === id);
+    if (index === -1) throw new Error('Offer not found');
+    mockOffers[index] = { ...mockOffers[index], ...offer, updatedAt: new Date().toISOString() };
+    return mockOffers[index];
+  },
+  delete: async (id: string): Promise<void> => {
+    const index = mockOffers.findIndex(o => o.id === id);
+    if (index !== -1) mockOffers.splice(index, 1);
+  },
+};
+
+// Content Pages API
+const mockContentPages: ContentPage[] = [
+  { id: 'page_1', key: 'about-us', titleEn: 'About Us', titleHi: 'हमारे बारे में', contentEn: 'About us content...', contentHi: 'हमारे बारे में सामग्री...', updatedAt: '2024-01-01T10:00:00Z' },
+  { id: 'page_2', key: 'service-warranty', titleEn: 'Service & Warranty', titleHi: 'सेवा और वारंटी', contentEn: 'Service content...', contentHi: 'सेवा सामग्री...', updatedAt: '2024-01-01T10:00:00Z' },
+  { id: 'page_3', key: 'parts-lubricants', titleEn: 'Parts & Lubricants', titleHi: 'पार्ट्स और लुब्रिकेंट्स', contentEn: 'Parts content...', contentHi: 'पार्ट्स सामग्री...', updatedAt: '2024-01-01T10:00:00Z' },
+];
+
+const mockSocialLinks: SocialLinks = { facebook: 'https://facebook.com/patliputra', instagram: 'https://instagram.com/patliputra', youtube: 'https://youtube.com/patliputra', linkedin: 'https://linkedin.com/company/patliputra' };
+
+export const contentPagesApi = {
+  getAll: async (): Promise<ContentPage[]> => mockContentPages,
+  update: async (id: string, page: Partial<ContentPage>): Promise<ContentPage> => {
+    const index = mockContentPages.findIndex(p => p.id === id);
+    if (index === -1) throw new Error('Page not found');
+    mockContentPages[index] = { ...mockContentPages[index], ...page, updatedAt: new Date().toISOString() };
+    return mockContentPages[index];
+  },
+  getSocialLinks: async (): Promise<SocialLinks> => mockSocialLinks,
+  updateSocialLinks: async (links: SocialLinks): Promise<SocialLinks> => {
+    Object.assign(mockSocialLinks, links);
+    return mockSocialLinks;
   },
 };
 

@@ -1,0 +1,432 @@
+import { useEffect, useState } from 'react';
+import {
+  Plus,
+  Search,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  UserCog,
+  Shield,
+  KeyRound,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import { DataTableSkeleton } from '@/components/admin/DataTableSkeleton';
+import { useToast } from '@/hooks/use-toast';
+import { usersApi, type AdminUser } from '@/lib/api';
+import { getRoleDisplayName, type UserRole } from '@/lib/rbac';
+
+export function UsersPage() {
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    mobile: '',
+    role: 'sales_user' as UserRole,
+    isActive: true,
+  });
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  async function fetchUsers() {
+    setIsLoading(true);
+    try {
+      const data = await usersApi.getAll();
+      setUsers(data);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch users',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function openCreateDialog() {
+    setEditingUser(null);
+    setFormData({
+      name: '',
+      email: '',
+      mobile: '',
+      role: 'sales_user',
+      isActive: true,
+    });
+    setIsDialogOpen(true);
+  }
+
+  function openEditDialog(user: AdminUser) {
+    setEditingUser(user);
+    setFormData({
+      name: user.name,
+      email: user.email,
+      mobile: user.mobile,
+      role: user.role,
+      isActive: user.isActive,
+    });
+    setIsDialogOpen(true);
+  }
+
+  async function handleSubmit() {
+    try {
+      if (editingUser) {
+        await usersApi.update(editingUser.id, formData);
+        toast({ title: 'User updated successfully' });
+      } else {
+        await usersApi.create(formData);
+        toast({ title: 'User created successfully' });
+      }
+      setIsDialogOpen(false);
+      fetchUsers();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to save user',
+        variant: 'destructive',
+      });
+    }
+  }
+
+  async function handleDelete(id: string) {
+    try {
+      await usersApi.delete(id);
+      toast({ title: 'User deleted successfully' });
+      fetchUsers();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete user',
+        variant: 'destructive',
+      });
+    }
+  }
+
+  async function toggleStatus(user: AdminUser) {
+    try {
+      await usersApi.update(user.id, { isActive: !user.isActive });
+      toast({
+        title: `User ${!user.isActive ? 'activated' : 'deactivated'}`,
+      });
+      fetchUsers();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update status',
+        variant: 'destructive',
+      });
+    }
+  }
+
+  const filteredUsers = users.filter(
+    (u) =>
+      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.mobile.includes(searchQuery)
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
+          <p className="text-muted-foreground">
+            Manage admin users and their roles
+          </p>
+        </div>
+        <Button onClick={openCreateDialog} className="gradient-accent text-accent-foreground">
+          <Plus className="mr-2 h-4 w-4" />
+          Add User
+        </Button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-2xl font-bold">{users.length}</p>
+                <p className="text-sm text-muted-foreground">Total Users</p>
+              </div>
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <UserCog className="h-5 w-5 text-primary" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-2xl font-bold">
+                  {users.filter((u) => u.isActive).length}
+                </p>
+                <p className="text-sm text-muted-foreground">Active Users</p>
+              </div>
+              <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
+                <Shield className="h-5 w-5 text-success" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-2xl font-bold">
+                  {users.filter((u) => u.role === 'master_admin').length}
+                </p>
+                <p className="text-sm text-muted-foreground">Master Admins</p>
+              </div>
+              <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center">
+                <KeyRound className="h-5 w-5 text-accent" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Search */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, email, or mobile..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Users Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserCog className="h-5 w-5" />
+            All Users ({filteredUsers.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <DataTableSkeleton columns={6} rows={5} />
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Mobile</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Last Login</TableHead>
+                    <TableHead className="w-[70px]"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        No users found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredUsers.map((user) => (
+                      <TableRow key={user.id} className="table-row-hover">
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                              <span className="text-sm font-medium text-primary">
+                                {user.name.charAt(0)}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="font-medium">{user.name}</p>
+                              <p className="text-sm text-muted-foreground">{user.email}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{user.mobile}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={
+                              user.role === 'master_admin'
+                                ? 'bg-accent/10 text-accent border-accent/20'
+                                : user.role === 'admin'
+                                ? 'bg-info/10 text-info border-info/20'
+                                : 'bg-muted'
+                            }
+                          >
+                            {getRoleDisplayName(user.role)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge status={user.isActive ? 'active' : 'inactive'} />
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {user.lastLogin
+                            ? new Date(user.lastLogin).toLocaleString()
+                            : 'Never'}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => openEditDialog(user)}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => toggleStatus(user)}>
+                                {user.isActive ? 'Deactivate' : 'Activate'}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => handleDelete(user.id)}
+                                className="text-destructive"
+                                disabled={user.role === 'master_admin'}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Create/Edit Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingUser ? 'Edit User' : 'Create User'}</DialogTitle>
+            <DialogDescription>
+              {editingUser
+                ? 'Update user information and role'
+                : 'Add a new admin user to the system'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Enter full name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="Enter email address"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="mobile">Mobile</Label>
+              <Input
+                id="mobile"
+                value={formData.mobile}
+                onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                placeholder="Enter mobile number"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Select
+                value={formData.role}
+                onValueChange={(value: UserRole) => setFormData({ ...formData, role: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="master_admin">Master Admin</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="sales_user">Sales User</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="status">Active Status</Label>
+              <Switch
+                id="status"
+                checked={formData.isActive}
+                onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit} className="gradient-accent text-accent-foreground">
+              {editingUser ? 'Update' : 'Create'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
