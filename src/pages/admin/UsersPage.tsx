@@ -8,6 +8,7 @@ import {
   UserCog,
   Shield,
   KeyRound,
+  Settings2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,17 +46,26 @@ import {
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { DataTableSkeleton } from '@/components/admin/DataTableSkeleton';
 import { useToast } from '@/hooks/use-toast';
 import { usersApi, type AdminUser } from '@/lib/api';
-import { getRoleDisplayName, type UserRole } from '@/lib/rbac';
+import { getRoleDisplayName, ALL_MODULES, type UserRole, type ModulePermissions, type Permission } from '@/lib/rbac';
+
+interface UserPermissions {
+  [key: string]: Permission;
+}
 
 export function UsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
+  const [selectedUserForPermissions, setSelectedUserForPermissions] = useState<AdminUser | null>(null);
+  const [userPermissions, setUserPermissions] = useState<UserPermissions>({});
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -108,6 +118,80 @@ export function UsersPage() {
       isActive: user.isActive,
     });
     setIsDialogOpen(true);
+  }
+
+  function openPermissionsDialog(user: AdminUser) {
+    setSelectedUserForPermissions(user);
+    const initialPermissions: UserPermissions = {};
+    ALL_MODULES.forEach((module) => {
+      initialPermissions[module.key] = user.permissions?.[module.key as keyof ModulePermissions] || {
+        view: false,
+        create: false,
+        edit: false,
+        delete: false,
+        export: false,
+      };
+    });
+    setUserPermissions(initialPermissions);
+    setIsPermissionsDialogOpen(true);
+  }
+
+  function toggleModuleAccess(moduleKey: string, enabled: boolean) {
+    setUserPermissions((prev) => ({
+      ...prev,
+      [moduleKey]: {
+        view: enabled,
+        create: enabled,
+        edit: enabled,
+        delete: enabled,
+        export: enabled,
+      },
+    }));
+  }
+
+  function togglePermission(moduleKey: string, permType: keyof Permission, enabled: boolean) {
+    setUserPermissions((prev) => ({
+      ...prev,
+      [moduleKey]: {
+        ...prev[moduleKey],
+        [permType]: enabled,
+      },
+    }));
+  }
+
+  async function handleSavePermissions() {
+    if (!selectedUserForPermissions) return;
+    try {
+      // Build complete permissions object from userPermissions state
+      const completePermissions: ModulePermissions = {
+        dashboard: userPermissions['dashboard'] || { view: false, create: false, edit: false, delete: false, export: false },
+        products: userPermissions['products'] || { view: false, create: false, edit: false, delete: false, export: false },
+        certifiedRefurbished: userPermissions['certifiedRefurbished'] || { view: false, create: false, edit: false, delete: false, export: false },
+        leads: userPermissions['leads'] || { view: false, create: false, edit: false, delete: false, export: false },
+        finance: userPermissions['finance'] || { view: false, create: false, edit: false, delete: false, export: false },
+        cibil: userPermissions['cibil'] || { view: false, create: false, edit: false, delete: false, export: false },
+        analytics: userPermissions['analytics'] || { view: false, create: false, edit: false, delete: false, export: false },
+        banners: userPermissions['banners'] || { view: false, create: false, edit: false, delete: false, export: false },
+        settings: userPermissions['settings'] || { view: false, create: false, edit: false, delete: false, export: false },
+        dealers: userPermissions['dealers'] || { view: false, create: false, edit: false, delete: false, export: false },
+        users: userPermissions['users'] || { view: false, create: false, edit: false, delete: false, export: false },
+        mediaLibrary: userPermissions['mediaLibrary'] || { view: false, create: false, edit: false, delete: false, export: false },
+        offersSchemes: userPermissions['offersSchemes'] || { view: false, create: false, edit: false, delete: false, export: false },
+        contentPages: userPermissions['contentPages'] || { view: false, create: false, edit: false, delete: false, export: false },
+      };
+      await usersApi.update(selectedUserForPermissions.id, { 
+        permissions: completePermissions
+      });
+      toast({ title: 'Permissions updated successfully' });
+      setIsPermissionsDialogOpen(false);
+      fetchUsers();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update permissions',
+        variant: 'destructive',
+      });
+    }
   }
 
   async function handleSubmit() {
@@ -327,6 +411,10 @@ export function UsersPage() {
                                 <Pencil className="mr-2 h-4 w-4" />
                                 Edit
                               </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openPermissionsDialog(user)}>
+                                <Settings2 className="mr-2 h-4 w-4" />
+                                Manage Permissions
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => toggleStatus(user)}>
                                 {user.isActive ? 'Deactivate' : 'Activate'}
                               </DropdownMenuItem>
@@ -423,6 +511,111 @@ export function UsersPage() {
             </Button>
             <Button onClick={handleSubmit} className="gradient-accent text-accent-foreground">
               {editingUser ? 'Update' : 'Create'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Permissions Dialog */}
+      <Dialog open={isPermissionsDialogOpen} onOpenChange={setIsPermissionsDialogOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings2 className="h-5 w-5" />
+              Manage Permissions
+            </DialogTitle>
+            <DialogDescription>
+              Configure module access for{' '}
+              <span className="font-medium text-foreground">
+                {selectedUserForPermissions?.name}
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          
+          <ScrollArea className="h-[60vh] pr-4">
+            <div className="space-y-4">
+              {ALL_MODULES.map((module, index) => {
+                const modulePerms = userPermissions[module.key] || {
+                  view: false,
+                  create: false,
+                  edit: false,
+                  delete: false,
+                  export: false,
+                };
+                const hasAnyAccess = modulePerms.view || modulePerms.create || 
+                  modulePerms.edit || modulePerms.delete || modulePerms.export;
+
+                return (
+                  <div key={module.key}>
+                    {index > 0 && <Separator className="my-4" />}
+                    <div className="space-y-3">
+                      {/* Module Header with Main Toggle */}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">{module.label}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {hasAnyAccess ? 'Access granted' : 'No access'}
+                          </p>
+                        </div>
+                        <Switch
+                          checked={hasAnyAccess}
+                          onCheckedChange={(checked) => toggleModuleAccess(module.key, checked)}
+                        />
+                      </div>
+                      
+                      {/* Individual Permissions */}
+                      {hasAnyAccess && (
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pl-4 pt-2">
+                          <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/50">
+                            <span className="text-sm">View</span>
+                            <Switch
+                              checked={modulePerms.view}
+                              onCheckedChange={(checked) => togglePermission(module.key, 'view', checked)}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/50">
+                            <span className="text-sm">Create</span>
+                            <Switch
+                              checked={modulePerms.create}
+                              onCheckedChange={(checked) => togglePermission(module.key, 'create', checked)}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/50">
+                            <span className="text-sm">Edit</span>
+                            <Switch
+                              checked={modulePerms.edit}
+                              onCheckedChange={(checked) => togglePermission(module.key, 'edit', checked)}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/50">
+                            <span className="text-sm">Delete</span>
+                            <Switch
+                              checked={modulePerms.delete}
+                              onCheckedChange={(checked) => togglePermission(module.key, 'delete', checked)}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/50">
+                            <span className="text-sm">Export</span>
+                            <Switch
+                              checked={modulePerms.export || false}
+                              onCheckedChange={(checked) => togglePermission(module.key, 'export', checked)}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+
+          <DialogFooter className="border-t pt-4">
+            <Button variant="outline" onClick={() => setIsPermissionsDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSavePermissions} className="gradient-accent text-accent-foreground">
+              Save Permissions
             </Button>
           </DialogFooter>
         </DialogContent>
