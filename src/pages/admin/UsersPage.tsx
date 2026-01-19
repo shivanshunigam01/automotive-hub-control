@@ -52,7 +52,7 @@ import { StatusBadge } from '@/components/admin/StatusBadge';
 import { DataTableSkeleton } from '@/components/admin/DataTableSkeleton';
 import { useToast } from '@/hooks/use-toast';
 import { usersApi, type AdminUser } from '@/lib/api';
-import { getRoleDisplayName, ALL_MODULES, type UserRole, type ModulePermissions, type Permission } from '@/lib/rbac';
+import { getRoleDisplayName, ALL_MODULES, DEFAULT_ROLES, type UserRole, type ModulePermissions, type Permission } from '@/lib/rbac';
 
 interface UserPermissions {
   [key: string]: Permission;
@@ -74,7 +74,23 @@ export function UsersPage() {
     role: 'sales_user' as UserRole,
     isActive: true,
   });
+  const [customRole, setCustomRole] = useState('');
+  const [isCustomRole, setIsCustomRole] = useState(false);
+  const [availableRoles, setAvailableRoles] = useState(DEFAULT_ROLES);
   const { toast } = useToast();
+
+  // Collect unique roles from existing users on load
+  useEffect(() => {
+    const userRoles = users.map(u => u.role);
+    const uniqueRoles = [...new Set(userRoles)];
+    const customRoles = uniqueRoles
+      .filter(role => !DEFAULT_ROLES.some(dr => dr.value === role))
+      .map(role => ({ value: role, label: getRoleDisplayName(role) }));
+    
+    if (customRoles.length > 0) {
+      setAvailableRoles([...DEFAULT_ROLES, ...customRoles]);
+    }
+  }, [users]);
 
   useEffect(() => {
     fetchUsers();
@@ -105,18 +121,23 @@ export function UsersPage() {
       role: 'sales_user',
       isActive: true,
     });
+    setCustomRole('');
+    setIsCustomRole(false);
     setIsDialogOpen(true);
   }
 
   function openEditDialog(user: AdminUser) {
     setEditingUser(user);
+    const isExistingCustomRole = !DEFAULT_ROLES.some(r => r.value === user.role);
     setFormData({
       name: user.name,
       email: user.email,
       mobile: user.mobile,
-      role: user.role,
+      role: isExistingCustomRole ? 'other' : user.role,
       isActive: user.isActive,
     });
+    setCustomRole(isExistingCustomRole ? user.role : '');
+    setIsCustomRole(isExistingCustomRole);
     setIsDialogOpen(true);
   }
 
@@ -195,12 +216,26 @@ export function UsersPage() {
   }
 
   async function handleSubmit() {
+    // Determine the actual role to use
+    const actualRole = isCustomRole ? customRole.toLowerCase().replace(/\s+/g, '_') : formData.role;
+    
+    if (!actualRole) {
+      toast({
+        title: 'Error',
+        description: 'Please select or enter a role',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const submitData = { ...formData, role: actualRole };
+    
     try {
       if (editingUser) {
-        await usersApi.update(editingUser.id, formData);
+        await usersApi.update(editingUser.id, submitData);
         toast({ title: 'User updated successfully' });
       } else {
-        await usersApi.create(formData);
+        await usersApi.create(submitData);
         toast({ title: 'User created successfully' });
       }
       setIsDialogOpen(false);
@@ -483,18 +518,38 @@ export function UsersPage() {
             <div className="space-y-2">
               <Label htmlFor="role">Role</Label>
               <Select
-                value={formData.role}
-                onValueChange={(value: UserRole) => setFormData({ ...formData, role: value })}
+                value={isCustomRole ? 'other' : formData.role}
+                onValueChange={(value) => {
+                  if (value === 'other') {
+                    setIsCustomRole(true);
+                    setFormData({ ...formData, role: 'other' });
+                  } else {
+                    setIsCustomRole(false);
+                    setCustomRole('');
+                    setFormData({ ...formData, role: value });
+                  }
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="master_admin">Master Admin</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="sales_user">Sales User</SelectItem>
+                  {availableRoles.map((role) => (
+                    <SelectItem key={role.value} value={role.value}>
+                      {role.label}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="other">Other (Custom Role)</SelectItem>
                 </SelectContent>
               </Select>
+              {isCustomRole && (
+                <Input
+                  value={customRole}
+                  onChange={(e) => setCustomRole(e.target.value)}
+                  placeholder="Enter custom role name (e.g., Content Manager)"
+                  className="mt-2"
+                />
+              )}
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="status">Active Status</Label>
