@@ -1,6 +1,14 @@
 // Role-Based Access Control System
 
-export type UserRole = 'master_admin' | 'admin' | 'sales_user';
+// Predefined roles - custom roles can be added dynamically
+export type UserRole = string;
+
+// Default roles with their display names
+export const DEFAULT_ROLES: { value: string; label: string }[] = [
+  { value: 'master_admin', label: 'Master Admin' },
+  { value: 'admin', label: 'Admin' },
+  { value: 'sales_user', label: 'Sales User' },
+];
 
 export interface Permission {
   view: boolean;
@@ -120,16 +128,15 @@ export function canExportInModule(role: UserRole, module: keyof ModulePermission
 }
 
 export function getRoleDisplayName(role: UserRole): string {
-  switch (role) {
-    case 'master_admin':
-      return 'Master Admin';
-    case 'admin':
-      return 'Admin';
-    case 'sales_user':
-      return 'Sales User';
-    default:
-      return 'Unknown';
+  const defaultRole = DEFAULT_ROLES.find(r => r.value === role);
+  if (defaultRole) {
+    return defaultRole.label;
   }
+  // For custom roles, format the role string nicely
+  return role
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
 }
 
 // Menu items that each role can access
