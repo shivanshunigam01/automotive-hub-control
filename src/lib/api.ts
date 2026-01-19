@@ -1,7 +1,7 @@
 // API Configuration - Replace BASE_URL with actual API endpoint
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
-import type { UserRole } from './rbac';
+import type { UserRole, ModulePermissions } from './rbac';
 
 // Types
 export interface TCOItem {
@@ -152,6 +152,7 @@ export interface AdminUser {
   role: UserRole;
   isActive: boolean;
   lastLogin?: string;
+  permissions?: ModulePermissions;
   createdAt: string;
   updatedAt: string;
 }
