@@ -15,6 +15,9 @@ import {
   LogOut,
   MapPin,
   UserCog,
+  FolderOpen,
+  Tag,
+  FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,10 +45,14 @@ const allMenuItems: MenuItem[] = [
   { icon: Users, label: 'Leads', path: '/admin/leads', module: 'leads' },
   { icon: CreditCard, label: 'Finance', path: '/admin/finance', module: 'finance' },
   { icon: FileCheck, label: 'CIBIL Checks', path: '/admin/cibil', module: 'cibil' },
-  { icon: BarChart3, label: 'Analytics', path: '/admin/analytics', module: 'analytics' },
   { icon: MapPin, label: 'Dealers', path: '/admin/dealers', module: 'dealers' },
+  { icon: FolderOpen, label: 'Media Library', path: '/admin/media-library', module: 'mediaLibrary' },
+  { icon: Tag, label: 'Offers & Schemes', path: '/admin/offers-schemes', module: 'offersSchemes' },
+  { icon: FileText, label: 'Content Pages', path: '/admin/content-pages', module: 'contentPages' },
+  { icon: BarChart3, label: 'Analytics', path: '/admin/analytics', module: 'analytics' },
   { icon: Image, label: 'Banners', path: '/admin/banners', module: 'banners' },
   { icon: Settings, label: 'Settings', path: '/admin/settings', module: 'settings' },
+  { icon: UserCog, label: 'Users', path: '/admin/users', module: 'users' },
 ];
 
 export function AdminSidebar() {

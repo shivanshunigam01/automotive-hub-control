@@ -11,6 +11,10 @@ import {
   Settings,
   LogOut,
   MapPin,
+  UserCog,
+  FolderOpen,
+  Tag,
+  FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,9 +30,13 @@ const menuItems = [
   { icon: CreditCard, label: 'Finance', path: '/admin/finance', module: 'finance' as const },
   { icon: FileCheck, label: 'CIBIL Checks', path: '/admin/cibil', module: 'cibil' as const },
   { icon: MapPin, label: 'Dealers', path: '/admin/dealers', module: 'dealers' as const },
+  { icon: FolderOpen, label: 'Media Library', path: '/admin/media-library', module: 'mediaLibrary' as const },
+  { icon: Tag, label: 'Offers & Schemes', path: '/admin/offers-schemes', module: 'offersSchemes' as const },
+  { icon: FileText, label: 'Content Pages', path: '/admin/content-pages', module: 'contentPages' as const },
   { icon: BarChart3, label: 'Analytics', path: '/admin/analytics', module: 'analytics' as const },
   { icon: Image, label: 'Banners', path: '/admin/banners', module: 'banners' as const },
   { icon: Settings, label: 'Settings', path: '/admin/settings', module: 'settings' as const },
+  { icon: UserCog, label: 'Users', path: '/admin/users', module: 'users' as const },
 ];
 
 export function AdminSidebarMobile() {
