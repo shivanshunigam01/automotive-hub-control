@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, X, Save, Upload } from 'lucide-react';
+import { ArrowLeft, Plus, X, Save, Upload, FileText, ChevronDown, ChevronUp, Trash2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,11 +15,15 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { TCOSection, type TCOItem } from '@/components/admin/TCOSection';
 import { productsApi, type Product } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
-type ProductFormData = Omit<Product, 'id' | 'createdAt' | 'updatedAt'>;
+type ProductFormData = Omit<Product, 'id' | 'createdAt' | 'updatedAt'> & {
+  brochureUrl?: string;
+  brochureUpdatedAt?: string;
+};
 
 const initialFormData: ProductFormData = {
   name: '',
@@ -36,6 +40,8 @@ const initialFormData: ProductFormData = {
   seoTitle: '',
   seoDescription: '',
   tcoItems: [],
+  brochureUrl: '',
+  brochureUpdatedAt: '',
 };
 
 export function ProductFormPage() {
@@ -297,6 +303,87 @@ export function ProductFormPage() {
               tcoItems={formData.tcoItems || []}
               onChange={(tcoItems) => setFormData({ ...formData, tcoItems })}
             />
+
+            {/* Brochure Upload */}
+            <Card>
+              <Collapsible>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-accent" />
+                          Brochure (PDF)
+                        </CardTitle>
+                        <CardDescription>
+                          Upload product brochure or enter URL
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {formData.brochureUrl && (
+                          <span className="text-xs text-muted-foreground">
+                            {formData.brochureUpdatedAt ? `Updated: ${new Date(formData.brochureUpdatedAt).toLocaleDateString()}` : 'Uploaded'}
+                          </span>
+                        )}
+                        <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                    </div>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="brochureUrl">URL / Upload</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="brochureUrl"
+                          value={formData.brochureUrl || ''}
+                          onChange={(e) => setFormData({ 
+                            ...formData, 
+                            brochureUrl: e.target.value,
+                            brochureUpdatedAt: new Date().toISOString()
+                          })}
+                          placeholder="Enter URL or upload file"
+                          className="flex-1"
+                        />
+                        <Button type="button" variant="outline" size="icon">
+                          <Upload className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {formData.brochureUrl && (
+                      <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-accent" />
+                          <span className="text-sm font-medium truncate max-w-[200px]">
+                            {formData.brochureUrl.split('/').pop() || 'brochure.pdf'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => window.open(formData.brochureUrl, '_blank')}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setFormData({ ...formData, brochureUrl: '', brochureUpdatedAt: '' })}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </CollapsibleContent>
+              </Collapsible>
+            </Card>
 
             {/* Images */}
             <Card>
