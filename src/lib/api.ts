@@ -8,30 +8,41 @@ export interface TCOItem {
   key: string;
   label: string;
   value: number;
-  unit: 'monthly' | 'yearly' | 'one-time';
+  unit: "monthly" | "yearly" | "one-time";
 }
 
 export interface Product {
   id: string;
-  name: string;
-  brand: 'JCB' | 'Ashok Leyland' | 'Switch EV';
+
+  brand: string;
   category: string;
-  segment?: string;
-  subcategory?: string;
-  applicationTags?: string[];
-  brochureUrl?: string;
-  brochureUpdatedAt?: string;
-  price: number;
+
+  name: string;
   shortDescription: string;
-  specifications: Record<string, string>;
+  fullDescription?: string;
+
+  price: number;
+  priceDisplay?: string;
+
   images: string[];
+  featuredImage?: string;
+
+  specifications: Record<string, string>;
+  keyFeatures?: string[];
+  applications?: string[];
+
+  /** ✅ TCO */
+  tcoItems?: TCOItem[];
+
+  isActive: boolean;
   isNewLaunch: boolean;
   isBestseller: boolean;
   isFeatured: boolean;
-  isActive: boolean;
+
   seoTitle?: string;
   seoDescription?: string;
-  tcoItems?: TCOItem[];
+  seoKeywords?: string[];
+
   createdAt: string;
   updatedAt: string;
 }
@@ -268,19 +279,38 @@ async function apiRequest<T>(
 // Auth API
 export const authApi = {
   login: async (email: string, password: string) => {
-    // Mock login for now
-    if (email === 'admin@patliputra.com' && password === 'admin123') {
-      const token = 'mock_jwt_token_' + Date.now();
-      localStorage.setItem('admin_token', token);
-      return { token, user: { email, name: 'Admin User', role: 'master_admin' } };
-    }
-    throw new Error('Invalid credentials');
+    const response = await apiRequest<{
+      token: string;
+      user: {
+        id: string;
+        name: string;
+        email: string;
+        role: UserRole;
+      };
+    }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+
+    // Save token
+    localStorage.setItem('admin_token', response.token);
+    localStorage.setItem('admin_user', JSON.stringify(response.user));
+
+    return response;
   },
+
   logout: () => {
     localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_user');
   },
+
   isAuthenticated: () => {
     return !!localStorage.getItem('admin_token');
+  },
+
+  getCurrentUser: (): AdminUser | null => {
+    const user = localStorage.getItem('admin_user');
+    return user ? JSON.parse(user) : null;
   },
 };
 
