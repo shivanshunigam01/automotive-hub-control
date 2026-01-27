@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, X, Save, Upload, FileText, ChevronDown, ChevronUp, Trash2, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Plus, X, Save, Upload, FileText, ChevronDown, ChevronUp, Trash2, ExternalLink, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -53,6 +53,67 @@ export function ProductFormPage() {
   const [specValue, setSpecValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // File input refs
+  const imageInputRef = React.useRef<HTMLInputElement>(null);
+  const brochureInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Handle image file selection
+  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const newImages = Array.from(files).map(file => URL.createObjectURL(file));
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, ...newImages]
+      }));
+      toast({
+        title: 'Images added',
+        description: `${files.length} image(s) added successfully.`,
+      });
+    }
+    // Reset input
+    if (imageInputRef.current) {
+      imageInputRef.current.value = '';
+    }
+  }
+
+  // Handle brochure file selection
+  function handleBrochureUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.type !== 'application/pdf') {
+        toast({
+          title: 'Invalid file type',
+          description: 'Please upload a PDF file for the brochure.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      setFormData(prev => ({
+        ...prev,
+        brochureUrl: url,
+        brochureUpdatedAt: new Date().toISOString()
+      }));
+      toast({
+        title: 'Brochure uploaded',
+        description: `${file.name} has been uploaded.`,
+      });
+    }
+    // Reset input
+    if (brochureInputRef.current) {
+      brochureInputRef.current.value = '';
+    }
+  }
+
+  // Remove image
+  function removeImage(index: number) {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  }
 
   const isEditing = !!id;
 
@@ -306,7 +367,7 @@ export function ProductFormPage() {
 
             {/* Brochure Upload */}
             <Card>
-              <Collapsible>
+              <Collapsible defaultOpen={!!formData.brochureUrl}>
                 <CollapsibleTrigger asChild>
                   <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                     <div className="flex items-center justify-between">
@@ -316,7 +377,7 @@ export function ProductFormPage() {
                           Brochure (PDF)
                         </CardTitle>
                         <CardDescription>
-                          Upload product brochure or enter URL
+                          Upload product brochure (PDF only)
                         </CardDescription>
                       </div>
                       <div className="flex items-center gap-2">
@@ -332,40 +393,58 @@ export function ProductFormPage() {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="brochureUrl">URL / Upload</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="brochureUrl"
-                          value={formData.brochureUrl || ''}
-                          onChange={(e) => setFormData({ 
-                            ...formData, 
-                            brochureUrl: e.target.value,
-                            brochureUpdatedAt: new Date().toISOString()
-                          })}
-                          placeholder="Enter URL or upload file"
-                          className="flex-1"
-                        />
-                        <Button type="button" variant="outline" size="icon">
-                          <Upload className="h-4 w-4" />
+                    {/* Hidden file input */}
+                    <input
+                      ref={brochureInputRef}
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      onChange={handleBrochureUpload}
+                      className="hidden"
+                    />
+                    
+                    {!formData.brochureUrl ? (
+                      <div 
+                        className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-accent/50 hover:bg-muted/50 transition-colors"
+                        onClick={() => brochureInputRef.current?.click()}
+                      >
+                        <FileText className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">
+                          Drag and drop PDF here, or click to browse
+                        </p>
+                        <Button type="button" variant="outline" className="mt-4">
+                          <Upload className="mr-2 h-4 w-4" />
+                          Upload Brochure
                         </Button>
                       </div>
-                    </div>
-                    
-                    {formData.brochureUrl && (
-                      <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-5 w-5 text-accent" />
-                          <span className="text-sm font-medium truncate max-w-[200px]">
-                            {formData.brochureUrl.split('/').pop() || 'brochure.pdf'}
-                          </span>
+                    ) : (
+                      <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="h-12 w-12 rounded-lg bg-accent/10 flex items-center justify-center">
+                            <FileText className="h-6 w-6 text-accent" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium truncate max-w-[250px]">
+                              {formData.brochureUrl.split('/').pop() || 'brochure.pdf'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">PDF Document</p>
+                          </div>
                         </div>
                         <div className="flex items-center gap-1">
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
+                            onClick={() => brochureInputRef.current?.click()}
+                            title="Replace brochure"
+                          >
+                            <Upload className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
                             onClick={() => window.open(formData.brochureUrl, '_blank')}
+                            title="Open brochure"
                           >
                             <ExternalLink className="h-4 w-4" />
                           </Button>
@@ -374,6 +453,7 @@ export function ProductFormPage() {
                             variant="ghost"
                             size="icon"
                             onClick={() => setFormData({ ...formData, brochureUrl: '', brochureUpdatedAt: '' })}
+                            title="Remove brochure"
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
@@ -388,19 +468,62 @@ export function ProductFormPage() {
             {/* Images */}
             <Card>
               <CardHeader>
-                <CardTitle>Images</CardTitle>
-                <CardDescription>Upload product images</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <Image className="h-5 w-5 text-accent" />
+                  Images
+                </CardTitle>
+                <CardDescription>Upload product images (JPG, PNG, WebP)</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="border-2 border-dashed rounded-lg p-8 text-center">
+              <CardContent className="space-y-4">
+                {/* Hidden file input */}
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                
+                <div 
+                  className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-accent/50 hover:bg-muted/50 transition-colors"
+                  onClick={() => imageInputRef.current?.click()}
+                >
                   <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                   <p className="text-sm text-muted-foreground">
                     Drag and drop images here, or click to browse
                   </p>
                   <Button type="button" variant="outline" className="mt-4">
+                    <Upload className="mr-2 h-4 w-4" />
                     Upload Images
                   </Button>
                 </div>
+
+                {/* Image preview grid */}
+                {formData.images.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    {formData.images.map((image, index) => (
+                      <div key={index} className="relative group">
+                        <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+                          <img
+                            src={image}
+                            alt={`Product image ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => removeImage(index)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
