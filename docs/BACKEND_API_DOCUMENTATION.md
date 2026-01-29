@@ -3335,7 +3335,7 @@ export function useProduct(id: string) {
 
 export function useCreateProduct() {
   const queryClient = useQueryClient();
-  
+  F
   return useMutation({
     mutationFn: async (formData: FormData) => {
       const { data } = await api.post('/products', formData, {

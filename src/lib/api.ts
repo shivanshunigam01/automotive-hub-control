@@ -257,12 +257,16 @@ async function apiRequest<T>(
   options?: RequestInit
 ): Promise<T> {
   const token = localStorage.getItem('admin_token');
-  
+
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options?.headers,
   };
+
+  // 🔥 KEY FIX
+  if (!(options?.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
@@ -387,51 +391,77 @@ export const dashboardApi = {
 };
 
 // Products API
+// Products API (REAL BACKEND)
 export const productsApi = {
-  getAll: async (filters?: {
-    brand?: string;
-    category?: string;
-    isActive?: boolean;
+  // Admin + Public List
+  getAll: async (params?: {
     search?: string;
+    isActive?: boolean;
+    page?: number;
+    per_page?: number;
   }): Promise<Product[]> => {
-    let products = [...mockProducts];
-    if (filters?.brand) {
-      products = products.filter(p => p.brand === filters.brand);
-    }
-    if (filters?.isActive !== undefined) {
-      products = products.filter(p => p.isActive === filters.isActive);
-    }
-    if (filters?.search) {
-      const search = filters.search.toLowerCase();
-      products = products.filter(p => 
-        p.name.toLowerCase().includes(search) ||
-        p.brand.toLowerCase().includes(search)
-      );
-    }
-    return products;
+    const query = new URLSearchParams();
+
+    if (params?.search) query.append("search", params.search);
+    if (params?.isActive !== undefined) query.append("is_active", String(params.isActive));
+    if (params?.page) query.append("page", String(params.page));
+    if (params?.per_page) query.append("per_page", String(params.per_page));
+
+    const res = await apiRequest<{
+      data: Product[];
+    }>(`/products?${query.toString()}`);
+
+    return res.data;
   },
-  getById: async (id: string): Promise<Product | undefined> => {
-    return mockProducts.find(p => p.id === id);
+
+  // ✅ ADMIN: fetch product for edit
+  getById: async (id: string): Promise<Product> => {
+    const res = await apiRequest<{ data: Product }>(`/products/admin/${id}`);
+    return res.data;
   },
-  create: async (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> => {
-    const newProduct: Product = {
-      ...product,
-      id: 'prod_' + Date.now(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    mockProducts.push(newProduct);
-    return newProduct;
+
+  // ✅ WEBSITE: fetch by slug
+  getBySlug: async (slug: string): Promise<Product> => {
+    const res = await apiRequest<{ data: Product }>(`/products/slug/${slug}`);
+    return res.data;
   },
-  update: async (id: string, product: Partial<Product>): Promise<Product> => {
-    const index = mockProducts.findIndex(p => p.id === id);
-    if (index === -1) throw new Error('Product not found');
-    mockProducts[index] = { ...mockProducts[index], ...product, updatedAt: new Date().toISOString() };
-    return mockProducts[index];
-  },
+
+// ✅ CREATE
+create: async (formData: FormData): Promise<Product> => {
+const res = await apiRequest<{ data: Product }>(`/products`, {
+method: "POST",
+body: formData,
+});
+return res.data;
+},
+
+
+// ✅ UPDATE
+update: async (id: string, formData: FormData): Promise<Product> => {
+const res = await apiRequest<{ data: Product }>(`/products/${id}`, {
+method: "PUT",
+body: formData,
+});
+return res.data;
+},
+
+  // ✅ DELETE
   delete: async (id: string): Promise<void> => {
-    const index = mockProducts.findIndex(p => p.id === id);
-    if (index !== -1) mockProducts.splice(index, 1);
+    await apiRequest(`/products/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  // ✅ COMPARE
+  compare: async (id1: string, id2: string) => {
+    const res = await apiRequest<{
+      data: {
+        products: Product[];
+        comparison_specs: string[];
+      };
+    }>(`/products/compare?ids=${id1},${id2}`);
+
+    return res.data;
   },
 };
 

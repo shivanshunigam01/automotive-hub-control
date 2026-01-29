@@ -36,24 +36,26 @@ export function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [brandFilter, setBrandFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const { toast } = useToast();
 
   useEffect(() => {
     fetchProducts();
-  }, [brandFilter, statusFilter, searchQuery]);
+  }, [searchQuery, statusFilter]);
 
   async function fetchProducts() {
     setIsLoading(true);
     try {
       const data = await productsApi.getAll({
-        brand: brandFilter !== 'all' ? brandFilter : undefined,
-        isActive: statusFilter !== 'all' ? statusFilter === 'active' : undefined,
         search: searchQuery || undefined,
+        isActive:
+          statusFilter === 'all'
+            ? undefined
+            : statusFilter === 'active',
       });
+
       setProducts(data);
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to fetch products',
@@ -72,7 +74,7 @@ export function ProductsPage() {
         description: 'The product has been removed successfully.',
       });
       fetchProducts();
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to delete product',
@@ -83,13 +85,15 @@ export function ProductsPage() {
 
   async function toggleStatus(id: string, currentStatus: boolean) {
     try {
-      await productsApi.update(id, { isActive: !currentStatus });
+      const formData = new FormData();
+      formData.append('isActive', String(!currentStatus));
+      await productsApi.update(id, formData);
       toast({
         title: 'Status updated',
         description: `Product is now ${!currentStatus ? 'active' : 'inactive'}.`,
       });
       fetchProducts();
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to update status',
@@ -104,9 +108,7 @@ export function ProductsPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Products</h1>
-          <p className="text-muted-foreground">
-            Manage your product catalog
-          </p>
+          <p className="text-muted-foreground">Manage your product catalog</p>
         </div>
         <Button asChild className="gradient-accent text-accent-foreground">
           <Link to="/admin/products/new">
@@ -129,30 +131,18 @@ export function ProductsPage() {
                 className="pl-9"
               />
             </div>
-            <div className="flex gap-2">
-              <Select value={brandFilter} onValueChange={setBrandFilter}>
-                <SelectTrigger className="w-[150px]">
-                  <Filter className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Brand" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Brands</SelectItem>
-                  <SelectItem value="JCB">JCB</SelectItem>
-                  <SelectItem value="Ashok Leyland">Ashok Leyland</SelectItem>
-                  <SelectItem value="Switch EV">Switch EV</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[130px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+              <SelectTrigger className="w-[140px]">
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -176,7 +166,7 @@ export function ProductsPage() {
                     <TableHead>Price</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Flags</TableHead>
-                    <TableHead className="w-[70px]"></TableHead>
+                    <TableHead className="w-[70px]" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -188,12 +178,12 @@ export function ProductsPage() {
                     </TableRow>
                   ) : (
                     products.map((product) => (
-                      <TableRow key={product.id} className="table-row-hover">
+                      <TableRow key={product.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
                               <img
-                                src={product.images[0] || '/placeholder.svg'}
+                                src={product.images?.[0] || '/placeholder.svg'}
                                 alt={product.name}
                                 className="h-8 w-8 object-contain"
                               />
@@ -206,33 +196,27 @@ export function ProductsPage() {
                             </div>
                           </div>
                         </TableCell>
+
                         <TableCell>
                           <Badge variant="outline">{product.brand}</Badge>
                         </TableCell>
+
                         <TableCell>{product.category}</TableCell>
-                        <TableCell>₹{product.price.toLocaleString()}</TableCell>
+
+                        <TableCell>₹{product.price?.toLocaleString()}</TableCell>
+
                         <TableCell>
                           <StatusBadge status={product.isActive ? 'active' : 'inactive'} />
                         </TableCell>
+
                         <TableCell>
                           <div className="flex gap-1">
-                            {product.isNewLaunch && (
-                              <Badge className="bg-info/10 text-info border-info/20" variant="outline">
-                                New
-                              </Badge>
-                            )}
-                            {product.isBestseller && (
-                              <Badge className="bg-accent/10 text-accent border-accent/20" variant="outline">
-                                Best
-                              </Badge>
-                            )}
-                            {product.isFeatured && (
-                              <Badge className="bg-success/10 text-success border-success/20" variant="outline">
-                                Featured
-                              </Badge>
-                            )}
+                            {product.isNewLaunch && <Badge variant="outline">New</Badge>}
+                            {product.isBestseller && <Badge variant="outline">Best</Badge>}
+                            {product.isFeatured && <Badge variant="outline">Featured</Badge>}
                           </div>
                         </TableCell>
+
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -253,7 +237,9 @@ export function ProductsPage() {
                                   Edit
                                 </Link>
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => toggleStatus(product.id, product.isActive)}>
+                              <DropdownMenuItem
+                                onClick={() => toggleStatus(product.id, product.isActive)}
+                              >
                                 {product.isActive ? 'Deactivate' : 'Activate'}
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />

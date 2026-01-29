@@ -20,16 +20,36 @@ import { TCOSection, type TCOItem } from '@/components/admin/TCOSection';
 import { productsApi, type Product } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
-type ProductFormData = Omit<Product, 'id' | 'createdAt' | 'updatedAt'> & {
-  brochureUrl?: string;
-  brochureUpdatedAt?: string;
+// type ProductFormData = Omit<Product, 'id' | 'createdAt' | 'updatedAt'> & {
+//   price: string | number;
+//   brochureUrl?: string;
+//   brochureUpdatedAt?: string;
+// };
+
+type ProductFormData = {
+name: string;
+brand: string;
+category: string;
+price: string; // 👈 string in UI
+shortDescription: string;
+specifications: Record<string, string>;
+images: string[];
+isNewLaunch: boolean;
+isBestseller: boolean;
+isFeatured: boolean;
+isActive: boolean;
+seoTitle?: string;
+seoDescription?: string;
+tcoItems?: any[];
+brochureUrl?: string;
+brochureUpdatedAt?: string;
 };
 
 const initialFormData: ProductFormData = {
   name: '',
   brand: 'JCB',
   category: '',
-  price: 0,
+  price: '0',
   shortDescription: '',
   specifications: {},
   images: [],
@@ -53,59 +73,107 @@ export function ProductFormPage() {
   const [specValue, setSpecValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+const [brochureFile, setBrochureFile] = useState<File | null>(null);
+function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  if (!e.target.files) return;
+
+  const files = Array.from(e.target.files);
+
+  setImageFiles(prev => [...prev, ...files]);
+
+  // 👇 create preview URLs
+  const previewUrls = files.map(file => URL.createObjectURL(file));
+
+  setFormData(prev => ({
+    ...prev,
+    images: [...prev.images, ...previewUrls],
+  }));
+
+  if (imageInputRef.current) {
+    imageInputRef.current.value = '';
+  }
+}
+function handleBrochureUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  if (file.type !== 'application/pdf') {
+    toast({
+      title: 'Invalid file',
+      description: 'Please upload a PDF file',
+      variant: 'destructive',
+    });
+    return;
+  }
+
+  setBrochureFile(file);
+
+  // 👇 local preview URL
+  const previewUrl = URL.createObjectURL(file);
+
+  setFormData(prev => ({
+    ...prev,
+    brochureUrl: previewUrl,
+    brochureUpdatedAt: new Date().toISOString(),
+  }));
+
+  if (brochureInputRef.current) {
+    brochureInputRef.current.value = '';
+  }
+}
   // File input refs
   const imageInputRef = React.useRef<HTMLInputElement>(null);
   const brochureInputRef = React.useRef<HTMLInputElement>(null);
 
   // Handle image file selection
-  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      const newImages = Array.from(files).map(file => URL.createObjectURL(file));
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, ...newImages]
-      }));
-      toast({
-        title: 'Images added',
-        description: `${files.length} image(s) added successfully.`,
-      });
-    }
-    // Reset input
-    if (imageInputRef.current) {
-      imageInputRef.current.value = '';
-    }
-  }
+  // function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  //   const files = e.target.files;
+  //   if (files && files.length > 0) {
+  //     const newImages = Array.from(files).map(file => URL.createObjectURL(file));
+  //     setFormData(prev => ({
+  //       ...prev,
+  //       images: [...prev.images, ...newImages]
+  //     }));
+  //     toast({
+  //       title: 'Images added',
+  //       description: `${files.length} image(s) added successfully.`,
+  //     });
+  //   }
+  //   // Reset input
+  //   if (imageInputRef.current) {
+  //     imageInputRef.current.value = '';
+  //   }
+  // }
 
   // Handle brochure file selection
-  function handleBrochureUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.type !== 'application/pdf') {
-        toast({
-          title: 'Invalid file type',
-          description: 'Please upload a PDF file for the brochure.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      const url = URL.createObjectURL(file);
-      setFormData(prev => ({
-        ...prev,
-        brochureUrl: url,
-        brochureUpdatedAt: new Date().toISOString()
-      }));
-      toast({
-        title: 'Brochure uploaded',
-        description: `${file.name} has been uploaded.`,
-      });
-    }
-    // Reset input
-    if (brochureInputRef.current) {
-      brochureInputRef.current.value = '';
-    }
-  }
+  // function handleBrochureUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  //   const file = e.target.files?.[0];
+  //   if (file) {
+  //     if (file.type !== 'application/pdf') {
+  //       toast({
+  //         title: 'Invalid file type',
+  //         description: 'Please upload a PDF file for the brochure.',
+  //         variant: 'destructive',
+  //       });
+  //       return;
+  //     }
+  //     const url = URL.createObjectURL(file);
+  //     setFormData(prev => ({
+  //       ...prev,
+  //       brochureUrl: url,
+  //       brochureUpdatedAt: new Date().toISOString()
+  //     }));
+  //     toast({
+  //       title: 'Brochure uploaded',
+  //       description: `${file.name} has been uploaded.`,
+  //     });
+  //   }
+  //   // Reset input
+  //   if (brochureInputRef.current) {
+  //     brochureInputRef.current.value = '';
+  //   }
+  // }
 
   // Remove image
   function removeImage(index: number) {
@@ -132,7 +200,7 @@ export function ProductFormPage() {
           name: product.name,
           brand: product.brand,
           category: product.category,
-          price: product.price,
+          price: product.price?.toString() ?? '0', // ✅ FIX
           shortDescription: product.shortDescription,
           specifications: product.specifications,
           images: product.images,
@@ -156,38 +224,55 @@ export function ProductFormPage() {
     }
   }
 
-  async function handleSubmit(e: React.FormEvent, isDraft = false) {
-    e.preventDefault();
-    setIsSaving(true);
+async function handleSubmit(e: React.FormEvent, isDraft = false) {
+  e.preventDefault();
+  setIsSaving(true);
 
-    try {
-      const productData = { ...formData, isActive: isDraft ? false : formData.isActive };
-      
-      if (isEditing) {
-        await productsApi.update(id!, productData);
-        toast({
-          title: 'Product updated',
-          description: 'The product has been updated successfully.',
-        });
-      } else {
-        await productsApi.create(productData);
-        toast({
-          title: 'Product created',
-          description: isDraft ? 'Product saved as draft.' : 'The product has been published.',
-        });
-      }
-      navigate('/admin/products');
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to save product',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSaving(false);
+  try {
+    const fd = new FormData();
+
+    fd.append("name", formData.name);
+    fd.append("brand", formData.brand);
+    fd.append("category", formData.category);
+    fd.append("price", String(Number(formData.price) || 0));
+    fd.append("shortDescription", formData.shortDescription || "");
+    fd.append("isActive", String(isDraft ? false : formData.isActive));
+    fd.append("isNewLaunch", String(formData.isNewLaunch));
+    fd.append("isBestseller", String(formData.isBestseller));
+    fd.append("isFeatured", String(formData.isFeatured));
+    fd.append("seoTitle", formData.seoTitle || "");
+    fd.append("seoDescription", formData.seoDescription || "");
+    fd.append("specifications", JSON.stringify(formData.specifications));
+    fd.append("tcoItems", JSON.stringify(formData.tcoItems || []));
+
+    // ✅ IMAGES → CLOUDINARY
+    imageFiles.forEach(file => {
+      fd.append("images", file);
+    });
+
+    // ✅ BROCHURE → SERVER
+    if (brochureFile) {
+      fd.append("brochure", brochureFile);
     }
-  }
 
+    if (isEditing) {
+      await productsApi.update(id!, fd as any);
+    } else {
+      await productsApi.create(fd as any);
+    }
+
+    toast({ title: "Success", description: "Product saved successfully" });
+    navigate("/admin/products");
+  } catch (err) {
+    toast({
+      title: "Error",
+      description: "Failed to save product",
+      variant: "destructive",
+    });
+  } finally {
+    setIsSaving(false);
+  }
+}
   function addSpecification() {
     if (specKey && specValue) {
       setFormData({
@@ -285,14 +370,26 @@ export function ProductFormPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="price">Price (₹) *</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-                    placeholder="2500000"
-                    required
-                  />
+                 <Input
+id="price"
+type="number"
+inputMode="numeric"
+value={formData.price}
+onChange={(e) => {
+const value = e.target.value;
+
+
+// allow empty while typing
+if (value === '') {
+setFormData({ ...formData, price: '' });
+return;
+}
+
+
+setFormData({ ...formData, price: value });
+}}
+placeholder="0"
+/>
                 </div>
 
                 <div className="space-y-2">
@@ -500,30 +597,33 @@ export function ProductFormPage() {
                 </div>
 
                 {/* Image preview grid */}
-                {formData.images.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                    {formData.images.map((image, index) => (
-                      <div key={index} className="relative group">
-                        <div className="aspect-square rounded-lg overflow-hidden bg-muted">
-                          <img
-                            src={image}
-                            alt={`Product image ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => removeImage(index)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+           {formData.images.length > 0 && (
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+    {formData.images.map((img, index) => (
+      <div key={index} className="relative group">
+        <img
+          src={img}
+          className="w-full h-32 object-cover rounded-lg"
+        />
+        <Button
+          type="button"
+          variant="destructive"
+          size="icon"
+          className="absolute top-2 right-2"
+          onClick={() => {
+            setFormData(prev => ({
+              ...prev,
+              images: prev.images.filter((_, i) => i !== index),
+            }));
+            setImageFiles(prev => prev.filter((_, i) => i !== index));
+          }}
+        >
+          <X className="h-3 w-3" />
+        </Button>
+      </div>
+    ))}
+  </div>
+)}
               </CardContent>
             </Card>
 
