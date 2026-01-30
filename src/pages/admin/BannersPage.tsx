@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, GripVertical, Eye, EyeOff, Trash2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +22,24 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { bannersApi } from '@/lib/api';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
+import { mediaApi } from '@/lib/api';
+
 
 interface Banner {
   id: string;
@@ -29,31 +47,10 @@ interface Banner {
   imageUrl: string;
   isActive: boolean;
   order: number;
+  page: string;
 }
 
-const initialBanners: Banner[] = [
-  {
-    id: '1',
-    title: 'JCB New Launch',
-    imageUrl: '/placeholder.svg',
-    isActive: true,
-    order: 1,
-  },
-  {
-    id: '2',
-    title: 'Ashok Leyland Offers',
-    imageUrl: '/placeholder.svg',
-    isActive: true,
-    order: 2,
-  },
-  {
-    id: '3',
-    title: 'Switch EV Promotion',
-    imageUrl: '/placeholder.svg',
-    isActive: false,
-    order: 3,
-  },
-];
+
 
 function SortableBannerItem({
   banner,
@@ -143,7 +140,41 @@ function SortableBannerItem({
 }
 
 export function BannersPage() {
-  const [banners, setBanners] = useState<Banner[]>(initialBanners);
+ const [banners, setBanners] = useState<Banner[]>([]);
+const [loading, setLoading] = useState(true);
+
+const [open, setOpen] = useState(false);
+const [creating, setCreating] = useState(false);
+
+const [form, setForm] = useState({
+  title: '',
+  page: 'home',
+  image: '',
+});
+useEffect(() => {
+  loadBanners();
+}, []);
+
+async function loadBanners() {
+  try {
+    const data = await bannersApi.getAll();
+    setBanners(
+      data.map(b => ({
+        id: b.id,
+        title: b.title,
+        imageUrl: b.background_image || "/placeholder.svg",
+        isActive: b.is_active,
+        order: b.display_order,
+        page: b.page,
+      }))
+    );
+  } catch {
+    toast({ title: "Failed to load banners", variant: "destructive" });
+  } finally {
+    setLoading(false);
+  }
+}
+
   const { toast } = useToast();
 
   const sensors = useSensors(
@@ -153,44 +184,59 @@ export function BannersPage() {
     })
   );
 
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
+ async function handleDragEnd(event: DragEndEvent) {
+  const { active, over } = event;
+  if (!over || active.id === over.id) return;
 
-    if (over && active.id !== over.id) {
-      setBanners((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
-        const newItems = arrayMove(items, oldIndex, newIndex);
-        // Update order numbers
-        return newItems.map((item, index) => ({ ...item, order: index + 1 }));
-      });
-      toast({
-        title: 'Order updated',
-        description: 'Banner order has been saved.',
-      });
-    }
-  }
+  const oldIndex = banners.findIndex(b => b.id === active.id);
+  const newIndex = banners.findIndex(b => b.id === over.id);
 
-  function toggleBanner(id: string) {
-    setBanners((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, isActive: !b.isActive } : b))
-    );
-    toast({
-      title: 'Banner updated',
-      description: 'Banner visibility has been changed.',
-    });
-  }
+  const reordered = arrayMove(banners, oldIndex, newIndex).map((b, i) => ({
+    ...b,
+    order: i + 1,
+  }));
 
-  function deleteBanner(id: string) {
-    setBanners((prev) => {
-      const filtered = prev.filter((b) => b.id !== id);
-      return filtered.map((item, index) => ({ ...item, order: index + 1 }));
-    });
-    toast({
-      title: 'Banner deleted',
-      description: 'The banner has been removed.',
-    });
-  }
+  setBanners(reordered);
+
+  // 🔥 Persist order to backend
+  await Promise.all(
+    reordered.map(b =>
+      bannersApi.update(b.id, { display_order: b.order })
+    )
+  );
+
+  toast({ title: "Banner order saved" });
+}
+
+
+ async function toggleBanner(id: string) {
+  const banner = banners.find(b => b.id === id);
+  if (!banner) return;
+
+  await bannersApi.update(id, { is_active: !banner.isActive });
+
+  setBanners(prev =>
+    prev.map(b =>
+      b.id === id ? { ...b, isActive: !b.isActive } : b
+    )
+  );
+
+  toast({ title: "Banner updated" });
+}
+
+
+ async function deleteBanner(id: string) {
+  await bannersApi.delete(id);
+
+  setBanners(prev =>
+    prev
+      .filter(b => b.id !== id)
+      .map((b, i) => ({ ...b, order: i + 1 }))
+  );
+
+  toast({ title: "Banner deleted" });
+}
+
 
   return (
     <div className="space-y-6">
@@ -202,14 +248,17 @@ export function BannersPage() {
             Manage homepage banners and promotional content
           </p>
         </div>
-        <Button className="gradient-accent text-accent-foreground">
+        <Button
+  className="gradient-accent text-accent-foreground"
+  onClick={() => setOpen(true)}
+>
           <Plus className="mr-2 h-4 w-4" />
           Add Banner
         </Button>
       </div>
 
       {/* Upload Area */}
-      <Card>
+      {/* <Card>
         <CardContent className="p-6">
           <div className="border-2 border-dashed rounded-lg p-8 text-center">
             <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
@@ -225,7 +274,7 @@ export function BannersPage() {
             </Button>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Banners List */}
       <Card>
@@ -263,6 +312,99 @@ export function BannersPage() {
           </DndContext>
         </CardContent>
       </Card>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+  <DialogContent className="sm:max-w-md">
+    <DialogHeader>
+      <DialogTitle>Add New Banner</DialogTitle>
+    </DialogHeader>
+
+    <div className="space-y-4">
+      {/* Title */}
+      <Input
+        placeholder="Banner title"
+        value={form.title}
+        onChange={(e) => setForm({ ...form, title: e.target.value })}
+      />
+
+      {/* Page */}
+      <Select
+        value={form.page}
+        onValueChange={(v) => setForm({ ...form, page: v })}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Select page" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="home">Home</SelectItem>
+          <SelectItem value="jcb">JCB</SelectItem>
+          <SelectItem value="ashok_leyland">Ashok Leyland</SelectItem>
+          <SelectItem value="switch_ev">Switch EV</SelectItem>
+          <SelectItem value="used_vehicles">Used Vehicles</SelectItem>
+          <SelectItem value="finance">Finance</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {/* Image Upload */}
+      <Input
+        type="file"
+        accept="image/*"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+
+          const uploaded = await mediaApi.uploadSingle(file, 'banners');
+          setForm({ ...form, image: uploaded.url });
+        }}
+      />
+
+      {form.image && (
+        <img
+          src={form.image}
+          className="h-24 w-full object-cover rounded"
+        />
+      )}
+    </div>
+
+    <DialogFooter>
+      <Button
+        variant="outline"
+        onClick={() => setOpen(false)}
+      >
+        Cancel
+      </Button>
+
+      <Button
+        disabled={creating}
+        onClick={async () => {
+          try {
+            setCreating(true);
+
+            await bannersApi.create({
+              title: form.title,
+              page: form.page as any,
+              background_image: form.image,
+              is_active: true,
+              display_order: banners.length + 1,
+            });
+
+            toast({ title: 'Banner created' });
+            setOpen(false);
+            setForm({ title: '', page: 'home', image: '' });
+            loadBanners();
+          } catch {
+            toast({ title: 'Failed to create banner', variant: 'destructive' });
+          } finally {
+            setCreating(false);
+          }
+        }}
+      >
+        Save
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
     </div>
   );
 }

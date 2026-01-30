@@ -25,6 +25,29 @@ import { DataTableSkeleton } from '@/components/admin/DataTableSkeleton';
 import { usedVehiclesApi, type UsedVehicle } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
+function capitalize(s: string) {
+  if (!s) return s;
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+type ConditionLevel = "Excellent" | "Good" | "Fair" | "Poor";
+
+function normalizeCondition(value?: string): ConditionLevel {
+  switch ((value || "").toLowerCase()) {
+    case "excellent":
+      return "Excellent";
+    case "fair":
+      return "Fair";
+    case "poor":
+      return "Poor";
+    case "good":
+    default:
+      return "Good";
+  }
+}
+
+
+
 export function UsedVehiclesPage() {
   const [vehicles, setVehicles] = useState<UsedVehicle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,8 +61,52 @@ export function UsedVehiclesPage() {
   async function fetchVehicles() {
     setIsLoading(true);
     try {
-      const data = await usedVehiclesApi.getAll();
-      setVehicles(data);
+     const data = await usedVehiclesApi.getAll();
+
+const mapped: UsedVehicle[] = data.map((v: any) => ({
+  id: v._id || v.id,
+
+  vehicleType: v.vehicle_type || "other",
+  brand: v.brand || "",
+  model: v.model || "",
+  year: Number(v.year || 0),
+
+  kilometers: Number(v.kilometers || 0),
+  hours: v.hours != null ? Number(v.hours) : undefined,
+
+  price: Number(v.price || 0),
+  ownership: v.ownership || "",
+  fuelType: v.fuel_type || "",
+
+  // ✅ your UI expects this structure
+condition: {
+  engine: normalizeCondition(v.condition_report?.engine),
+  transmission: normalizeCondition(v.condition_report?.transmission),
+  body: normalizeCondition(v.condition_report?.body),
+  tyres:
+    v.condition_report?.tyres_life_percent != null
+      ? `${v.condition_report.tyres_life_percent}%`
+      : "Good",
+  notes: v.condition_report?.notes || "",
+},
+
+
+  certifications: {
+    inspection150Point: !!v.is_certified,
+    financeAvailable: !!v.finance_available,
+    returnPolicy: !!v.has_return_policy,
+  },
+
+  images: v.gallery_images?.length ? v.gallery_images : ["/placeholder.svg"],
+
+  isActive: v.is_active ?? true,
+
+  createdAt: v.created_at || new Date().toISOString(),
+  updatedAt: v.updated_at || new Date().toISOString(),
+}));
+
+setVehicles(mapped);
+
     } catch (error) {
       toast({
         title: 'Error',
@@ -70,8 +137,8 @@ export function UsedVehiclesPage() {
 
   const filteredVehicles = vehicles.filter(
     (v) =>
-      v.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      v.model.toLowerCase().includes(searchQuery.toLowerCase())
+    (v.brand || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+(v.model || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (

@@ -101,7 +101,7 @@ export function FinancePage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        {['new', 'under_review', 'approved', 'rejected'].map((status) => (
+        {['pending', 'under_review', 'approved', 'rejected'].map((status) => (
           <Card key={status}>
             <CardContent className="pt-6">
               <div className="text-2xl font-bold">

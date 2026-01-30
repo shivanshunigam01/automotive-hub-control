@@ -1,131 +1,58 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   Plus,
   Search,
-  MoreHorizontal,
-  Pencil,
   Trash2,
   Image as ImageIcon,
   Video,
-  Star,
-  Eye,
-  GripVertical,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { DataTableSkeleton } from '@/components/admin/DataTableSkeleton';
-import { useToast } from '@/hooks/use-toast';
-import { mediaApi, type MediaItem } from '@/lib/api';
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { DataTableSkeleton } from "@/components/admin/DataTableSkeleton";
+import { useToast } from "@/hooks/use-toast";
+import { mediaApi, type MediaItem } from "@/lib/api";
 
 export function MediaLibraryPage() {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('gallery');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<MediaItem | null>(null);
-  const [formData, setFormData] = useState({
-    titleEn: '',
-    titleHi: '',
-    mediaType: 'image' as 'image' | 'video',
-    url: '',
-    category: 'gallery' as 'gallery' | 'events' | 'testimonials',
-    isFeatured: false,
-    isActive: true,
-  });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchItems();
+    fetchMedia();
   }, []);
 
-  async function fetchItems() {
+  async function fetchMedia() {
     setIsLoading(true);
     try {
       const data = await mediaApi.getAll();
       setItems(data);
-    } catch (error) {
+    } catch {
       toast({
-        title: 'Error',
-        description: 'Failed to fetch media items',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to load media",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   }
 
-  function openCreateDialog() {
-    setEditingItem(null);
-    setFormData({
-      titleEn: '',
-      titleHi: '',
-      mediaType: 'image',
-      url: '',
-      category: activeTab === 'gallery' ? 'gallery' : 'events',
-      isFeatured: false,
-      isActive: true,
-    });
-    setIsDialogOpen(true);
-  }
-
-  function openEditDialog(item: MediaItem) {
-    setEditingItem(item);
-    setFormData({
-      titleEn: item.titleEn,
-      titleHi: item.titleHi,
-      mediaType: item.mediaType,
-      url: item.url,
-      category: item.category,
-      isFeatured: item.isFeatured,
-      isActive: item.isActive,
-    });
-    setIsDialogOpen(true);
-  }
-
-  async function handleSubmit() {
+  async function handleUpload(file: File) {
     try {
-      if (editingItem) {
-        await mediaApi.update(editingItem.id, formData);
-        toast({ title: 'Media updated successfully' });
-      } else {
-        await mediaApi.create(formData);
-        toast({ title: 'Media added successfully' });
-      }
-      setIsDialogOpen(false);
-      fetchItems();
-    } catch (error) {
+      await mediaApi.uploadSingle(file, "gallery");
+      toast({ title: "Media uploaded successfully" });
+      setIsUploadOpen(false);
+      fetchMedia();
+    } catch {
       toast({
-        title: 'Error',
-        description: 'Failed to save media',
-        variant: 'destructive',
+        title: "Upload failed",
+        variant: "destructive",
       });
     }
   }
@@ -133,119 +60,20 @@ export function MediaLibraryPage() {
   async function handleDelete(id: string) {
     try {
       await mediaApi.delete(id);
-      toast({ title: 'Media deleted successfully' });
-      fetchItems();
-    } catch (error) {
+      toast({ title: "Media deleted" });
+      fetchMedia();
+    } catch {
       toast({
-        title: 'Error',
-        description: 'Failed to delete media',
-        variant: 'destructive',
+        title: "Delete failed",
+        variant: "destructive",
       });
     }
   }
 
-  async function toggleFeatured(item: MediaItem) {
-    try {
-      await mediaApi.update(item.id, { isFeatured: !item.isFeatured });
-      toast({
-        title: item.isFeatured ? 'Removed from featured' : 'Added to featured',
-      });
-      fetchItems();
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update',
-        variant: 'destructive',
-      });
-    }
-  }
-
-  const galleryItems = items.filter(
+  const filteredItems = items.filter(
     (i) =>
-      i.category === 'gallery' &&
-      (i.titleEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        i.titleHi.includes(searchQuery))
-  );
-
-  const albumItems = items.filter(
-    (i) =>
-      (i.category === 'events' || i.category === 'testimonials') &&
-      (i.titleEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        i.titleHi.includes(searchQuery))
-  );
-
-  const renderMediaGrid = (mediaItems: MediaItem[]) => (
-    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-      {mediaItems.map((item) => (
-        <Card key={item.id} className="group overflow-hidden">
-          <div className="relative aspect-video bg-muted">
-            {item.mediaType === 'image' ? (
-              <img
-                src={item.url || '/placeholder.svg'}
-                alt={item.titleEn}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center">
-                <Video className="h-12 w-12 text-muted-foreground" />
-              </div>
-            )}
-            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              <Button
-                size="icon"
-                variant="secondary"
-                onClick={() => openEditDialog(item)}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button
-                size="icon"
-                variant="secondary"
-                onClick={() => toggleFeatured(item)}
-              >
-                <Star
-                  className={`h-4 w-4 ${item.isFeatured ? 'fill-yellow-400 text-yellow-400' : ''}`}
-                />
-              </Button>
-              <Button
-                size="icon"
-                variant="destructive"
-                onClick={() => handleDelete(item.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-            {item.isFeatured && (
-              <Badge className="absolute top-2 right-2 bg-yellow-500 text-yellow-950">
-                Featured
-              </Badge>
-            )}
-            {!item.isActive && (
-              <Badge className="absolute top-2 left-2" variant="secondary">
-                Inactive
-              </Badge>
-            )}
-          </div>
-          <CardContent className="p-3">
-            <p className="font-medium truncate">{item.titleEn}</p>
-            <p className="text-sm text-muted-foreground truncate">{item.titleHi}</p>
-            <div className="flex items-center gap-2 mt-2">
-              <Badge variant="outline" className="text-xs">
-                {item.mediaType === 'image' ? (
-                  <ImageIcon className="mr-1 h-3 w-3" />
-                ) : (
-                  <Video className="mr-1 h-3 w-3" />
-                )}
-                {item.mediaType}
-              </Badge>
-              <Badge variant="outline" className="text-xs capitalize">
-                {item.category}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+      i.original_filename?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      i.filename?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -255,12 +83,16 @@ export function MediaLibraryPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Media Library</h1>
           <p className="text-muted-foreground">
-            Manage gallery images, videos, and company albums
+            Upload and manage images, videos, and documents
           </p>
         </div>
-        <Button onClick={openCreateDialog} className="gradient-accent text-accent-foreground">
+
+        <Button
+          onClick={() => setIsUploadOpen(true)}
+          className="gradient-accent text-accent-foreground"
+        >
           <Plus className="mr-2 h-4 w-4" />
-          Add Media
+          Upload Media
         </Button>
       </div>
 
@@ -270,7 +102,7 @@ export function MediaLibraryPage() {
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search media..."
+              placeholder="Search files..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -279,145 +111,102 @@ export function MediaLibraryPage() {
         </CardContent>
       </Card>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="gallery" className="gap-2">
-            <ImageIcon className="h-4 w-4" />
-            Gallery ({galleryItems.length})
-          </TabsTrigger>
-          <TabsTrigger value="albums" className="gap-2">
-            <Video className="h-4 w-4" />
-            Company Albums ({albumItems.length})
-          </TabsTrigger>
-        </TabsList>
+      {/* Media Grid */}
+      {isLoading ? (
+        <DataTableSkeleton columns={4} rows={2} />
+      ) : filteredItems.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center text-muted-foreground">
+            No media files found
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {filteredItems.map((item) => {
+            const isImage = item.mime_type?.startsWith("image");
+            const isVideo = item.mime_type?.startsWith("video");
 
-        <TabsContent value="gallery" className="mt-6">
-          {isLoading ? (
-            <DataTableSkeleton columns={4} rows={2} />
-          ) : galleryItems.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center text-muted-foreground">
-                No gallery items found
-              </CardContent>
-            </Card>
-          ) : (
-            renderMediaGrid(galleryItems)
-          )}
-        </TabsContent>
+            return (
+              <Card key={item.id} className="group overflow-hidden">
+                <div className="relative aspect-video bg-muted">
+                  {isImage ? (
+                    <img
+                      src={item.url}
+                      alt={item.original_filename}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : isVideo ? (
+                    <div className="flex h-full items-center justify-center">
+                      <Video className="h-12 w-12 text-muted-foreground" />
+                    </div>
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                      FILE
+                    </div>
+                  )}
 
-        <TabsContent value="albums" className="mt-6">
-          {isLoading ? (
-            <DataTableSkeleton columns={4} rows={2} />
-          ) : albumItems.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center text-muted-foreground">
-                No album items found
-              </CardContent>
-            </Card>
-          ) : (
-            renderMediaGrid(albumItems)
-          )}
-        </TabsContent>
-      </Tabs>
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Button
+                      size="icon"
+                      variant="destructive"
+                   onClick={() => {
+  if (!item.id) {
+    toast({
+      title: "Invalid media item",
+      variant: "destructive",
+    });
+    return;
+  }
+  handleDelete(item.id);
+}}
 
-      {/* Create/Edit Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <CardContent className="p-3 space-y-1">
+                  <p className="font-medium truncate">
+                    {item.original_filename || item.filename}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {item.mime_type}
+                  </p>
+
+                  <div className="flex gap-2 pt-1">
+                    <Badge variant="outline" className="text-xs">
+                      {isImage ? <ImageIcon className="mr-1 h-3 w-3" /> : <Video className="mr-1 h-3 w-3" />}
+                      {isImage ? "Image" : isVideo ? "Video" : "File"}
+                    </Badge>
+                    {item.size && (
+                      <Badge variant="outline" className="text-xs">
+                        {(item.size / 1024 / 1024).toFixed(2)} MB
+                      </Badge>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Upload Dialog */}
+      <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingItem ? 'Edit Media' : 'Add Media'}</DialogTitle>
-            <DialogDescription>
-              {editingItem ? 'Update media information' : 'Add a new media item'}
-            </DialogDescription>
+            <DialogTitle>Upload Media</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="titleEn">Title (English)</Label>
-              <Input
-                id="titleEn"
-                value={formData.titleEn}
-                onChange={(e) => setFormData({ ...formData, titleEn: e.target.value })}
-                placeholder="Enter title in English"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="titleHi">Title (Hindi)</Label>
-              <Input
-                id="titleHi"
-                value={formData.titleHi}
-                onChange={(e) => setFormData({ ...formData, titleHi: e.target.value })}
-                placeholder="हिंदी में शीर्षक दर्ज करें"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="mediaType">Media Type</Label>
-              <Select
-                value={formData.mediaType}
-                onValueChange={(value: 'image' | 'video') =>
-                  setFormData({ ...formData, mediaType: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="image">Image</SelectItem>
-                  <SelectItem value="video">Video</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="url">URL / Upload</Label>
-              <Input
-                id="url"
-                value={formData.url}
-                onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                placeholder="Enter URL or upload file"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value: 'gallery' | 'events' | 'testimonials') =>
-                  setFormData({ ...formData, category: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="gallery">Gallery</SelectItem>
-                  <SelectItem value="events">Events</SelectItem>
-                  <SelectItem value="testimonials">Testimonials</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="featured">Featured</Label>
-              <Switch
-                id="featured"
-                checked={formData.isFeatured}
-                onCheckedChange={(checked) => setFormData({ ...formData, isFeatured: checked })}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="active">Active</Label>
-              <Switch
-                id="active"
-                checked={formData.isActive}
-                onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit} className="gradient-accent text-accent-foreground">
-              {editingItem ? 'Update' : 'Add'}
-            </Button>
-          </DialogFooter>
+
+          <input
+            type="file"
+            accept="image/*,video/*,.pdf"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleUpload(file);
+            }}
+          />
         </DialogContent>
       </Dialog>
     </div>

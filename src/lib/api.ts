@@ -45,37 +45,50 @@ export interface Product {
 
   createdAt: string;
   updatedAt: string;
+  brochureUrl?: string;
+brochureUpdatedAt?: string;
 }
 
 export interface UsedVehicle {
   id: string;
+
   vehicleType: string;
   brand: string;
   model: string;
   year: number;
+
   kilometers: number;
   hours?: number;
+
   price: number;
   ownership: string;
   fuelType: string;
+
+  images: string[];
+
+  /** ✅ UI EXPECTS THIS */
   condition: {
-    engine: string;
-    transmission: string;
-    body: string;
+    engine: "Excellent" | "Good" | "Fair" | "Poor";
+    transmission: "Excellent" | "Good" | "Fair" | "Poor";
+    body: "Excellent" | "Good" | "Fair" | "Poor";
     tyres: string;
     notes?: string;
   };
+
+  /** ✅ UI EXPECTS THIS */
   certifications: {
     inspection150Point: boolean;
     financeAvailable: boolean;
     returnPolicy: boolean;
   };
-  images: string[];
+
   isActive: boolean;
-  tcoItems?: TCOItem[];
+
   createdAt: string;
   updatedAt: string;
 }
+
+
 
 export interface Lead {
   id: string;
@@ -105,35 +118,39 @@ export interface Lead {
 
 export interface FinanceApplication {
   id: string;
-  leadId: string;
+  applicationNumber: string;
+  email?: string; 
   customerName: string;
   mobile: string;
-  email: string;
+  district?: string;
+
   productId?: string;
   productName?: string;
+
   loanAmount: number;
-  tenure: number;
-  status: 'new' | 'under_review' | 'approved' | 'rejected';
+  tenure?: number | null;
+
+  status: 'pending' | 'under_review' | 'approved' | 'rejected' | 'disbursed';
+
   documents: Array<{
     type: string;
     url: string;
     uploadedAt: string;
   }>;
+
   createdAt: string;
   updatedAt: string;
 }
 
+
 export interface CibilCheck {
   id: string;
-  leadId?: string;
   customerName: string;
   mobile: string;
   panNumber: string;
   dateOfBirth?: string;
-  aadhaarUrl?: string;
-  panUrl?: string;
   score: number;
-  scoreBand: 'Excellent' | 'Good' | 'Fair' | 'Poor';
+  scoreBand: 'Excellent' | 'Good' | 'Average' | 'Poor' | 'Unknown';
   checkedAt: string;
 }
 
@@ -167,19 +184,16 @@ export interface AdminUser {
   createdAt: string;
   updatedAt: string;
 }
-
 export interface MediaItem {
   id: string;
-  titleEn: string;
-  titleHi: string;
-  mediaType: 'image' | 'video';
   url: string;
-  category: 'gallery' | 'events' | 'testimonials';
-  isFeatured: boolean;
-  isActive: boolean;
-  order: number;
-  createdAt: string;
-  updatedAt: string;
+  thumbnail_url?: string;
+  filename?: string;
+  original_filename?: string;
+  folder?: string;
+  size?: number;
+  mime_type?: string;
+  created_at: string;
 }
 
 export interface Offer {
@@ -467,113 +481,207 @@ return res.data;
 
 // Leads API
 export const leadsApi = {
+  // ✅ LIST LEADS
   getAll: async (filters?: {
     status?: string;
-    brand?: string;
+    search?: string;
     source?: string;
+    brand?: string;
     dateFrom?: string;
     dateTo?: string;
-    search?: string;
   }): Promise<Lead[]> => {
-    let leads = [...mockLeads];
-    if (filters?.status) {
-      leads = leads.filter(l => l.status === filters.status);
-    }
-    if (filters?.search) {
-      const search = filters.search.toLowerCase();
-      leads = leads.filter(l => 
-        l.customerName.toLowerCase().includes(search) ||
-        l.mobile.includes(search)
-      );
-    }
-    return leads;
+    const params = new URLSearchParams();
+
+    if (filters?.status) params.append("status", filters.status);
+    if (filters?.search) params.append("search", filters.search);
+    if (filters?.source) params.append("source", filters.source);
+    if (filters?.brand) params.append("brand_interest", filters.brand);
+    if (filters?.dateFrom) params.append("date_from", filters.dateFrom);
+    if (filters?.dateTo) params.append("date_to", filters.dateTo);
+
+    const res = await apiRequest<{ data: Lead[] }>(
+      `/leads?${params.toString()}`
+    );
+
+    return res.data;
   },
-  getById: async (id: string): Promise<Lead | undefined> => {
-    return mockLeads.find(l => l.id === id);
+
+  // ✅ GET SINGLE LEAD
+  getById: async (id: string): Promise<Lead> => {
+    const res = await apiRequest<{ data: Lead }>(`/leads/${id}`);
+    return res.data;
   },
-  updateStatus: async (id: string, status: Lead['status']): Promise<Lead> => {
-    const index = mockLeads.findIndex(l => l.id === id);
-    if (index === -1) throw new Error('Lead not found');
-    mockLeads[index] = { ...mockLeads[index], status, updatedAt: new Date().toISOString() };
-    return mockLeads[index];
+
+  // ✅ UPDATE STATUS
+  updateStatus: async (
+    id: string,
+    status: Lead["status"]
+  ): Promise<Lead> => {
+    const res = await apiRequest<{ data: Lead }>(
+      `/leads/${id}/status`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      }
+    );
+
+    return res.data;
   },
+
+  // ✅ ADD NOTE
   addNote: async (id: string, note: string): Promise<Lead> => {
-    const index = mockLeads.findIndex(l => l.id === id);
-    if (index === -1) throw new Error('Lead not found');
-    mockLeads[index].notes.push(note);
-    mockLeads[index].updatedAt = new Date().toISOString();
-    return mockLeads[index];
+    const res = await apiRequest<{ data: Lead }>(
+      `/leads/${id}/notes`,
+      {
+        method: "POST",
+        body: JSON.stringify({ note }),
+      }
+    );
+
+    return res.data;
   },
 };
+
 
 // Used Vehicles API
 export const usedVehiclesApi = {
-  getAll: async (): Promise<UsedVehicle[]> => mockUsedVehicles,
-  getById: async (id: string): Promise<UsedVehicle | undefined> => {
-    return mockUsedVehicles.find(v => v.id === id);
+  getAll: async (): Promise<any[]> => {
+    const res = await apiRequest<{ data: any[] }>("/used-vehicles");
+    return res.data;
   },
-  create: async (vehicle: Omit<UsedVehicle, 'id' | 'createdAt' | 'updatedAt'>): Promise<UsedVehicle> => {
-    const newVehicle: UsedVehicle = {
-      ...vehicle,
-      id: 'uv_' + Date.now(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    mockUsedVehicles.push(newVehicle);
-    return newVehicle;
+
+  getById: async (id: string): Promise<any> => {
+    const res = await apiRequest<{ data: any }>(`/used-vehicles/${id}`);
+    return res.data;
   },
-  update: async (id: string, vehicle: Partial<UsedVehicle>): Promise<UsedVehicle> => {
-    const index = mockUsedVehicles.findIndex(v => v.id === id);
-    if (index === -1) throw new Error('Vehicle not found');
-    mockUsedVehicles[index] = { ...mockUsedVehicles[index], ...vehicle, updatedAt: new Date().toISOString() };
-    return mockUsedVehicles[index];
+
+  create: async (formData: FormData): Promise<any> => {
+    const res = await apiRequest<{ data: any }>(`/used-vehicles`, {
+      method: "POST",
+      body: formData,
+    });
+    return res.data;
   },
+
+  update: async (id: string, formData: FormData): Promise<any> => {
+    const res = await apiRequest<{ data: any }>(`/used-vehicles/${id}`, {
+      method: "PUT",
+      body: formData,
+    });
+    return res.data;
+  },
+
   delete: async (id: string): Promise<void> => {
-    const index = mockUsedVehicles.findIndex(v => v.id === id);
-    if (index !== -1) mockUsedVehicles.splice(index, 1);
+    await apiRequest(`/used-vehicles/${id}`, { method: "DELETE" });
   },
 };
+
+
 
 // Finance API
 export const financeApi = {
-  getAll: async (): Promise<FinanceApplication[]> => mockFinanceApplications,
-  getById: async (id: string): Promise<FinanceApplication | undefined> => {
-    return mockFinanceApplications.find(f => f.id === id);
+  getAll: async (params?: { status?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.status) query.append("status", params.status);
+
+    const res = await apiRequest<{
+      data: FinanceApplication[];
+    }>(`/finance/applications?${query.toString()}`);
+
+    return res.data;
   },
-  updateStatus: async (id: string, status: FinanceApplication['status']): Promise<FinanceApplication> => {
-    const index = mockFinanceApplications.findIndex(f => f.id === id);
-    if (index === -1) throw new Error('Application not found');
-    mockFinanceApplications[index] = { ...mockFinanceApplications[index], status, updatedAt: new Date().toISOString() };
-    return mockFinanceApplications[index];
+
+  getById: async (id: string) => {
+    const res = await apiRequest<{ data: FinanceApplication }>(
+      `/finance/applications/${id}`
+    );
+    return res.data;
+  },
+
+  updateStatus: async (
+    id: string,
+    status: FinanceApplication['status']
+  ) => {
+    const res = await apiRequest<{ data: FinanceApplication }>(
+      `/finance/applications/${id}/status`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      }
+    );
+    return res.data;
   },
 };
 
+
 // CIBIL API
 export const cibilApi = {
+  // ✅ LIST CIBIL CHECKS (REAL BACKEND)
   getAll: async (filters?: {
     search?: string;
     scoreMin?: number;
     scoreMax?: number;
+    page?: number;
+    per_page?: number;
   }): Promise<CibilCheck[]> => {
-    let checks = [...mockCibilChecks];
-    if (filters?.search) {
-      const search = filters.search.toLowerCase();
-      checks = checks.filter(c => 
-        c.customerName.toLowerCase().includes(search) ||
-        c.mobile.includes(search)
-      );
-    }
-    if (filters?.scoreMin) {
-      checks = checks.filter(c => c.score >= filters.scoreMin!);
-    }
-    if (filters?.scoreMax) {
-      checks = checks.filter(c => c.score <= filters.scoreMax!);
-    }
-    return checks;
+    const params = new URLSearchParams();
+
+    if (filters?.search) params.append("search", filters.search);
+    if (filters?.scoreMin !== undefined)
+      params.append("min_score", String(filters.scoreMin));
+    if (filters?.scoreMax !== undefined)
+      params.append("max_score", String(filters.scoreMax));
+    if (filters?.page) params.append("page", String(filters.page));
+    if (filters?.per_page) params.append("per_page", String(filters.per_page));
+
+    const res = await apiRequest<{
+      data: CibilCheck[];
+    }>(`/cibil?${params.toString()}`);
+
+    return res.data;
   },
-  getById: async (id: string): Promise<CibilCheck | undefined> => {
-    return mockCibilChecks.find(c => c.id === id);
+
+  // ✅ GET SINGLE CIBIL CHECK
+  getById: async (id: string): Promise<CibilCheck> => {
+    const res = await apiRequest<{ data: CibilCheck }>(
+      `/cibil/${id}`
+    );
+    return res.data;
   },
+};
+
+export const createCibilOrder = async (payload: {
+  customer_name: string;
+  mobile: string;
+  pan: string;
+  dob: string;
+  linked_lead_id?: string | null;
+}) => {
+  return apiRequest<{
+    razorpay_key_id: string;
+    order: {
+      id: string;
+      amount: number;
+      currency: string;
+    };
+    payment_id: string;
+  }>("/cibil/create-order", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const verifyCibilPayment = async (payload: {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}) => {
+  return apiRequest<{
+    data: CibilCheck;
+  }>("/cibil/verify-payment", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 };
 
 // Comparison Analytics API
@@ -599,83 +707,94 @@ export const comparisonApi = {
 };
 
 // Dealers API
-const mockDealers: Dealer[] = [
-  {
-    id: 'dealer_1',
-    name: 'Patliputra Motors - Main Branch',
-    address: '123 Main Road, Near Railway Station',
-    city: 'Patna',
-    district: 'Patna',
-    state: 'Bihar',
-    pincode: '800001',
-    phone: '+91 9876543210',
-    email: 'main@patliputra-motors.com',
-    latitude: 25.6102,
-    longitude: 85.1415,
-    isActive: true,
-    createdAt: '2024-01-01T10:00:00Z',
-    updatedAt: '2024-01-01T10:00:00Z',
-  },
-  {
-    id: 'dealer_2',
-    name: 'Patliputra Motors - Muzaffarpur',
-    address: '45 Station Road, Opposite Bus Stand',
-    city: 'Muzaffarpur',
-    district: 'Muzaffarpur',
-    state: 'Bihar',
-    pincode: '842001',
-    phone: '+91 9876543211',
-    email: 'mzp@patliputra-motors.com',
-    latitude: 26.1209,
-    longitude: 85.3647,
-    isActive: true,
-    createdAt: '2024-02-15T10:00:00Z',
-    updatedAt: '2024-02-15T10:00:00Z',
-  },
-  {
-    id: 'dealer_3',
-    name: 'Patliputra Motors - Gaya',
-    address: '78 GT Road, Industrial Area',
-    city: 'Gaya',
-    district: 'Gaya',
-    state: 'Bihar',
-    pincode: '823001',
-    phone: '+91 9876543212',
-    email: 'gaya@patliputra-motors.com',
-    latitude: 24.7955,
-    longitude: 85.0128,
-    isActive: false,
-    createdAt: '2024-03-10T10:00:00Z',
-    updatedAt: '2024-03-10T10:00:00Z',
-  },
-];
+// const mockDealers: Dealer[] = [
+//   {
+//     id: 'dealer_1',
+//     name: 'Patliputra Motors - Main Branch',
+//     address: '123 Main Road, Near Railway Station',
+//     city: 'Patna',
+//     district: 'Patna',
+//     state: 'Bihar',
+//     pincode: '800001',
+//     phone: '+91 9876543210',
+//     email: 'main@patliputra-motors.com',
+//     latitude: 25.6102,
+//     longitude: 85.1415,
+//     isActive: true,
+//     createdAt: '2024-01-01T10:00:00Z',
+//     updatedAt: '2024-01-01T10:00:00Z',
+//   },
+//   {
+//     id: 'dealer_2',
+//     name: 'Patliputra Motors - Muzaffarpur',
+//     address: '45 Station Road, Opposite Bus Stand',
+//     city: 'Muzaffarpur',
+//     district: 'Muzaffarpur',
+//     state: 'Bihar',
+//     pincode: '842001',
+//     phone: '+91 9876543211',
+//     email: 'mzp@patliputra-motors.com',
+//     latitude: 26.1209,
+//     longitude: 85.3647,
+//     isActive: true,
+//     createdAt: '2024-02-15T10:00:00Z',
+//     updatedAt: '2024-02-15T10:00:00Z',
+//   },
+//   {
+//     id: 'dealer_3',
+//     name: 'Patliputra Motors - Gaya',
+//     address: '78 GT Road, Industrial Area',
+//     city: 'Gaya',
+//     district: 'Gaya',
+//     state: 'Bihar',
+//     pincode: '823001',
+//     phone: '+91 9876543212',
+//     email: 'gaya@patliputra-motors.com',
+//     latitude: 24.7955,
+//     longitude: 85.0128,
+//     isActive: false,
+//     createdAt: '2024-03-10T10:00:00Z',
+//     updatedAt: '2024-03-10T10:00:00Z',
+//   },
+// ];
 
 export const dealersApi = {
-  getAll: async (): Promise<Dealer[]> => mockDealers,
-  getById: async (id: string): Promise<Dealer | undefined> => {
-    return mockDealers.find(d => d.id === id);
+  getAll: async (): Promise<Dealer[]> => {
+    const res = await apiRequest<{ data: Dealer[] }>("/dealers");
+    return res.data;
   },
-  create: async (dealer: Omit<Dealer, 'id' | 'createdAt' | 'updatedAt'>): Promise<Dealer> => {
-    const newDealer: Dealer = {
-      ...dealer,
-      id: 'dealer_' + Date.now(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    mockDealers.push(newDealer);
-    return newDealer;
+
+  getById: async (id: string): Promise<Dealer> => {
+    const res = await apiRequest<{ data: Dealer }>(`/dealers/${id}`);
+    return res.data;
   },
-  update: async (id: string, dealer: Partial<Dealer>): Promise<Dealer> => {
-    const index = mockDealers.findIndex(d => d.id === id);
-    if (index === -1) throw new Error('Dealer not found');
-    mockDealers[index] = { ...mockDealers[index], ...dealer, updatedAt: new Date().toISOString() };
-    return mockDealers[index];
+
+  create: async (
+    dealer: Omit<Dealer, "id" | "createdAt" | "updatedAt">
+  ): Promise<Dealer> => {
+    const res = await apiRequest<{ data: Dealer }>("/dealers", {
+      method: "POST",
+      body: JSON.stringify(dealer),
+    });
+    return res.data;
   },
+
+  update: async (
+    id: string,
+    dealer: Partial<Dealer>
+  ): Promise<Dealer> => {
+    const res = await apiRequest<{ data: Dealer }>(`/dealers/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(dealer),
+    });
+    return res.data;
+  },
+
   delete: async (id: string): Promise<void> => {
-    const index = mockDealers.findIndex(d => d.id === id);
-    if (index !== -1) mockDealers.splice(index, 1);
+    await apiRequest(`/dealers/${id}`, { method: "DELETE" });
   },
 };
+
 
 // Users API
 const mockUsers: AdminUser[] = [
@@ -739,40 +858,46 @@ export const usersApi = {
 };
 
 // Media API
-const mockMedia: MediaItem[] = [
-  {
-    id: 'media_1',
-    titleEn: 'JCB Product Showcase',
-    titleHi: 'JCB उत्पाद प्रदर्शन',
-    mediaType: 'image',
-    url: '/placeholder.svg',
-    category: 'gallery',
-    isFeatured: true,
-    isActive: true,
-    order: 1,
-    createdAt: '2024-01-01T10:00:00Z',
-    updatedAt: '2024-01-01T10:00:00Z',
-  },
-];
+// const mockMedia: MediaItem[] = [
+//   {
+//     id: 'media_1',
+//     titleEn: 'JCB Product Showcase',
+//     titleHi: 'JCB उत्पाद प्रदर्शन',
+//     mediaType: 'image',
+//     url: '/placeholder.svg',
+//     category: 'gallery',
+//     isFeatured: true,
+//     isActive: true,
+//     order: 1,
+//     createdAt: '2024-01-01T10:00:00Z',
+//     updatedAt: '2024-01-01T10:00:00Z',
+//   },
+// ];
 
 export const mediaApi = {
-  getAll: async (): Promise<MediaItem[]> => mockMedia,
-  create: async (item: Omit<MediaItem, 'id' | 'order' | 'createdAt' | 'updatedAt'>): Promise<MediaItem> => {
-    const newItem: MediaItem = { ...item, id: 'media_' + Date.now(), order: mockMedia.length + 1, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-    mockMedia.push(newItem);
-    return newItem;
+  getAll: async (): Promise<MediaItem[]> => {
+    const res = await apiRequest<{ data: MediaItem[] }>("/media");
+    return res.data;
   },
-  update: async (id: string, item: Partial<MediaItem>): Promise<MediaItem> => {
-    const index = mockMedia.findIndex(m => m.id === id);
-    if (index === -1) throw new Error('Media not found');
-    mockMedia[index] = { ...mockMedia[index], ...item, updatedAt: new Date().toISOString() };
-    return mockMedia[index];
+
+  uploadSingle: async (file: File, folder?: string) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    if (folder) fd.append("folder", folder);
+
+    const res = await apiRequest<{ data: MediaItem }>("/media/upload", {
+      method: "POST",
+      body: fd,
+    });
+
+    return res.data;
   },
+
   delete: async (id: string): Promise<void> => {
-    const index = mockMedia.findIndex(m => m.id === id);
-    if (index !== -1) mockMedia.splice(index, 1);
+    await apiRequest(`/media/${id}`, { method: "DELETE" });
   },
 };
+
 
 // Offers API
 const mockOffers: Offer[] = [
@@ -950,88 +1075,133 @@ const mockLeads: Lead[] = [
   },
 ];
 
-const mockUsedVehicles: UsedVehicle[] = [
-  {
-    id: 'uv_1',
-    vehicleType: 'Backhoe Loader',
-    brand: 'JCB',
-    model: '3DX',
-    year: 2021,
-    kilometers: 0,
-    hours: 3500,
-    price: 1850000,
-    ownership: 'First Owner',
-    fuelType: 'Diesel',
-    condition: {
-      engine: 'Good',
-      transmission: 'Good',
-      body: 'Fair',
-      tyres: 'Good',
-      notes: 'Minor scratches on body',
-    },
-    certifications: {
-      inspection150Point: true,
-      financeAvailable: true,
-      returnPolicy: true,
-    },
-    images: ['/placeholder.svg'],
-    isActive: true,
-    createdAt: '2024-02-20T10:00:00Z',
-    updatedAt: '2024-02-20T10:00:00Z',
-  },
-];
+// const mockUsedVehicles: UsedVehicle[] = [
+//   {
+//     id: 'uv_1',
+//     vehicleType: 'Backhoe Loader',
+//     brand: 'JCB',
+//     model: '3DX',
+//     year: 2021,
+//     kilometers: 0,
+//     hours: 3500,
+//     price: 1850000,
+//     ownership: 'First Owner',
+//     fuelType: 'Diesel',
+//     condition: {
+//       engine: 'Good',
+//       transmission: 'Good',
+//       body: 'Fair',
+//       tyres: 'Good',
+//       notes: 'Minor scratches on body',
+//     },
+//     certifications: {
+//       inspection150Point: true,
+//       financeAvailable: true,
+//       returnPolicy: true,
+//     },
+//     images: ['/placeholder.svg'],
+//     isActive: true,
+//     createdAt: '2024-02-20T10:00:00Z',
+//     updatedAt: '2024-02-20T10:00:00Z',
+//   },
+// ];
 
-const mockFinanceApplications: FinanceApplication[] = [
-  {
-    id: 'fin_1',
-    leadId: 'lead_1',
-    customerName: 'Rajesh Kumar',
-    mobile: '9876543210',
-    email: 'rajesh@example.com',
-    productName: 'JCB 3DX Backhoe Loader',
-    loanAmount: 2000000,
-    tenure: 60,
-    status: 'under_review',
-    documents: [
-      { type: 'PAN Card', url: '/docs/pan.pdf', uploadedAt: '2024-03-15T10:00:00Z' },
-      { type: 'Aadhaar Card', url: '/docs/aadhaar.pdf', uploadedAt: '2024-03-15T10:00:00Z' },
-    ],
-    createdAt: '2024-03-15T10:00:00Z',
-    updatedAt: '2024-03-15T10:00:00Z',
-  },
-];
+// const mockFinanceApplications: FinanceApplication[] = [
+//   {
+//     id: 'fin_1',
+//     leadId: 'lead_1',
+//     customerName: 'Rajesh Kumar',
+//     mobile: '9876543210',
+//     email: 'rajesh@example.com',
+//     productName: 'JCB 3DX Backhoe Loader',
+//     loanAmount: 2000000,
+//     tenure: 60,
+//     status: 'under_review',
+//     documents: [
+//       { type: 'PAN Card', url: '/docs/pan.pdf', uploadedAt: '2024-03-15T10:00:00Z' },
+//       { type: 'Aadhaar Card', url: '/docs/aadhaar.pdf', uploadedAt: '2024-03-15T10:00:00Z' },
+//     ],
+//     createdAt: '2024-03-15T10:00:00Z',
+//     updatedAt: '2024-03-15T10:00:00Z',
+//   },
+// ];
 
-const mockCibilChecks: CibilCheck[] = [
-  {
-    id: 'cibil_1',
-    leadId: 'lead_1',
-    customerName: 'Rajesh Kumar',
-    mobile: '9876543210',
-    panNumber: 'ABCDE1234F',
-    dateOfBirth: '1985-06-15',
-    score: 756,
-    scoreBand: 'Good',
-    checkedAt: '2024-03-15T09:45:00Z',
+// const mockCibilChecks: CibilCheck[] = [
+//   {
+//     id: 'cibil_1',
+//     leadId: 'lead_1',
+//     customerName: 'Rajesh Kumar',
+//     mobile: '9876543210',
+//     panNumber: 'ABCDE1234F',
+//     dateOfBirth: '1985-06-15',
+//     score: 756,
+//     scoreBand: 'Good',
+//     checkedAt: '2024-03-15T09:45:00Z',
+//   },
+//   {
+//     id: 'cibil_2',
+//     leadId: 'lead_2',
+//     customerName: 'Suresh Patel',
+//     mobile: '9898989898',
+//     panNumber: 'XYZAB5678C',
+//     dateOfBirth: '1990-03-22',
+//     score: 812,
+//     scoreBand: 'Excellent',
+//     checkedAt: '2024-03-14T11:30:00Z',
+//   },
+//   {
+//     id: 'cibil_3',
+//     customerName: 'Vikram Singh',
+//     mobile: '9765432100',
+//     panNumber: 'PQRST9012D',
+//     dateOfBirth: '1978-11-08',
+//     score: 620,
+//     scoreBand: 'Fair',
+//     checkedAt: '2024-03-13T15:00:00Z',
+//   },
+// ];
+
+// ================= BANNERS API =================
+export interface Banner {
+  id: string;
+  page: "home" | "jcb" | "ashok_leyland" | "switch_ev" | "used_vehicles" | "finance";
+  title: string;
+  subtitle?: string;
+  background_image?: string;
+  background_video?: string;
+  overlay_opacity: number;
+  is_active: boolean;
+  display_order: number;
+  created_at: string;
+}
+
+export const bannersApi = {
+  getAll: async (): Promise<Banner[]> => {
+    const res = await apiRequest<{ data: any[] }>("/banners");
+
+    return res.data.map(b => ({
+      id: b._id,
+      ...b,
+    }));
   },
-  {
-    id: 'cibil_2',
-    leadId: 'lead_2',
-    customerName: 'Suresh Patel',
-    mobile: '9898989898',
-    panNumber: 'XYZAB5678C',
-    dateOfBirth: '1990-03-22',
-    score: 812,
-    scoreBand: 'Excellent',
-    checkedAt: '2024-03-14T11:30:00Z',
+
+  create: async (payload: Partial<Banner>) => {
+    const res = await apiRequest<{ data: Banner }>("/banners", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    return res.data;
   },
-  {
-    id: 'cibil_3',
-    customerName: 'Vikram Singh',
-    mobile: '9765432100',
-    panNumber: 'PQRST9012D',
-    dateOfBirth: '1978-11-08',
-    score: 620,
-    scoreBand: 'Fair',
-    checkedAt: '2024-03-13T15:00:00Z',
+
+  update: async (id: string, payload: Partial<Banner>) => {
+    const res = await apiRequest<{ data: Banner }>(`/banners/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+    return res.data;
   },
-];
+
+  delete: async (id: string) => {
+    await apiRequest(`/banners/${id}`, { method: "DELETE" });
+  },
+};

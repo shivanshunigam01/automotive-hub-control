@@ -26,6 +26,7 @@ import { ContentPagesPage } from "@/pages/admin/ContentPagesPage";
 import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
 
 import NotFound from "./pages/NotFound";
+import { UsedVehicleFormPage } from "./pages/admin/UsedVehicleFormPage";
 
 const queryClient = new QueryClient();
 
@@ -51,9 +52,9 @@ const App = () => (
               <Route path="products/:id" element={<ProductFormPage />} />
               <Route path="products/:id/edit" element={<ProductFormPage />} />
               <Route path="certified-refurbished" element={<UsedVehiclesPage />} />
-              <Route path="certified-refurbished/new" element={<ProductFormPage />} />
-              <Route path="certified-refurbished/:id" element={<ProductFormPage />} />
-              <Route path="certified-refurbished/:id/edit" element={<ProductFormPage />} />
+              <Route path="certified-refurbished/new" element={<UsedVehicleFormPage  />} />
+              <Route path="certified-refurbished/:id" element={<UsedVehicleFormPage  />} />
+              <Route path="certified-refurbished/:id/edit" element={<UsedVehicleFormPage  />} />
               <Route path="leads" element={<LeadsPage />} />
               <Route path="finance" element={<FinancePage />} />
               <Route path="cibil" element={<CibilPage />} />

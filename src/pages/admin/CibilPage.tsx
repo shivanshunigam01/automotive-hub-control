@@ -25,8 +25,10 @@ import { useToast } from '@/hooks/use-toast';
 const scoreBandConfig: Record<string, { color: string; bg: string }> = {
   Excellent: { color: 'text-success', bg: 'bg-success/10' },
   Good: { color: 'text-info', bg: 'bg-info/10' },
+  Average: { color: 'text-warning', bg: 'bg-warning/10' },
   Fair: { color: 'text-warning', bg: 'bg-warning/10' },
   Poor: { color: 'text-destructive', bg: 'bg-destructive/10' },
+  Unknown: { color: 'text-muted-foreground', bg: 'bg-muted' },
 };
 
 export function CibilPage() {
@@ -222,7 +224,7 @@ export function CibilPage() {
                         <TableCell>{check.mobile}</TableCell>
                         <TableCell>
                           <code className="text-sm bg-muted px-2 py-1 rounded">
-                            {check.panNumber.slice(0, 2)}****{check.panNumber.slice(-2)}
+                       {check.panNumber}
                           </code>
                         </TableCell>
                         <TableCell>

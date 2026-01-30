@@ -191,6 +191,8 @@ function handleBrochureUpload(e: React.ChangeEvent<HTMLInputElement>) {
     }
   }, [id]);
 
+  const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
   async function fetchProduct() {
     setIsLoading(true);
     try {
@@ -211,6 +213,10 @@ function handleBrochureUpload(e: React.ChangeEvent<HTMLInputElement>) {
           seoTitle: product.seoTitle,
           seoDescription: product.seoDescription,
           tcoItems: product.tcoItems || [],
+          brochureUrl: product.brochureUrl
+    ? `${API_BASE_URL}${product.brochureUrl.replace(/\\/g, '/')}`
+    : '',
+brochureUpdatedAt: product.updatedAt,
         });
       }
     } catch (error) {
@@ -521,7 +527,7 @@ placeholder="0"
                           </div>
                           <div>
                             <p className="text-sm font-medium truncate max-w-[250px]">
-                              {formData.brochureUrl.split('/').pop() || 'brochure.pdf'}
+                              {formData.brochureUrl.split(/[\\/]/).pop() || 'brochure.pdf'}
                             </p>
                             <p className="text-xs text-muted-foreground">PDF Document</p>
                           </div>
