@@ -56,10 +56,12 @@ function SortableBannerItem({
   banner,
   onToggle,
   onDelete,
+  onPreview,
 }: {
   banner: Banner;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
+  onPreview: (image: string) => void;
 }) {
   const {
     attributes,
@@ -80,32 +82,29 @@ function SortableBannerItem({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-4 p-4 rounded-lg border bg-card hover:shadow-sm transition-shadow"
+      className="flex items-center gap-4 p-4 rounded-lg border bg-card"
     >
-      {/* Drag Handle */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="cursor-grab active:cursor-grabbing touch-none"
-      >
+      {/* Drag */}
+      <div {...attributes} {...listeners} className="cursor-grab">
         <GripVertical className="h-5 w-5 text-muted-foreground" />
       </div>
 
-      {/* Banner Preview */}
-      <div className="h-16 w-28 rounded-md overflow-hidden bg-muted flex-shrink-0">
+      {/* Thumbnail */}
+      <div className="h-16 w-28 rounded-md overflow-hidden bg-muted">
         <img
           src={banner.imageUrl}
           alt={banner.title}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover cursor-pointer"
+          onClick={() => onPreview(banner.imageUrl)}
         />
       </div>
 
-      {/* Banner Info */}
-      <div className="flex-1 min-w-0">
+      {/* Info */}
+      <div className="flex-1">
         <h4 className="font-medium truncate">{banner.title}</h4>
         <div className="flex items-center gap-2 mt-1">
-          <Badge variant={banner.isActive ? 'default' : 'secondary'}>
-            {banner.isActive ? 'Active' : 'Inactive'}
+          <Badge variant={banner.isActive ? "default" : "secondary"}>
+            {banner.isActive ? "Active" : "Inactive"}
           </Badge>
           <span className="text-sm text-muted-foreground">
             Position: {banner.order}
@@ -114,23 +113,28 @@ function SortableBannerItem({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          {banner.isActive ? (
-            <Eye className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <EyeOff className="h-4 w-4 text-muted-foreground" />
-          )}
-          <Switch
-            checked={banner.isActive}
-            onCheckedChange={() => onToggle(banner.id)}
-          />
-        </div>
+      <div className="flex items-center gap-3">
+        {/* 👁 Preview */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onPreview(banner.imageUrl)}
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
+
+        {/* Toggle */}
+        <Switch
+          checked={banner.isActive}
+          onCheckedChange={() => onToggle(banner.id)}
+        />
+
+        {/* Delete */}
         <Button
           variant="ghost"
           size="icon"
           onClick={() => onDelete(banner.id)}
-          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+          className="text-destructive"
         >
           <Trash2 className="h-4 w-4" />
         </Button>
@@ -139,12 +143,14 @@ function SortableBannerItem({
   );
 }
 
+
 export function BannersPage() {
  const [banners, setBanners] = useState<Banner[]>([]);
 const [loading, setLoading] = useState(true);
 
 const [open, setOpen] = useState(false);
 const [creating, setCreating] = useState(false);
+const [previewImage, setPreviewImage] = useState<string | null>(null);
 
 const [form, setForm] = useState({
   title: '',
@@ -294,12 +300,13 @@ async function loadBanners() {
             >
               <div className="space-y-4">
                 {banners.map((banner) => (
-                  <SortableBannerItem
-                    key={banner.id}
-                    banner={banner}
-                    onToggle={toggleBanner}
-                    onDelete={deleteBanner}
-                  />
+              <SortableBannerItem
+  key={banner.id}
+  banner={banner}
+  onToggle={toggleBanner}
+  onDelete={deleteBanner}
+  onPreview={(img) => setPreviewImage(img)}
+/>
                 ))}
 
                 {banners.length === 0 && (
@@ -357,7 +364,6 @@ async function loadBanners() {
           setForm({ ...form, image: uploaded.url });
         }}
       />
-
       {form.image && (
         <img
           src={form.image}
@@ -404,6 +410,22 @@ async function loadBanners() {
     </DialogFooter>
   </DialogContent>
 </Dialog>
+
+ {/* 👁 IMAGE PREVIEW MODAL — ADD THIS HERE */}
+    <Dialog
+      open={!!previewImage}
+      onOpenChange={() => setPreviewImage(null)}
+    >
+      <DialogContent className="max-w-4xl p-0 overflow-hidden">
+        {previewImage && (
+          <img
+            src={previewImage}
+            alt="Banner Preview"
+            className="w-full h-auto object-contain"
+          />
+        )}
+      </DialogContent>
+    </Dialog>
 
     </div>
   );

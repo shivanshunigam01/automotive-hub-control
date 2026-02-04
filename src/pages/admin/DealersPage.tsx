@@ -34,7 +34,7 @@ import { dealersApi, type Dealer } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/usePermissions';
 
-const emptyDealer: Omit<Dealer, 'id' | 'createdAt' | 'updatedAt'> = {
+const emptyDealer: Omit<Dealer, '_id' | 'createdAt' | 'updatedAt'> = {
   name: '',
   address: '',
   city: '',
@@ -121,7 +121,7 @@ export function DealersPage() {
 
     try {
       if (editingDealer) {
-        await dealersApi.update(editingDealer.id, formData);
+        await dealersApi.update(editingDealer._id, formData);
         toast({
           title: 'Dealer updated',
           description: 'Dealer information has been updated.',
@@ -167,7 +167,7 @@ export function DealersPage() {
 
   async function toggleActive(dealer: Dealer) {
     try {
-      await dealersApi.update(dealer.id, { isActive: !dealer.isActive });
+      await dealersApi.update(dealer._id, { isActive: !dealer.isActive });
       toast({
         title: 'Status updated',
         description: `Dealer is now ${dealer.isActive ? 'inactive' : 'active'}.`,
@@ -260,7 +260,7 @@ export function DealersPage() {
                     </TableRow>
                   ) : (
                     filteredDealers.map((dealer) => (
-                      <TableRow key={dealer.id} className="table-row-hover">
+                      <TableRow key={dealer._id} className="table-row-hover">
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center">
@@ -324,7 +324,7 @@ export function DealersPage() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => handleDelete(dealer.id)}
+                                onClick={() => handleDelete(dealer._id)}
                                 className="text-destructive hover:text-destructive"
                               >
                                 <Trash2 className="h-4 w-4" />

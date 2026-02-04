@@ -80,17 +80,16 @@ export function UsersPage() {
   const { toast } = useToast();
 
   // Collect unique roles from existing users on load
-  useEffect(() => {
-    const userRoles = users.map(u => u.role);
-    const uniqueRoles = [...new Set(userRoles)];
-    const customRoles = uniqueRoles
-      .filter(role => !DEFAULT_ROLES.some(dr => dr.value === role))
-      .map(role => ({ value: role, label: getRoleDisplayName(role) }));
+  // useEffect(() => {
+  //   const uniqueRoles = [...new Set(userRoles)];
+  //   const customRoles = uniqueRoles
+  //     .filter(role => !DEFAULT_ROLES.some(dr => dr.value === role))
+  //     .map(role => ({ value: role, label: getRoleDisplayName(role) }));
     
-    if (customRoles.length > 0) {
-      setAvailableRoles([...DEFAULT_ROLES, ...customRoles]);
-    }
-  }, [users]);
+  //   if (customRoles.length > 0) {
+  //     setAvailableRoles([...DEFAULT_ROLES, ...customRoles]);
+  //   }
+  // }, [users]);
 
   useEffect(() => {
     fetchUsers();
@@ -126,20 +125,25 @@ export function UsersPage() {
     setIsDialogOpen(true);
   }
 
-  function openEditDialog(user: AdminUser) {
-    setEditingUser(user);
-    const isExistingCustomRole = !DEFAULT_ROLES.some(r => r.value === user.role);
-    setFormData({
-      name: user.name,
-      email: user.email,
-      mobile: user.mobile,
-      role: isExistingCustomRole ? 'other' : user.role,
-      isActive: user.isActive,
-    });
-    setCustomRole(isExistingCustomRole ? user.role : '');
-    setIsCustomRole(isExistingCustomRole);
-    setIsDialogOpen(true);
-  }
+function openEditDialog(user: AdminUser) {
+  setEditingUser(user);
+
+  const isCustom = user.role === 'custom';
+
+  setFormData({
+    name: user.name,
+    email: user.email,
+    mobile: user.mobile,
+    role: isCustom ? 'custom' : user.role,
+    isActive: user.isActive,
+  });
+
+  setIsCustomRole(isCustom);
+  setCustomRole(isCustom ? user.roleLabel || '' : '');
+
+  setIsDialogOpen(true);
+}
+
 
   function openPermissionsDialog(user: AdminUser) {
     setSelectedUserForPermissions(user);
@@ -215,39 +219,56 @@ export function UsersPage() {
     }
   }
 
-  async function handleSubmit() {
-    // Determine the actual role to use
-    const actualRole = isCustomRole ? customRole.toLowerCase().replace(/\s+/g, '_') : formData.role;
-    
-    if (!actualRole) {
-      toast({
-        title: 'Error',
-        description: 'Please select or enter a role',
-        variant: 'destructive',
-      });
-      return;
+ async function handleSubmit() {
+  if (!formData.name || !formData.email || !formData.mobile) {
+    toast({
+      title: 'Validation error',
+      description: 'Name, email and mobile are required',
+      variant: 'destructive',
+    });
+    return;
+  }
+
+  if (isCustomRole && !customRole.trim()) {
+    toast({
+      title: 'Validation error',
+      description: 'Please enter a custom role name',
+      variant: 'destructive',
+    });
+    return;
+  }
+
+  const submitData = {
+    name: formData.name,
+    email: formData.email,
+    mobile: formData.mobile,
+    isActive: formData.isActive,
+
+    // 🔥 CORE FIX
+    role: isCustomRole ? 'custom' : formData.role,
+    roleLabel: isCustomRole ? customRole.trim() : undefined,
+  };
+
+  try {
+    if (editingUser) {
+      await usersApi.update(editingUser.id, submitData);
+      toast({ title: 'User updated successfully' });
+    } else {
+      await usersApi.create(submitData);
+      toast({ title: 'User created successfully' });
     }
 
-    const submitData = { ...formData, role: actualRole };
-    
-    try {
-      if (editingUser) {
-        await usersApi.update(editingUser.id, submitData);
-        toast({ title: 'User updated successfully' });
-      } else {
-        await usersApi.create(submitData);
-        toast({ title: 'User created successfully' });
-      }
-      setIsDialogOpen(false);
-      fetchUsers();
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to save user',
-        variant: 'destructive',
-      });
-    }
+    setIsDialogOpen(false);
+    fetchUsers();
+  } catch (error) {
+    toast({
+      title: 'Error',
+      description: 'Failed to save user',
+      variant: 'destructive',
+    });
   }
+}
+
 
   async function handleDelete(id: string) {
     try {
@@ -423,7 +444,9 @@ export function UsersPage() {
                                 : 'bg-muted'
                             }
                           >
-                            {getRoleDisplayName(user.role)}
+                           {user.role === 'custom'
+  ? user.roleLabel || 'Custom'
+  : getRoleDisplayName(user.role)}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -520,15 +543,15 @@ export function UsersPage() {
               <Select
                 value={isCustomRole ? 'other' : formData.role}
                 onValueChange={(value) => {
-                  if (value === 'other') {
-                    setIsCustomRole(true);
-                    setFormData({ ...formData, role: 'other' });
-                  } else {
-                    setIsCustomRole(false);
-                    setCustomRole('');
-                    setFormData({ ...formData, role: value });
-                  }
-                }}
+  if (value === 'other') {
+    setIsCustomRole(true);
+  } else {
+    setIsCustomRole(false);
+    setCustomRole('');
+    setFormData({ ...formData, role: value as UserRole });
+  }
+}}
+
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select role" />

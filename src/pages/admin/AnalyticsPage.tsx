@@ -20,7 +20,14 @@ import {
 const COLORS = ['hsl(var(--accent))', 'hsl(var(--info))', 'hsl(var(--success))', 'hsl(var(--warning))'];
 
 export function AnalyticsPage() {
-  const [analytics, setAnalytics] = useState<ComparisonAnalytics | null>(null);
+  const EMPTY_ANALYTICS: ComparisonAnalytics = {
+  mostComparedProducts: [],
+  productPairings: [],
+  brandComparisons: [],
+};
+
+const [analytics, setAnalytics] = useState<ComparisonAnalytics>(EMPTY_ANALYTICS);
+
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -28,20 +35,29 @@ export function AnalyticsPage() {
     fetchAnalytics();
   }, []);
 
-  async function fetchAnalytics() {
-    try {
-      const data = await comparisonApi.getAnalytics();
-      setAnalytics(data);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch analytics',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+ async function fetchAnalytics() {
+  try {
+    const data = await comparisonApi.getAnalytics();
+
+    setAnalytics({
+      mostComparedProducts: data?.mostComparedProducts ?? [],
+      productPairings: data?.productPairings ?? [],
+      brandComparisons: data?.brandComparisons ?? [],
+    });
+  } catch (error) {
+    toast({
+      title: 'Error',
+      description: 'Failed to fetch analytics',
+      variant: 'destructive',
+    });
+
+    // fallback
+    setAnalytics(EMPTY_ANALYTICS);
+  } finally {
+    setIsLoading(false);
   }
+}
+
 
   if (isLoading) {
     return (
@@ -176,7 +192,7 @@ export function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {analytics?.productPairings.map((pair, index) => (
+              {analytics.productPairings.map((pair, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between p-4 rounded-lg bg-muted/50"

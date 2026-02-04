@@ -64,7 +64,7 @@ export function OffersSchemesPage() {
     descriptionHi: '',
     startDate: '',
     endDate: '',
-    applicableBrand: '',
+  applicableBrand: 'ALL',
     applicableCategory: '',
     isActive: true,
     priority: 1,
@@ -100,7 +100,7 @@ export function OffersSchemesPage() {
       descriptionHi: '',
       startDate: '',
       endDate: '',
-      applicableBrand: '',
+    applicableBrand: 'ALL',
       applicableCategory: '',
       isActive: true,
       priority: 1,
@@ -117,7 +117,7 @@ export function OffersSchemesPage() {
       descriptionHi: offer.descriptionHi,
       startDate: offer.startDate.split('T')[0],
       endDate: offer.endDate.split('T')[0],
-      applicableBrand: offer.applicableBrand || '',
+    applicableBrand: offer.applicableBrand || 'ALL',
       applicableCategory: offer.applicableCategory || '',
       isActive: offer.isActive,
       priority: offer.priority,
@@ -133,13 +133,13 @@ export function OffersSchemesPage() {
         endDate: new Date(formData.endDate).toISOString(),
       };
 
-      if (editingOffer) {
-        await offersApi.update(editingOffer.id, payload);
-        toast({ title: 'Offer updated successfully' });
-      } else {
-        await offersApi.create(payload);
-        toast({ title: 'Offer created successfully' });
-      }
+    if (editingOffer) {
+  await offersApi.update(editingOffer._id, payload);
+  toast({ title: 'Offer updated successfully' });
+} else {
+  await offersApi.create(payload);
+  toast({ title: 'Offer created successfully' });
+}
       setIsDialogOpen(false);
       fetchOffers();
     } catch (error) {
@@ -151,35 +151,39 @@ export function OffersSchemesPage() {
     }
   }
 
-  async function handleDelete(id: string) {
-    try {
-      await offersApi.delete(id);
-      toast({ title: 'Offer deleted successfully' });
-      fetchOffers();
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete offer',
-        variant: 'destructive',
-      });
-    }
-  }
+async function handleDelete(id?: string) {
+  if (!id) return;
 
-  async function toggleStatus(offer: Offer) {
-    try {
-      await offersApi.update(offer.id, { isActive: !offer.isActive });
-      toast({
-        title: offer.isActive ? 'Offer deactivated' : 'Offer activated',
-      });
-      fetchOffers();
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update status',
-        variant: 'destructive',
-      });
-    }
+  try {
+    await offersApi.delete(id);
+    toast({ title: 'Offer deleted successfully' });
+    fetchOffers();
+  } catch (error) {
+    toast({
+      title: 'Error',
+      description: 'Failed to delete offer',
+      variant: 'destructive',
+    });
   }
+}
+
+
+ async function toggleStatus(offer: Offer) {
+  try {
+    await offersApi.update(offer._id, { isActive: !offer.isActive });
+    toast({
+      title: offer.isActive ? 'Offer deactivated' : 'Offer activated',
+    });
+    fetchOffers();
+  } catch (error) {
+    toast({
+      title: 'Error',
+      description: 'Failed to update status',
+      variant: 'destructive',
+    });
+  }
+}
+
 
   const filteredOffers = offers.filter(
     (o) =>
@@ -307,7 +311,7 @@ export function OffersSchemesPage() {
                     </TableRow>
                   ) : (
                     filteredOffers.map((offer) => (
-                      <TableRow key={offer.id} className="table-row-hover">
+                      <TableRow key={offer._id} className="table-row-hover">
                         <TableCell>
                           <div>
                             <p className="font-medium">{offer.titleEn}</p>
@@ -364,7 +368,7 @@ export function OffersSchemesPage() {
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
-                                onClick={() => handleDelete(offer.id)}
+                                onClick={() => handleDelete(offer._id)}
                                 className="text-destructive"
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
@@ -456,20 +460,22 @@ export function OffersSchemesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="brand">Applicable Brand (Optional)</Label>
-                <Select
-                  value={formData.applicableBrand}
-                  onValueChange={(value) => setFormData({ ...formData, applicableBrand: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All brands" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Brands</SelectItem>
-                    <SelectItem value="JCB">JCB</SelectItem>
-                    <SelectItem value="Ashok Leyland">Ashok Leyland</SelectItem>
-                    <SelectItem value="Switch EV">Switch EV</SelectItem>
-                  </SelectContent>
-                </Select>
+              <Select
+  value={formData.applicableBrand}
+  onValueChange={(value) =>
+    setFormData({ ...formData, applicableBrand: value })
+  }
+>
+  <SelectTrigger>
+    <SelectValue placeholder="All brands" />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectItem value="ALL">All Brands</SelectItem>
+    <SelectItem value="JCB">JCB</SelectItem>
+    <SelectItem value="Ashok Leyland">Ashok Leyland</SelectItem>
+    <SelectItem value="Switch EV">Switch EV</SelectItem>
+  </SelectContent>
+</Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="priority">Priority</Label>

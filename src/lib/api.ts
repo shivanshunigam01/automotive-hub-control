@@ -155,7 +155,7 @@ export interface CibilCheck {
 }
 
 export interface Dealer {
-  id: string;
+  _id: string;
   name: string;
   address: string;
   city: string;
@@ -178,6 +178,7 @@ export interface AdminUser {
   email: string;
   mobile: string;
   role: UserRole;
+  roleLabel?: string;
   isActive: boolean;
   lastLogin?: string;
   permissions?: ModulePermissions;
@@ -197,7 +198,7 @@ export interface MediaItem {
 }
 
 export interface Offer {
-  id: string;
+  _id: string;
   titleEn: string;
   titleHi: string;
   descriptionEn: string;
@@ -333,74 +334,43 @@ export const authApi = {
 };
 
 // Dashboard API
+// ================= DASHBOARD API (REAL BACKEND) =================
 export const dashboardApi = {
+  // 🔹 Top stats cards
   getStats: async (): Promise<DashboardStats> => {
-    // Mock data
-    return {
-      totalLeads: 1247,
-      newLeadsToday: 23,
-      financeApplications: 89,
-      cibilChecks: 156,
-      activeProducts: 45,
-      activeUsedVehicles: 28,
-      totalVisitors: 15840,
-      todayVisitors: 342,
-      uniqueVisitors: 8920,
-    };
+    const res = await apiRequest<{ data: DashboardStats }>("/dashboard/stats");
+    return res.data;
   },
+
+  // 🔹 Recent leads table
   getRecentLeads: async (): Promise<Lead[]> => {
-    return mockLeads.slice(0, 10);
+    const res = await apiRequest<{ data: Lead[] }>("/dashboard/recent-leads");
+    return res.data;
   },
-  getLeadsOverTime: async () => {
-    return [
-      { date: 'Jan', leads: 65 },
-      { date: 'Feb', leads: 78 },
-      { date: 'Mar', leads: 90 },
-      { date: 'Apr', leads: 81 },
-      { date: 'May', leads: 95 },
-      { date: 'Jun', leads: 110 },
-      { date: 'Jul', leads: 125 },
-    ];
+
+  // 🔹 Leads over time (area chart)
+  getLeadsOverTime: async (): Promise<Array<{ date: string; leads: number }>> => {
+    const res = await apiRequest<{ data: any[] }>("/dashboard/leads-over-time");
+    return res.data;
   },
-  getFinanceStatus: async () => {
-    return [
-      { status: 'Approved', count: 45, fill: 'hsl(var(--success))' },
-      { status: 'Under Review', count: 28, fill: 'hsl(var(--warning))' },
-      { status: 'Rejected', count: 12, fill: 'hsl(var(--destructive))' },
-      { status: 'New', count: 15, fill: 'hsl(var(--info))' },
-    ];
+
+  // 🔹 Finance status (pie chart)
+  getFinanceStatus: async (): Promise<
+    Array<{ status: string; count: number; fill: string }>
+  > => {
+    const res = await apiRequest<{ data: any[] }>("/dashboard/finance-status");
+    return res.data;
   },
-  getTrafficOverTime: async (): Promise<TrafficData[]> => {
-    return [
-      { date: 'Jan', visitors: 1200, uniqueVisitors: 890, pageViews: 3400 },
-      { date: 'Feb', visitors: 1450, uniqueVisitors: 1020, pageViews: 4100 },
-      { date: 'Mar', visitors: 1680, uniqueVisitors: 1180, pageViews: 4800 },
-      { date: 'Apr', visitors: 1890, uniqueVisitors: 1340, pageViews: 5200 },
-      { date: 'May', visitors: 2100, uniqueVisitors: 1520, pageViews: 5800 },
-      { date: 'Jun', visitors: 2350, uniqueVisitors: 1680, pageViews: 6400 },
-      { date: 'Jul', visitors: 2580, uniqueVisitors: 1850, pageViews: 7100 },
-    ];
-  },
+
+  // 🔹 Website traffic
   getWebsiteTraffic: async (): Promise<{
     totalVisitors: number;
     todayVisitors: number;
     uniqueVisitors: number;
     trafficTrend: Array<{ date: string; visitors: number }>;
   }> => {
-    return {
-      totalVisitors: 15840,
-      todayVisitors: 342,
-      uniqueVisitors: 8920,
-      trafficTrend: [
-        { date: 'Mon', visitors: 312 },
-        { date: 'Tue', visitors: 285 },
-        { date: 'Wed', visitors: 356 },
-        { date: 'Thu', visitors: 298 },
-        { date: 'Fri', visitors: 378 },
-        { date: 'Sat', visitors: 445 },
-        { date: 'Sun', visitors: 342 },
-      ],
-    };
+    const res = await apiRequest<{ data: any }>("/dashboard/traffic");
+    return res.data;
   },
 };
 
@@ -687,24 +657,13 @@ export const verifyCibilPayment = async (payload: {
 // Comparison Analytics API
 export const comparisonApi = {
   getAnalytics: async (): Promise<ComparisonAnalytics> => {
-    return {
-      mostComparedProducts: [
-        { productId: '1', productName: 'JCB 3DX Backhoe Loader', comparisonCount: 245 },
-        { productId: '2', productName: 'Ashok Leyland Dost', comparisonCount: 189 },
-        { productId: '3', productName: 'Switch EiV 12', comparisonCount: 156 },
-      ],
-      productPairings: [
-        { product1: 'JCB 3DX', product2: 'JCB 4DX', count: 89 },
-        { product1: 'Dost', product2: 'Bada Dost', count: 67 },
-      ],
-      brandComparisons: [
-        { brand: 'JCB', count: 456 },
-        { brand: 'Ashok Leyland', count: 312 },
-        { brand: 'Switch EV', count: 178 },
-      ],
-    };
+    const res = await apiRequest<ComparisonAnalytics>(
+      "/analytics/comparisons"
+    );
+    return res;
   },
 };
+
 
 // Dealers API
 // const mockDealers: Dealer[] = [
@@ -770,7 +729,7 @@ export const dealersApi = {
   },
 
   create: async (
-    dealer: Omit<Dealer, "id" | "createdAt" | "updatedAt">
+    dealer: Omit<Dealer, "_id" | "createdAt" | "updatedAt">
   ): Promise<Dealer> => {
     const res = await apiRequest<{ data: Dealer }>("/dealers", {
       method: "POST",
@@ -779,16 +738,19 @@ export const dealersApi = {
     return res.data;
   },
 
-  update: async (
-    id: string,
-    dealer: Partial<Dealer>
-  ): Promise<Dealer> => {
-    const res = await apiRequest<{ data: Dealer }>(`/dealers/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(dealer),
-    });
-    return res.data;
-  },
+update: async (id: string, dealer: Partial<Dealer>): Promise<Dealer> => {
+  if (!id) {
+    throw new Error("Dealer ID missing");
+  }
+
+  const res = await apiRequest<{ data: Dealer }>(`/dealers/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(dealer),
+  });
+
+  return res.data;
+},
+
 
   delete: async (id: string): Promise<void> => {
     await apiRequest(`/dealers/${id}`, { method: "DELETE" });
@@ -833,29 +795,54 @@ const mockUsers: AdminUser[] = [
 ];
 
 export const usersApi = {
-  getAll: async (): Promise<AdminUser[]> => mockUsers,
-  getById: async (id: string): Promise<AdminUser | undefined> => mockUsers.find(u => u.id === id),
-  create: async (user: Omit<AdminUser, 'id' | 'createdAt' | 'updatedAt'>): Promise<AdminUser> => {
-    const newUser: AdminUser = {
-      ...user,
-      id: 'user_' + Date.now(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+  // ✅ LIST USERS
+  getAll: async (): Promise<AdminUser[]> => {
+    const res = await apiRequest<{ data: any[] }>("/users");
+
+    return res.data.map((u) => ({
+      ...u,
+      id: u._id, // normalize once
+    }));
+  },
+
+  // ✅ CREATE USER
+  create: async (
+    user: Omit<AdminUser, "id" | "createdAt" | "updatedAt">
+  ): Promise<AdminUser> => {
+    const res = await apiRequest<{ user: any }>("/users", {
+      method: "POST",
+      body: JSON.stringify(user),
+    });
+
+    return {
+      ...res.user,
+      id: res.user._id, // 🔥 REQUIRED
     };
-    mockUsers.push(newUser);
-    return newUser;
   },
-  update: async (id: string, user: Partial<AdminUser>): Promise<AdminUser> => {
-    const index = mockUsers.findIndex(u => u.id === id);
-    if (index === -1) throw new Error('User not found');
-    mockUsers[index] = { ...mockUsers[index], ...user, updatedAt: new Date().toISOString() };
-    return mockUsers[index];
+
+  // ✅ UPDATE USER (incl. permissions)
+  update: async (
+    id: string,
+    user: Partial<AdminUser>
+  ): Promise<AdminUser> => {
+    const res = await apiRequest<{ user: any }>(`/users/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(user),
+    });
+
+    return {
+      ...res.user,
+      id: res.user._id, // 🔥 REQUIRED
+    };
   },
+
+  // ✅ DELETE USER
   delete: async (id: string): Promise<void> => {
-    const index = mockUsers.findIndex(u => u.id === id);
-    if (index !== -1) mockUsers.splice(index, 1);
+    await apiRequest(`/users/${id}`, { method: "DELETE" });
   },
 };
+
+
 
 // Media API
 // const mockMedia: MediaItem[] = [
@@ -900,65 +887,111 @@ export const mediaApi = {
 
 
 // Offers API
-const mockOffers: Offer[] = [
-  {
-    id: 'offer_1',
-    titleEn: 'Summer Sale',
-    titleHi: 'गर्मियों की बिक्री',
-    descriptionEn: 'Get special discounts on all JCB products',
-    descriptionHi: 'सभी JCB उत्पादों पर विशेष छूट प्राप्त करें',
-    startDate: '2024-03-01T00:00:00Z',
-    endDate: '2024-06-30T23:59:59Z',
-    applicableBrand: 'JCB',
-    isActive: true,
-    priority: 1,
-    createdAt: '2024-03-01T10:00:00Z',
-    updatedAt: '2024-03-01T10:00:00Z',
-  },
-];
+// const mockOffers: Offer[] = [
+//   {
+//     id: 'offer_1',
+//     titleEn: 'Summer Sale',
+//     titleHi: 'गर्मियों की बिक्री',
+//     descriptionEn: 'Get special discounts on all JCB products',
+//     descriptionHi: 'सभी JCB उत्पादों पर विशेष छूट प्राप्त करें',
+//     startDate: '2024-03-01T00:00:00Z',
+//     endDate: '2024-06-30T23:59:59Z',
+//     applicableBrand: 'JCB',
+//     isActive: true,
+//     priority: 1,
+//     createdAt: '2024-03-01T10:00:00Z',
+//     updatedAt: '2024-03-01T10:00:00Z',
+//   },
+// ];
 
 export const offersApi = {
-  getAll: async (): Promise<Offer[]> => mockOffers,
-  create: async (offer: Omit<Offer, 'id' | 'createdAt' | 'updatedAt'>): Promise<Offer> => {
-    const newOffer: Offer = { ...offer, id: 'offer_' + Date.now(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-    mockOffers.push(newOffer);
-    return newOffer;
+  getAll: async (): Promise<Offer[]> => {
+    const res = await apiRequest<{ data: Offer[] }>("/offers");
+    return res.data;
   },
-  update: async (id: string, offer: Partial<Offer>): Promise<Offer> => {
-    const index = mockOffers.findIndex(o => o.id === id);
-    if (index === -1) throw new Error('Offer not found');
-    mockOffers[index] = { ...mockOffers[index], ...offer, updatedAt: new Date().toISOString() };
-    return mockOffers[index];
+
+  getById: async (id: string): Promise<Offer> => {
+    const res = await apiRequest<{ data: Offer }>(`/offers/${id}`);
+    return res.data;
   },
+
+  create: async (
+    offer: Omit<Offer, "_id" | "createdAt" | "updatedAt">
+  ): Promise<Offer> => {
+    const res = await apiRequest<{ data: Offer }>("/offers", {
+      method: "POST",
+      body: JSON.stringify(offer),
+    });
+    return res.data;
+  },
+
+  update: async (
+    id: string,
+    offer: Partial<Offer>
+  ): Promise<Offer> => {
+    if (!id) throw new Error("Offer ID missing");
+
+    const res = await apiRequest<{ data: Offer }>(`/offers/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(offer),
+    });
+    return res.data;
+  },
+
   delete: async (id: string): Promise<void> => {
-    const index = mockOffers.findIndex(o => o.id === id);
-    if (index !== -1) mockOffers.splice(index, 1);
+    await apiRequest(`/offers/${id}`, { method: "DELETE" });
   },
 };
 
-// Content Pages API
-const mockContentPages: ContentPage[] = [
-  { id: 'page_1', key: 'about-us', titleEn: 'About Us', titleHi: 'हमारे बारे में', contentEn: 'About us content...', contentHi: 'हमारे बारे में सामग्री...', updatedAt: '2024-01-01T10:00:00Z' },
-  { id: 'page_2', key: 'service-warranty', titleEn: 'Service & Warranty', titleHi: 'सेवा और वारंटी', contentEn: 'Service content...', contentHi: 'सेवा सामग्री...', updatedAt: '2024-01-01T10:00:00Z' },
-  { id: 'page_3', key: 'parts-lubricants', titleEn: 'Parts & Lubricants', titleHi: 'पार्ट्स और लुब्रिकेंट्स', contentEn: 'Parts content...', contentHi: 'पार्ट्स सामग्री...', updatedAt: '2024-01-01T10:00:00Z' },
-];
 
-const mockSocialLinks: SocialLinks = { facebook: 'https://facebook.com/patliputra', instagram: 'https://instagram.com/patliputra', youtube: 'https://youtube.com/patliputra', linkedin: 'https://linkedin.com/company/patliputra' };
+
+
+// ================= CONTENT PAGES API (REAL BACKEND) =================
 
 export const contentPagesApi = {
-  getAll: async (): Promise<ContentPage[]> => mockContentPages,
-  update: async (id: string, page: Partial<ContentPage>): Promise<ContentPage> => {
-    const index = mockContentPages.findIndex(p => p.id === id);
-    if (index === -1) throw new Error('Page not found');
-    mockContentPages[index] = { ...mockContentPages[index], ...page, updatedAt: new Date().toISOString() };
-    return mockContentPages[index];
+  // ✅ GET ALL CONTENT PAGES
+  getAll: async (): Promise<ContentPage[]> => {
+    const res = await apiRequest<ContentPage[]>("/content-pages");
+    return res;
   },
-  getSocialLinks: async (): Promise<SocialLinks> => mockSocialLinks,
-  updateSocialLinks: async (links: SocialLinks): Promise<SocialLinks> => {
-    Object.assign(mockSocialLinks, links);
-    return mockSocialLinks;
+
+  // ✅ UPDATE PAGE CONTENT
+  update: async (
+    id: string,
+    page: Pick<ContentPage, "contentEn" | "contentHi">
+  ): Promise<ContentPage> => {
+    const res = await apiRequest<ContentPage>(`/content-pages/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(page),
+    });
+    return res;
+  },
+
+  // ================= SOCIAL LINKS =================
+
+  // ✅ GET SOCIAL LINKS
+  getSocialLinks: async (): Promise<SocialLinks> => {
+    const res = await apiRequest<SocialLinks>(
+      "/content-pages/social-links"
+    );
+    return res;
+  },
+
+  // ✅ UPDATE SOCIAL LINKS
+  updateSocialLinks: async (
+    links: SocialLinks
+  ): Promise<SocialLinks> => {
+    const res = await apiRequest<SocialLinks>(
+      "/content-pages/social-links",
+      {
+        method: "PUT",
+        body: JSON.stringify(links),
+      }
+    );
+    return res;
   },
 };
+
 
 // Mock Data
 const mockProducts: Product[] = [
@@ -1203,5 +1236,45 @@ export const bannersApi = {
 
   delete: async (id: string) => {
     await apiRequest(`/banners/${id}`, { method: "DELETE" });
+  },
+};
+
+
+// ================= SETTINGS API =================
+
+export interface SiteSettingsResponse {
+  primary_phone?: string;
+  whatsapp_number?: string;
+  email?: string;
+  address?: string;
+  working_hours?: string;
+  features?: {
+    emiCalculator?: boolean;
+    usedVehicles?: boolean;
+    cibilCheck?: boolean;
+    comparison?: boolean;
+  };
+}
+
+export const settingsApi = {
+  // 🔓 Public (website)
+  getPublic: async (): Promise<SiteSettingsResponse | null> => {
+    const res = await apiRequest<{ data: SiteSettingsResponse | null }>("/settings");
+    return res.data;
+  },
+
+  // 🔐 Admin
+  getAdmin: async (): Promise<SiteSettingsResponse | null> => {
+    const res = await apiRequest<{ data: SiteSettingsResponse | null }>("/settings/admin");
+    return res.data;
+  },
+
+  // 💾 Save
+  update: async (payload: SiteSettingsResponse): Promise<SiteSettingsResponse> => {
+    const res = await apiRequest<{ data: SiteSettingsResponse }>("/settings", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+    return res.data;
   },
 };
