@@ -135,7 +135,7 @@ export function FinancePage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="new">New</SelectItem>
+               <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="under_review">Under Review</SelectItem>
                 <SelectItem value="approved">Approved</SelectItem>
                 <SelectItem value="rejected">Rejected</SelectItem>
@@ -185,15 +185,19 @@ export function FinancePage() {
                         </TableCell>
                         <TableCell>{app.productName || 'N/A'}</TableCell>
                         <TableCell className="font-medium">
-                          ₹{app.loanAmount.toLocaleString()}
+                          {app.loanAmount != null ? `₹${app.loanAmount.toLocaleString()}` : '—'}
                         </TableCell>
-                        <TableCell>{app.tenure} months</TableCell>
+                        <TableCell>
+                          {app.tenure != null ? `${app.tenure} months` : '—'}
+                        </TableCell>
                         <TableCell>
                           <StatusBadge status={app.status} />
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {new Date(app.createdAt).toLocaleDateString()}
-                        </TableCell>
+                      <TableCell className="text-muted-foreground">
+  {app.createdAt
+    ? new Date(app.createdAt).toLocaleDateString()
+    : '—'}
+</TableCell>
                         <TableCell>
                           <Dialog>
                             <DialogTrigger asChild>
@@ -242,12 +246,16 @@ export function FinancePage() {
                                     <div>
                                       <p className="text-sm text-muted-foreground">Loan Amount</p>
                                       <p className="text-2xl font-bold">
-                                        ₹{selectedApp.loanAmount.toLocaleString()}
+                                        {selectedApp.loanAmount != null
+                                          ? `₹${selectedApp.loanAmount.toLocaleString()}`
+                                          : '—'}
                                       </p>
                                     </div>
                                     <div>
                                       <p className="text-sm text-muted-foreground">Tenure</p>
-                                      <p className="text-2xl font-bold">{selectedApp.tenure} months</p>
+                                      <p className="text-2xl font-bold">
+                                        {selectedApp.tenure != null ? `${selectedApp.tenure} months` : '—'}
+                                      </p>
                                     </div>
                                   </div>
 
@@ -266,7 +274,7 @@ export function FinancePage() {
                                         <SelectValue />
                                       </SelectTrigger>
                                       <SelectContent>
-                                        <SelectItem value="new">New</SelectItem>
+                                        <SelectItem value="pending">Pending</SelectItem>
                                         <SelectItem value="under_review">Under Review</SelectItem>
                                         <SelectItem value="approved">Approved</SelectItem>
                                         <SelectItem value="rejected">Rejected</SelectItem>
@@ -290,7 +298,9 @@ export function FinancePage() {
                                           >
                                             <div className="flex items-center gap-2">
                                               <FileText className="h-4 w-4 text-muted-foreground" />
-                                              <span className="text-sm font-medium">{doc.type}</span>
+                                              <span className="text-sm font-medium">
+                                                {typeof doc === 'string' ? doc : doc?.type ?? 'Document'}
+                                              </span>
                                             </div>
                                             <Button variant="ghost" size="sm">
                                               <Download className="h-4 w-4 mr-2" />

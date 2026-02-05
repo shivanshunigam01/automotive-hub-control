@@ -947,12 +947,16 @@ export const offersApi = {
 
 
 // ================= CONTENT PAGES API (REAL BACKEND) =================
-
 export const contentPagesApi = {
-  // ✅ GET ALL CONTENT PAGES
+  // ✅ GET ALL CONTENT PAGES (FIXED)
   getAll: async (): Promise<ContentPage[]> => {
-    const res = await apiRequest<ContentPage[]>("/content-pages");
-    return res;
+    const res = await apiRequest<any[]>("/content-pages");
+
+    // 🔥 NORMALIZE MONGODB _id → id
+    return res.map((p) => ({
+      ...p,
+      id: p._id,
+    }));
   },
 
   // ✅ UPDATE PAGE CONTENT
@@ -971,26 +975,20 @@ export const contentPagesApi = {
 
   // ✅ GET SOCIAL LINKS
   getSocialLinks: async (): Promise<SocialLinks> => {
-    const res = await apiRequest<SocialLinks>(
-      "/content-pages/social-links"
-    );
-    return res;
+    return apiRequest<SocialLinks>("/content-pages/social-links");
   },
 
   // ✅ UPDATE SOCIAL LINKS
   updateSocialLinks: async (
     links: SocialLinks
   ): Promise<SocialLinks> => {
-    const res = await apiRequest<SocialLinks>(
-      "/content-pages/social-links",
-      {
-        method: "PUT",
-        body: JSON.stringify(links),
-      }
-    );
-    return res;
+    return apiRequest<SocialLinks>("/content-pages/social-links", {
+      method: "PUT",
+      body: JSON.stringify(links),
+    });
   },
 };
+
 
 
 // Mock Data

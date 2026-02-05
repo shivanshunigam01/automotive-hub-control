@@ -195,7 +195,7 @@ export function CibilPage() {
                     <TableHead>Customer</TableHead>
                     <TableHead>Mobile</TableHead>
                     <TableHead>PAN</TableHead>
-                    <TableHead>Date of Birth</TableHead>
+                    
                     <TableHead>Score</TableHead>
                     <TableHead>Band</TableHead>
                     <TableHead>Checked At</TableHead>
@@ -227,9 +227,9 @@ export function CibilPage() {
                        {check.panNumber}
                           </code>
                         </TableCell>
-                        <TableCell>
+                        {/* <TableCell>
                           {new Date(check.dateOfBirth).toLocaleDateString()}
-                        </TableCell>
+                        </TableCell> */}
                         <TableCell>
                           <span className={`text-2xl font-bold ${scoreBandConfig[check.scoreBand]?.color || ''}`}>
                             {check.score}

@@ -38,12 +38,12 @@ interface StatusBadgeProps {
   status: UnifiedStatus;
   className?: string;
 }
-export type FinanceStatus =
-  | "pending"
-  | "under_review"
-  | "approved"
-  | "rejected"
-  | "disbursed";
+type FinanceStatus =
+  | 'pending'
+  | 'under_review'
+  | 'approved'
+  | 'rejected'
+  | 'disbursed';
 export function StatusBadge({ status, className }: StatusBadgeProps) {
   const config = statusConfig[status];
 
