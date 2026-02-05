@@ -1,24 +1,46 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, X, Save, Upload, FileText, ChevronDown, ChevronUp, Trash2, ExternalLink, Image } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  ArrowLeft,
+  Plus,
+  X,
+  Save,
+  Upload,
+  FileText,
+  ChevronDown,
+  ChevronUp,
+  Trash2,
+  ExternalLink,
+  Image,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { TCOSection, type TCOItem } from '@/components/admin/TCOSection';
-import { productsApi, type Product } from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { TCOSection, type TCOItem } from "@/components/admin/TCOSection";
+import { productsApi, type Product } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 // type ProductFormData = Omit<Product, 'id' | 'createdAt' | 'updatedAt'> & {
 //   price: string | number;
@@ -27,41 +49,41 @@ import { useToast } from '@/hooks/use-toast';
 // };
 
 type ProductFormData = {
-name: string;
-brand: string;
-category: string;
-price: string; // 👈 string in UI
-shortDescription: string;
-specifications: Record<string, string>;
-images: string[];
-isNewLaunch: boolean;
-isBestseller: boolean;
-isFeatured: boolean;
-isActive: boolean;
-seoTitle?: string;
-seoDescription?: string;
-tcoItems?: any[];
-brochureUrl?: string;
-brochureUpdatedAt?: string;
+  name: string;
+  brand: string;
+  category: string;
+  price: string; // 👈 string in UI
+  shortDescription: string;
+  specifications: Record<string, string>;
+  images: string[];
+  isNewLaunch: boolean;
+  isBestseller: boolean;
+  isFeatured: boolean;
+  isActive: boolean;
+  seoTitle?: string;
+  seoDescription?: string;
+  tcoItems?: any[];
+  brochureUrl?: string;
+  brochureUpdatedAt?: string;
 };
 
 const initialFormData: ProductFormData = {
-  name: '',
-  brand: 'JCB',
-  category: '',
-  price: '0',
-  shortDescription: '',
+  name: "",
+  brand: "JCB",
+  category: "",
+  price: "0",
+  shortDescription: "",
   specifications: {},
   images: [],
   isNewLaunch: false,
   isBestseller: false,
   isFeatured: false,
   isActive: true,
-  seoTitle: '',
-  seoDescription: '',
+  seoTitle: "",
+  seoDescription: "",
   tcoItems: [],
-  brochureUrl: '',
-  brochureUpdatedAt: '',
+  brochureUrl: "",
+  brochureUpdatedAt: "",
 };
 
 export function ProductFormPage() {
@@ -69,59 +91,59 @@ export function ProductFormPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [formData, setFormData] = useState<ProductFormData>(initialFormData);
-  const [specKey, setSpecKey] = useState('');
-  const [specValue, setSpecValue] = useState('');
+  const [specKey, setSpecKey] = useState("");
+  const [specValue, setSpecValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
-const [brochureFile, setBrochureFile] = useState<File | null>(null);
-function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-  if (!e.target.files) return;
+  const [brochureFile, setBrochureFile] = useState<File | null>(null);
+  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!e.target.files) return;
 
-  const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files);
 
-  setImageFiles(prev => [...prev, ...files]);
+    setImageFiles((prev) => [...prev, ...files]);
 
-  // 👇 create preview URLs
-  const previewUrls = files.map(file => URL.createObjectURL(file));
+    // 👇 create preview URLs
+    const previewUrls = files.map((file) => URL.createObjectURL(file));
 
-  setFormData(prev => ({
-    ...prev,
-    images: [...prev.images, ...previewUrls],
-  }));
+    setFormData((prev) => ({
+      ...prev,
+      images: [...prev.images, ...previewUrls],
+    }));
 
-  if (imageInputRef.current) {
-    imageInputRef.current.value = '';
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
+    }
   }
-}
-function handleBrochureUpload(e: React.ChangeEvent<HTMLInputElement>) {
-  const file = e.target.files?.[0];
-  if (!file) return;
+  function handleBrochureUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  if (file.type !== 'application/pdf') {
-    toast({
-      title: 'Invalid file',
-      description: 'Please upload a PDF file',
-      variant: 'destructive',
-    });
-    return;
+    if (file.type !== "application/pdf") {
+      toast({
+        title: "Invalid file",
+        description: "Please upload a PDF file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setBrochureFile(file);
+
+    // 👇 local preview URL
+    const previewUrl = URL.createObjectURL(file);
+
+    setFormData((prev) => ({
+      ...prev,
+      brochureUrl: previewUrl,
+      brochureUpdatedAt: new Date().toISOString(),
+    }));
+
+    if (brochureInputRef.current) {
+      brochureInputRef.current.value = "";
+    }
   }
-
-  setBrochureFile(file);
-
-  // 👇 local preview URL
-  const previewUrl = URL.createObjectURL(file);
-
-  setFormData(prev => ({
-    ...prev,
-    brochureUrl: previewUrl,
-    brochureUpdatedAt: new Date().toISOString(),
-  }));
-
-  if (brochureInputRef.current) {
-    brochureInputRef.current.value = '';
-  }
-}
   // File input refs
   const imageInputRef = React.useRef<HTMLInputElement>(null);
   const brochureInputRef = React.useRef<HTMLInputElement>(null);
@@ -177,9 +199,9 @@ function handleBrochureUpload(e: React.ChangeEvent<HTMLInputElement>) {
 
   // Remove image
   function removeImage(index: number) {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== index)
+      images: prev.images.filter((_, i) => i !== index),
     }));
   }
 
@@ -192,7 +214,7 @@ function handleBrochureUpload(e: React.ChangeEvent<HTMLInputElement>) {
   }, [id]);
 
   const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+    import.meta.env.VITE_API_BASE_URL || "https://api.patliputragroup.com";
   async function fetchProduct() {
     setIsLoading(true);
     try {
@@ -202,7 +224,7 @@ function handleBrochureUpload(e: React.ChangeEvent<HTMLInputElement>) {
           name: product.name,
           brand: product.brand,
           category: product.category,
-          price: product.price?.toString() ?? '0', // ✅ FIX
+          price: product.price?.toString() ?? "0", // ✅ FIX
           shortDescription: product.shortDescription,
           specifications: product.specifications,
           images: product.images,
@@ -214,79 +236,79 @@ function handleBrochureUpload(e: React.ChangeEvent<HTMLInputElement>) {
           seoDescription: product.seoDescription,
           tcoItems: product.tcoItems || [],
           brochureUrl: product.brochureUrl
-    ? `${API_BASE_URL}${product.brochureUrl.replace(/\\/g, '/')}`
-    : '',
-brochureUpdatedAt: product.updatedAt,
+            ? `${API_BASE_URL}${product.brochureUrl.replace(/\\/g, "/")}`
+            : "",
+          brochureUpdatedAt: product.updatedAt,
         });
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to fetch product',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to fetch product",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   }
 
-async function handleSubmit(e: React.FormEvent, isDraft = false) {
-  e.preventDefault();
-  setIsSaving(true);
+  async function handleSubmit(e: React.FormEvent, isDraft = false) {
+    e.preventDefault();
+    setIsSaving(true);
 
-  try {
-    const fd = new FormData();
+    try {
+      const fd = new FormData();
 
-    fd.append("name", formData.name);
-    fd.append("brand", formData.brand);
-    fd.append("category", formData.category);
-    fd.append("price", String(Number(formData.price) || 0));
-    fd.append("shortDescription", formData.shortDescription || "");
-    fd.append("isActive", String(isDraft ? false : formData.isActive));
-    fd.append("isNewLaunch", String(formData.isNewLaunch));
-    fd.append("isBestseller", String(formData.isBestseller));
-    fd.append("isFeatured", String(formData.isFeatured));
-    fd.append("seoTitle", formData.seoTitle || "");
-    fd.append("seoDescription", formData.seoDescription || "");
-    fd.append("specifications", JSON.stringify(formData.specifications));
-    fd.append("tcoItems", JSON.stringify(formData.tcoItems || []));
+      fd.append("name", formData.name);
+      fd.append("brand", formData.brand);
+      fd.append("category", formData.category);
+      fd.append("price", String(Number(formData.price) || 0));
+      fd.append("shortDescription", formData.shortDescription || "");
+      fd.append("isActive", String(isDraft ? false : formData.isActive));
+      fd.append("isNewLaunch", String(formData.isNewLaunch));
+      fd.append("isBestseller", String(formData.isBestseller));
+      fd.append("isFeatured", String(formData.isFeatured));
+      fd.append("seoTitle", formData.seoTitle || "");
+      fd.append("seoDescription", formData.seoDescription || "");
+      fd.append("specifications", JSON.stringify(formData.specifications));
+      fd.append("tcoItems", JSON.stringify(formData.tcoItems || []));
 
-    // ✅ IMAGES → CLOUDINARY
-    imageFiles.forEach(file => {
-      fd.append("images", file);
-    });
+      // ✅ IMAGES → CLOUDINARY
+      imageFiles.forEach((file) => {
+        fd.append("images", file);
+      });
 
-    // ✅ BROCHURE → SERVER
-    if (brochureFile) {
-      fd.append("brochure", brochureFile);
+      // ✅ BROCHURE → SERVER
+      if (brochureFile) {
+        fd.append("brochure", brochureFile);
+      }
+
+      if (isEditing) {
+        await productsApi.update(id!, fd as any);
+      } else {
+        await productsApi.create(fd as any);
+      }
+
+      toast({ title: "Success", description: "Product saved successfully" });
+      navigate("/admin/products");
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to save product",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
-
-    if (isEditing) {
-      await productsApi.update(id!, fd as any);
-    } else {
-      await productsApi.create(fd as any);
-    }
-
-    toast({ title: "Success", description: "Product saved successfully" });
-    navigate("/admin/products");
-  } catch (err) {
-    toast({
-      title: "Error",
-      description: "Failed to save product",
-      variant: "destructive",
-    });
-  } finally {
-    setIsSaving(false);
   }
-}
   function addSpecification() {
     if (specKey && specValue) {
       setFormData({
         ...formData,
         specifications: { ...formData.specifications, [specKey]: specValue },
       });
-      setSpecKey('');
-      setSpecValue('');
+      setSpecKey("");
+      setSpecValue("");
     }
   }
 
@@ -308,15 +330,21 @@ async function handleSubmit(e: React.FormEvent, isDraft = false) {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/admin/products')}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate("/admin/products")}
+        >
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            {isEditing ? 'Edit Product' : 'Add New Product'}
+            {isEditing ? "Edit Product" : "Add New Product"}
           </h1>
           <p className="text-muted-foreground">
-            {isEditing ? 'Update product details' : 'Create a new product listing'}
+            {isEditing
+              ? "Update product details"
+              : "Create a new product listing"}
           </p>
         </div>
       </div>
@@ -336,7 +364,9 @@ async function handleSubmit(e: React.FormEvent, isDraft = false) {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     placeholder="e.g., JCB 3DX Backhoe Loader"
                     required
                   />
@@ -347,7 +377,7 @@ async function handleSubmit(e: React.FormEvent, isDraft = false) {
                     <Label htmlFor="brand">Brand *</Label>
                     <Select
                       value={formData.brand}
-                      onValueChange={(value: Product['brand']) =>
+                      onValueChange={(value: Product["brand"]) =>
                         setFormData({ ...formData, brand: value })
                       }
                     >
@@ -356,7 +386,9 @@ async function handleSubmit(e: React.FormEvent, isDraft = false) {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="JCB">JCB</SelectItem>
-                        <SelectItem value="Ashok Leyland">Ashok Leyland</SelectItem>
+                        <SelectItem value="Ashok Leyland">
+                          Ashok Leyland
+                        </SelectItem>
                         <SelectItem value="Switch EV">Switch EV</SelectItem>
                       </SelectContent>
                     </Select>
@@ -367,7 +399,9 @@ async function handleSubmit(e: React.FormEvent, isDraft = false) {
                     <Input
                       id="category"
                       value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, category: e.target.value })
+                      }
                       placeholder="e.g., Backhoe Loader"
                       required
                     />
@@ -376,26 +410,24 @@ async function handleSubmit(e: React.FormEvent, isDraft = false) {
 
                 <div className="space-y-2">
                   <Label htmlFor="price">Price (₹) *</Label>
-                 <Input
-id="price"
-type="number"
-inputMode="numeric"
-value={formData.price}
-onChange={(e) => {
-const value = e.target.value;
+                  <Input
+                    id="price"
+                    type="number"
+                    inputMode="numeric"
+                    value={formData.price}
+                    onChange={(e) => {
+                      const value = e.target.value;
 
+                      // allow empty while typing
+                      if (value === "") {
+                        setFormData({ ...formData, price: "" });
+                        return;
+                      }
 
-// allow empty while typing
-if (value === '') {
-setFormData({ ...formData, price: '' });
-return;
-}
-
-
-setFormData({ ...formData, price: value });
-}}
-placeholder="0"
-/>
+                      setFormData({ ...formData, price: value });
+                    }}
+                    placeholder="0"
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -403,7 +435,12 @@ placeholder="0"
                   <Textarea
                     id="description"
                     value={formData.shortDescription}
-                    onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        shortDescription: e.target.value,
+                      })
+                    }
                     placeholder="Brief description of the product..."
                     rows={3}
                   />
@@ -431,32 +468,40 @@ placeholder="0"
                     placeholder="Value"
                     className="flex-1"
                   />
-                  <Button type="button" variant="outline" onClick={addSpecification}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addSpecification}
+                  >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
 
                 {Object.entries(formData.specifications).length > 0 && (
                   <div className="space-y-2">
-                    {Object.entries(formData.specifications).map(([key, value]) => (
-                      <div
-                        key={key}
-                        className="flex items-center justify-between p-3 bg-muted rounded-lg"
-                      >
-                        <div>
-                          <span className="font-medium">{key}:</span>{' '}
-                          <span className="text-muted-foreground">{value}</span>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeSpecification(key)}
+                    {Object.entries(formData.specifications).map(
+                      ([key, value]) => (
+                        <div
+                          key={key}
+                          className="flex items-center justify-between p-3 bg-muted rounded-lg"
                         >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
+                          <div>
+                            <span className="font-medium">{key}:</span>{" "}
+                            <span className="text-muted-foreground">
+                              {value}
+                            </span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeSpecification(key)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ),
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -486,7 +531,9 @@ placeholder="0"
                       <div className="flex items-center gap-2">
                         {formData.brochureUrl && (
                           <span className="text-xs text-muted-foreground">
-                            {formData.brochureUpdatedAt ? `Updated: ${new Date(formData.brochureUpdatedAt).toLocaleDateString()}` : 'Uploaded'}
+                            {formData.brochureUpdatedAt
+                              ? `Updated: ${new Date(formData.brochureUpdatedAt).toLocaleDateString()}`
+                              : "Uploaded"}
                           </span>
                         )}
                         <ChevronDown className="h-5 w-5 text-muted-foreground" />
@@ -504,9 +551,9 @@ placeholder="0"
                       onChange={handleBrochureUpload}
                       className="hidden"
                     />
-                    
+
                     {!formData.brochureUrl ? (
-                      <div 
+                      <div
                         className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-accent/50 hover:bg-muted/50 transition-colors"
                         onClick={() => brochureInputRef.current?.click()}
                       >
@@ -514,7 +561,11 @@ placeholder="0"
                         <p className="text-sm text-muted-foreground">
                           Drag and drop PDF here, or click to browse
                         </p>
-                        <Button type="button" variant="outline" className="mt-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="mt-4"
+                        >
                           <Upload className="mr-2 h-4 w-4" />
                           Upload Brochure
                         </Button>
@@ -527,9 +578,12 @@ placeholder="0"
                           </div>
                           <div>
                             <p className="text-sm font-medium truncate max-w-[250px]">
-                              {formData.brochureUrl.split(/[\\/]/).pop() || 'brochure.pdf'}
+                              {formData.brochureUrl.split(/[\\/]/).pop() ||
+                                "brochure.pdf"}
                             </p>
-                            <p className="text-xs text-muted-foreground">PDF Document</p>
+                            <p className="text-xs text-muted-foreground">
+                              PDF Document
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-1">
@@ -546,7 +600,9 @@ placeholder="0"
                             type="button"
                             variant="ghost"
                             size="icon"
-                            onClick={() => window.open(formData.brochureUrl, '_blank')}
+                            onClick={() =>
+                              window.open(formData.brochureUrl, "_blank")
+                            }
                             title="Open brochure"
                           >
                             <ExternalLink className="h-4 w-4" />
@@ -555,7 +611,13 @@ placeholder="0"
                             type="button"
                             variant="ghost"
                             size="icon"
-                            onClick={() => setFormData({ ...formData, brochureUrl: '', brochureUpdatedAt: '' })}
+                            onClick={() =>
+                              setFormData({
+                                ...formData,
+                                brochureUrl: "",
+                                brochureUpdatedAt: "",
+                              })
+                            }
                             title="Remove brochure"
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
@@ -575,7 +637,9 @@ placeholder="0"
                   <Image className="h-5 w-5 text-accent" />
                   Images
                 </CardTitle>
-                <CardDescription>Upload product images (JPG, PNG, WebP)</CardDescription>
+                <CardDescription>
+                  Upload product images (JPG, PNG, WebP)
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Hidden file input */}
@@ -587,8 +651,8 @@ placeholder="0"
                   onChange={handleImageUpload}
                   className="hidden"
                 />
-                
-                <div 
+
+                <div
                   className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-accent/50 hover:bg-muted/50 transition-colors"
                   onClick={() => imageInputRef.current?.click()}
                 >
@@ -603,33 +667,35 @@ placeholder="0"
                 </div>
 
                 {/* Image preview grid */}
-           {formData.images.length > 0 && (
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-    {formData.images.map((img, index) => (
-      <div key={index} className="relative group">
-        <img
-          src={img}
-          className="w-full h-32 object-cover rounded-lg"
-        />
-        <Button
-          type="button"
-          variant="destructive"
-          size="icon"
-          className="absolute top-2 right-2"
-          onClick={() => {
-            setFormData(prev => ({
-              ...prev,
-              images: prev.images.filter((_, i) => i !== index),
-            }));
-            setImageFiles(prev => prev.filter((_, i) => i !== index));
-          }}
-        >
-          <X className="h-3 w-3" />
-        </Button>
-      </div>
-    ))}
-  </div>
-)}
+                {formData.images.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    {formData.images.map((img, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={img}
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2"
+                          onClick={() => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              images: prev.images.filter((_, i) => i !== index),
+                            }));
+                            setImageFiles((prev) =>
+                              prev.filter((_, i) => i !== index),
+                            );
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -644,8 +710,10 @@ placeholder="0"
                   <Label htmlFor="seoTitle">SEO Title</Label>
                   <Input
                     id="seoTitle"
-                    value={formData.seoTitle || ''}
-                    onChange={(e) => setFormData({ ...formData, seoTitle: e.target.value })}
+                    value={formData.seoTitle || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, seoTitle: e.target.value })
+                    }
                     placeholder="SEO optimized title"
                   />
                 </div>
@@ -653,8 +721,13 @@ placeholder="0"
                   <Label htmlFor="seoDescription">Meta Description</Label>
                   <Textarea
                     id="seoDescription"
-                    value={formData.seoDescription || ''}
-                    onChange={(e) => setFormData({ ...formData, seoDescription: e.target.value })}
+                    value={formData.seoDescription || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        seoDescription: e.target.value,
+                      })
+                    }
                     placeholder="SEO meta description"
                     rows={2}
                   />
@@ -676,7 +749,9 @@ placeholder="0"
                   <Switch
                     id="active"
                     checked={formData.isActive}
-                    onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, isActive: checked })
+                    }
                   />
                 </div>
                 <Separator />
@@ -685,7 +760,9 @@ placeholder="0"
                   <Switch
                     id="newLaunch"
                     checked={formData.isNewLaunch}
-                    onCheckedChange={(checked) => setFormData({ ...formData, isNewLaunch: checked })}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, isNewLaunch: checked })
+                    }
                   />
                 </div>
                 <div className="flex items-center justify-between">
@@ -693,7 +770,9 @@ placeholder="0"
                   <Switch
                     id="bestseller"
                     checked={formData.isBestseller}
-                    onCheckedChange={(checked) => setFormData({ ...formData, isBestseller: checked })}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, isBestseller: checked })
+                    }
                   />
                 </div>
                 <div className="flex items-center justify-between">
@@ -701,7 +780,9 @@ placeholder="0"
                   <Switch
                     id="featured"
                     checked={formData.isFeatured}
-                    onCheckedChange={(checked) => setFormData({ ...formData, isFeatured: checked })}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, isFeatured: checked })
+                    }
                   />
                 </div>
               </CardContent>
@@ -716,7 +797,11 @@ placeholder="0"
                   disabled={isSaving}
                 >
                   <Save className="mr-2 h-4 w-4" />
-                  {isSaving ? 'Saving...' : isEditing ? 'Update Product' : 'Publish Product'}
+                  {isSaving
+                    ? "Saving..."
+                    : isEditing
+                      ? "Update Product"
+                      : "Publish Product"}
                 </Button>
                 <Button
                   type="button"
@@ -731,7 +816,7 @@ placeholder="0"
                   type="button"
                   variant="ghost"
                   className="w-full"
-                  onClick={() => navigate('/admin/products')}
+                  onClick={() => navigate("/admin/products")}
                 >
                   Cancel
                 </Button>

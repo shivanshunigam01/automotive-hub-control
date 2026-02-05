@@ -98,12 +98,15 @@ export function UsedVehicleFormPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [inspectionReportFile, setInspectionReportFile] = useState<File | null>(null);
+  const [inspectionReportFile, setInspectionReportFile] = useState<File | null>(
+    null,
+  );
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const reportInputRef = useRef<HTMLInputElement>(null);
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+  const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || "https://api.patliputragroup.com";
 
   useEffect(() => {
     if (isEditing) fetchVehicle();
@@ -117,7 +120,8 @@ export function UsedVehicleFormPage() {
 
       // map backend -> UI
       setFormData({
-        vehicleType: (vehicle as any).vehicle_type || vehicle.vehicleType || "other",
+        vehicleType:
+          (vehicle as any).vehicle_type || vehicle.vehicleType || "other",
         brand: vehicle.brand || "",
         model: vehicle.model || "",
         year: String(vehicle.year || ""),
@@ -166,7 +170,9 @@ export function UsedVehicleFormPage() {
     if (imageInputRef.current) imageInputRef.current.value = "";
   }
 
-  function handleInspectionReportUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleInspectionReportUpload(
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -221,7 +227,7 @@ export function UsedVehicleFormPage() {
         "condition_report",
         JSON.stringify({
           notes: formData.conditionNotes || "",
-        })
+        }),
       );
 
       // ✅ images
@@ -271,15 +277,23 @@ export function UsedVehicleFormPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/admin/certified-refurbished")}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate("/admin/certified-refurbished")}
+        >
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            {isEditing ? "Edit Certified Refurbished" : "Add Certified Refurbished"}
+            {isEditing
+              ? "Edit Certified Refurbished"
+              : "Add Certified Refurbished"}
           </h1>
           <p className="text-muted-foreground">
-            {isEditing ? "Update vehicle details" : "Create a new certified refurbished listing"}
+            {isEditing
+              ? "Update vehicle details"
+              : "Create a new certified refurbished listing"}
           </p>
         </div>
       </div>
@@ -297,33 +311,34 @@ export function UsedVehicleFormPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Vehicle Type *</Label>
-                  <Select
-  value={formData.vehicleType}
-  onValueChange={(value) =>
-    setFormData((prev) => ({ ...prev, vehicleType: value }))
-  }
-  required
->
-  <SelectTrigger>
-    <SelectValue placeholder="Select vehicle type" />
-  </SelectTrigger>
+                    <Select
+                      value={formData.vehicleType}
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({ ...prev, vehicleType: value }))
+                      }
+                      required
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select vehicle type" />
+                      </SelectTrigger>
 
-  <SelectContent>
-    {VEHICLE_TYPES.map((type) => (
-      <SelectItem key={type.value} value={type.value}>
-        {type.label}
-      </SelectItem>
-    ))}
-  </SelectContent>
-</Select>
-
+                      <SelectContent>
+                        {VEHICLE_TYPES.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-2">
                     <Label>Brand</Label>
                     <Input
                       value={formData.brand}
-                      onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, brand: e.target.value })
+                      }
                       placeholder="JCB"
                     />
                   </div>
@@ -334,7 +349,9 @@ export function UsedVehicleFormPage() {
                     <Label>Model *</Label>
                     <Input
                       value={formData.model}
-                      onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, model: e.target.value })
+                      }
                       placeholder="3DX"
                       required
                     />
@@ -345,7 +362,9 @@ export function UsedVehicleFormPage() {
                     <Input
                       type="number"
                       value={formData.year}
-                      onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, year: e.target.value })
+                      }
                       placeholder="2021"
                       required
                     />
@@ -358,7 +377,9 @@ export function UsedVehicleFormPage() {
                     <Input
                       type="number"
                       value={formData.kilometers}
-                      onChange={(e) => setFormData({ ...formData, kilometers: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, kilometers: e.target.value })
+                      }
                       placeholder="0"
                     />
                   </div>
@@ -368,7 +389,9 @@ export function UsedVehicleFormPage() {
                     <Input
                       type="number"
                       value={formData.hours}
-                      onChange={(e) => setFormData({ ...formData, hours: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, hours: e.target.value })
+                      }
                       placeholder="3500"
                     />
                   </div>
@@ -379,7 +402,9 @@ export function UsedVehicleFormPage() {
                   <Input
                     type="number"
                     value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, price: e.target.value })
+                    }
                     placeholder="1850000"
                     required
                   />
@@ -390,7 +415,9 @@ export function UsedVehicleFormPage() {
                     <Label>Ownership</Label>
                     <Input
                       value={formData.ownership}
-                      onChange={(e) => setFormData({ ...formData, ownership: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, ownership: e.target.value })
+                      }
                       placeholder="First Owner"
                     />
                   </div>
@@ -399,7 +426,9 @@ export function UsedVehicleFormPage() {
                     <Label>Fuel Type</Label>
                     <Input
                       value={formData.fuelType}
-                      onChange={(e) => setFormData({ ...formData, fuelType: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, fuelType: e.target.value })
+                      }
                       placeholder="Diesel"
                     />
                   </div>
@@ -409,7 +438,9 @@ export function UsedVehicleFormPage() {
                   <Label>Location</Label>
                   <Input
                     value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, location: e.target.value })
+                    }
                     placeholder="Patna"
                   />
                 </div>
@@ -418,7 +449,12 @@ export function UsedVehicleFormPage() {
                   <Label>Condition Notes</Label>
                   <Textarea
                     value={formData.conditionNotes}
-                    onChange={(e) => setFormData({ ...formData, conditionNotes: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        conditionNotes: e.target.value,
+                      })
+                    }
                     placeholder="Minor scratches, engine checked..."
                     rows={3}
                   />
@@ -449,7 +485,9 @@ export function UsedVehicleFormPage() {
                     onClick={() => reportInputRef.current?.click()}
                   >
                     <FileText className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground">Upload inspection report PDF</p>
+                    <p className="text-sm text-muted-foreground">
+                      Upload inspection report PDF
+                    </p>
                     <Button type="button" variant="outline" className="mt-4">
                       <Upload className="mr-2 h-4 w-4" />
                       Upload PDF
@@ -463,14 +501,22 @@ export function UsedVehicleFormPage() {
                       </div>
                       <div>
                         <p className="text-sm font-medium truncate max-w-[250px]">
-                          {formData.inspectionReportUrl.split(/[\\/]/).pop() || "report.pdf"}
+                          {formData.inspectionReportUrl.split(/[\\/]/).pop() ||
+                            "report.pdf"}
                         </p>
-                        <p className="text-xs text-muted-foreground">PDF Document</p>
+                        <p className="text-xs text-muted-foreground">
+                          PDF Document
+                        </p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-1">
-                      <Button type="button" variant="ghost" size="icon" onClick={() => reportInputRef.current?.click()}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => reportInputRef.current?.click()}
+                      >
                         <Upload className="h-4 w-4" />
                       </Button>
 
@@ -478,7 +524,9 @@ export function UsedVehicleFormPage() {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        onClick={() => window.open(formData.inspectionReportUrl, "_blank")}
+                        onClick={() =>
+                          window.open(formData.inspectionReportUrl, "_blank")
+                        }
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
@@ -488,7 +536,10 @@ export function UsedVehicleFormPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => {
-                          setFormData((prev) => ({ ...prev, inspectionReportUrl: "" }));
+                          setFormData((prev) => ({
+                            ...prev,
+                            inspectionReportUrl: "",
+                          }));
                           setInspectionReportFile(null);
                         }}
                       >
@@ -523,7 +574,9 @@ export function UsedVehicleFormPage() {
                   onClick={() => imageInputRef.current?.click()}
                 >
                   <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">Click to upload images</p>
+                  <p className="text-sm text-muted-foreground">
+                    Click to upload images
+                  </p>
                   <Button type="button" variant="outline" className="mt-4">
                     <Upload className="mr-2 h-4 w-4" />
                     Upload Images
@@ -534,7 +587,10 @@ export function UsedVehicleFormPage() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                     {formData.images.map((img, index) => (
                       <div key={index} className="relative group">
-                        <img src={img} className="w-full h-32 object-cover rounded-lg" />
+                        <img
+                          src={img}
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
                         <Button
                           type="button"
                           variant="destructive"
@@ -563,7 +619,9 @@ export function UsedVehicleFormPage() {
                   <Label>Active</Label>
                   <Switch
                     checked={formData.isActive}
-                    onCheckedChange={(v) => setFormData({ ...formData, isActive: v })}
+                    onCheckedChange={(v) =>
+                      setFormData({ ...formData, isActive: v })
+                    }
                   />
                 </div>
 
@@ -571,7 +629,9 @@ export function UsedVehicleFormPage() {
                   <Label>Certified</Label>
                   <Switch
                     checked={formData.isCertified}
-                    onCheckedChange={(v) => setFormData({ ...formData, isCertified: v })}
+                    onCheckedChange={(v) =>
+                      setFormData({ ...formData, isCertified: v })
+                    }
                   />
                 </div>
 
@@ -579,7 +639,9 @@ export function UsedVehicleFormPage() {
                   <Label>Finance Available</Label>
                   <Switch
                     checked={formData.financeAvailable}
-                    onCheckedChange={(v) => setFormData({ ...formData, financeAvailable: v })}
+                    onCheckedChange={(v) =>
+                      setFormData({ ...formData, financeAvailable: v })
+                    }
                   />
                 </div>
 
@@ -587,7 +649,9 @@ export function UsedVehicleFormPage() {
                   <Label>Warranty</Label>
                   <Switch
                     checked={formData.hasWarranty}
-                    onCheckedChange={(v) => setFormData({ ...formData, hasWarranty: v })}
+                    onCheckedChange={(v) =>
+                      setFormData({ ...formData, hasWarranty: v })
+                    }
                   />
                 </div>
 
@@ -595,7 +659,9 @@ export function UsedVehicleFormPage() {
                   <Label>Return Policy</Label>
                   <Switch
                     checked={formData.hasReturnPolicy}
-                    onCheckedChange={(v) => setFormData({ ...formData, hasReturnPolicy: v })}
+                    onCheckedChange={(v) =>
+                      setFormData({ ...formData, hasReturnPolicy: v })
+                    }
                   />
                 </div>
               </CardContent>
@@ -609,10 +675,19 @@ export function UsedVehicleFormPage() {
                   disabled={isSaving}
                 >
                   <Save className="mr-2 h-4 w-4" />
-                  {isSaving ? "Saving..." : isEditing ? "Update Vehicle" : "Publish Vehicle"}
+                  {isSaving
+                    ? "Saving..."
+                    : isEditing
+                      ? "Update Vehicle"
+                      : "Publish Vehicle"}
                 </Button>
 
-                <Button type="button" variant="outline" className="w-full" onClick={() => navigate("/admin/certified-refurbished")}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => navigate("/admin/certified-refurbished")}
+                >
                   Cancel
                 </Button>
               </CardContent>

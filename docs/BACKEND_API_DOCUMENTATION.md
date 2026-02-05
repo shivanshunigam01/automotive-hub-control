@@ -1,6 +1,7 @@
 # Patliputra Motors - Admin Panel Backend API Documentation
 
 ## Tech Stack
+
 - **Runtime**: Node.js (v18+)
 - **Framework**: Express.js
 - **Database**: MongoDB with Mongoose ODM
@@ -127,68 +128,71 @@ FRONTEND_URL=http://localhost:5173
 
 ```javascript
 // models/User.js
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Name is required'],
-    trim: true,
-    maxlength: 100
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Name is required"],
+      trim: true,
+      maxlength: 100,
+    },
+    email: {
+      type: String,
+      required: [true, "Email is required"],
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      minlength: 6,
+      select: false, // Don't return password by default
+    },
+    phone: {
+      type: String,
+      trim: true,
+    },
+    role: {
+      type: String,
+      enum: ["master_admin", "admin", "sales_user"],
+      default: "sales_user",
+    },
+    customRole: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Role",
+    },
+    permissions: {
+      type: Map,
+      of: {
+        view: Boolean,
+        create: Boolean,
+        edit: Boolean,
+        delete: Boolean,
+        export: Boolean,
+      },
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    lastLogin: Date,
+    refreshToken: String,
   },
-  email: {
-    type: String,
-    required: [true, 'Email is required'],
-    unique: true,
-    lowercase: true,
-    trim: true
+  {
+    timestamps: true,
   },
-  password: {
-    type: String,
-    required: [true, 'Password is required'],
-    minlength: 6,
-    select: false // Don't return password by default
-  },
-  phone: {
-    type: String,
-    trim: true
-  },
-  role: {
-    type: String,
-    enum: ['master_admin', 'admin', 'sales_user'],
-    default: 'sales_user'
-  },
-  customRole: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Role'
-  },
-  permissions: {
-    type: Map,
-    of: {
-      view: Boolean,
-      create: Boolean,
-      edit: Boolean,
-      delete: Boolean,
-      export: Boolean
-    }
-  },
-  isActive: {
-    type: Boolean,
-    default: true
-  },
-  lastLogin: Date,
-  refreshToken: String
-}, {
-  timestamps: true
-});
+);
 
 // Password hashing middleware
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 12);
   next();
 });
 
 // Password comparison method
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 ```
@@ -197,175 +201,273 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 
 ```javascript
 // models/Role.js
-const roleSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true
+const roleSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+    displayName: {
+      type: String,
+      required: true,
+    },
+    permissions: {
+      dashboard: {
+        view: Boolean,
+        create: Boolean,
+        edit: Boolean,
+        delete: Boolean,
+        export: Boolean,
+      },
+      products: {
+        view: Boolean,
+        create: Boolean,
+        edit: Boolean,
+        delete: Boolean,
+        export: Boolean,
+      },
+      certifiedRefurbished: {
+        view: Boolean,
+        create: Boolean,
+        edit: Boolean,
+        delete: Boolean,
+        export: Boolean,
+      },
+      leads: {
+        view: Boolean,
+        create: Boolean,
+        edit: Boolean,
+        delete: Boolean,
+        export: Boolean,
+      },
+      finance: {
+        view: Boolean,
+        create: Boolean,
+        edit: Boolean,
+        delete: Boolean,
+        export: Boolean,
+      },
+      cibil: {
+        view: Boolean,
+        create: Boolean,
+        edit: Boolean,
+        delete: Boolean,
+        export: Boolean,
+      },
+      analytics: {
+        view: Boolean,
+        create: Boolean,
+        edit: Boolean,
+        delete: Boolean,
+        export: Boolean,
+      },
+      banners: {
+        view: Boolean,
+        create: Boolean,
+        edit: Boolean,
+        delete: Boolean,
+        export: Boolean,
+      },
+      settings: {
+        view: Boolean,
+        create: Boolean,
+        edit: Boolean,
+        delete: Boolean,
+        export: Boolean,
+      },
+      dealers: {
+        view: Boolean,
+        create: Boolean,
+        edit: Boolean,
+        delete: Boolean,
+        export: Boolean,
+      },
+      users: {
+        view: Boolean,
+        create: Boolean,
+        edit: Boolean,
+        delete: Boolean,
+        export: Boolean,
+      },
+      mediaLibrary: {
+        view: Boolean,
+        create: Boolean,
+        edit: Boolean,
+        delete: Boolean,
+        export: Boolean,
+      },
+      offersSchemes: {
+        view: Boolean,
+        create: Boolean,
+        edit: Boolean,
+        delete: Boolean,
+        export: Boolean,
+      },
+      contentPages: {
+        view: Boolean,
+        create: Boolean,
+        edit: Boolean,
+        delete: Boolean,
+        export: Boolean,
+      },
+    },
+    isSystem: {
+      type: Boolean,
+      default: false, // true for default roles that can't be deleted
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
-  displayName: {
-    type: String,
-    required: true
+  {
+    timestamps: true,
   },
-  permissions: {
-    dashboard: { view: Boolean, create: Boolean, edit: Boolean, delete: Boolean, export: Boolean },
-    products: { view: Boolean, create: Boolean, edit: Boolean, delete: Boolean, export: Boolean },
-    certifiedRefurbished: { view: Boolean, create: Boolean, edit: Boolean, delete: Boolean, export: Boolean },
-    leads: { view: Boolean, create: Boolean, edit: Boolean, delete: Boolean, export: Boolean },
-    finance: { view: Boolean, create: Boolean, edit: Boolean, delete: Boolean, export: Boolean },
-    cibil: { view: Boolean, create: Boolean, edit: Boolean, delete: Boolean, export: Boolean },
-    analytics: { view: Boolean, create: Boolean, edit: Boolean, delete: Boolean, export: Boolean },
-    banners: { view: Boolean, create: Boolean, edit: Boolean, delete: Boolean, export: Boolean },
-    settings: { view: Boolean, create: Boolean, edit: Boolean, delete: Boolean, export: Boolean },
-    dealers: { view: Boolean, create: Boolean, edit: Boolean, delete: Boolean, export: Boolean },
-    users: { view: Boolean, create: Boolean, edit: Boolean, delete: Boolean, export: Boolean },
-    mediaLibrary: { view: Boolean, create: Boolean, edit: Boolean, delete: Boolean, export: Boolean },
-    offersSchemes: { view: Boolean, create: Boolean, edit: Boolean, delete: Boolean, export: Boolean },
-    contentPages: { view: Boolean, create: Boolean, edit: Boolean, delete: Boolean, export: Boolean }
-  },
-  isSystem: {
-    type: Boolean,
-    default: false // true for default roles that can't be deleted
-  },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }
-}, {
-  timestamps: true
-});
+);
 ```
 
 ### 3. Product Schema
 
 ```javascript
 // models/Product.js
-const productSchema = new mongoose.Schema({
-  // Basic Info
-  name: {
-    type: String,
-    required: [true, 'Product name is required'],
-    trim: true,
-    maxlength: 200
-  },
-  slug: {
-    type: String,
-    unique: true,
-    lowercase: true
-  },
-  brand: {
-    type: String,
-    enum: ['JCB', 'Ashok Leyland', 'Switch EV'],
-    required: true
-  },
-  model: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  
-  // Classification
-  segment: {
-    type: String,
-    enum: ['Construction', 'Agriculture', 'Commercial', 'Electric'],
-    required: true
-  },
-  category: {
-    type: String,
-    required: true
-  },
-  subcategory: String,
-  applicationTags: [String],
-  
-  // Pricing
-  price: {
-    base: Number,
-    showOnWebsite: {
-      type: Boolean,
-      default: false
+const productSchema = new mongoose.Schema(
+  {
+    // Basic Info
+    name: {
+      type: String,
+      required: [true, "Product name is required"],
+      trim: true,
+      maxlength: 200,
     },
-    priceLabel: String // "Starting from", "Contact for price", etc.
+    slug: {
+      type: String,
+      unique: true,
+      lowercase: true,
+    },
+    brand: {
+      type: String,
+      enum: ["JCB", "Ashok Leyland", "Switch EV"],
+      required: true,
+    },
+    model: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    // Classification
+    segment: {
+      type: String,
+      enum: ["Construction", "Agriculture", "Commercial", "Electric"],
+      required: true,
+    },
+    category: {
+      type: String,
+      required: true,
+    },
+    subcategory: String,
+    applicationTags: [String],
+
+    // Pricing
+    price: {
+      base: Number,
+      showOnWebsite: {
+        type: Boolean,
+        default: false,
+      },
+      priceLabel: String, // "Starting from", "Contact for price", etc.
+    },
+
+    // Media
+    images: [
+      {
+        url: String, // Cloudinary URL
+        publicId: String, // Cloudinary public ID
+        alt: String,
+        isPrimary: Boolean,
+        order: Number,
+      },
+    ],
+
+    // Brochure (Local Storage)
+    brochure: {
+      filename: String,
+      originalName: String,
+      path: String,
+      size: Number,
+      uploadedAt: Date,
+    },
+
+    // Specifications (Dynamic)
+    specifications: [
+      {
+        category: String, // "Engine", "Dimensions", "Performance"
+        specs: [
+          {
+            label: String,
+            value: String,
+            unit: String,
+          },
+        ],
+      },
+    ],
+
+    // TCO Data
+    tco: {
+      fuelConsumption: Number,
+      maintenanceCost: Number,
+      insuranceCost: Number,
+      depreciationRate: Number,
+      resaleValue: Number,
+      warrantyYears: Number,
+      customFields: [
+        {
+          label: String,
+          value: String,
+        },
+      ],
+    },
+
+    // SEO
+    seo: {
+      metaTitle: String,
+      metaDescription: String,
+      keywords: [String],
+      canonicalUrl: String,
+    },
+
+    // Status
+    status: {
+      type: String,
+      enum: ["draft", "published", "archived"],
+      default: "draft",
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
+
+    // Timestamps
+    publishedAt: Date,
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
-  
-  // Media
-  images: [{
-    url: String,          // Cloudinary URL
-    publicId: String,     // Cloudinary public ID
-    alt: String,
-    isPrimary: Boolean,
-    order: Number
-  }],
-  
-  // Brochure (Local Storage)
-  brochure: {
-    filename: String,
-    originalName: String,
-    path: String,
-    size: Number,
-    uploadedAt: Date
+  {
+    timestamps: true,
   },
-  
-  // Specifications (Dynamic)
-  specifications: [{
-    category: String,     // "Engine", "Dimensions", "Performance"
-    specs: [{
-      label: String,
-      value: String,
-      unit: String
-    }]
-  }],
-  
-  // TCO Data
-  tco: {
-    fuelConsumption: Number,
-    maintenanceCost: Number,
-    insuranceCost: Number,
-    depreciationRate: Number,
-    resaleValue: Number,
-    warrantyYears: Number,
-    customFields: [{
-      label: String,
-      value: String
-    }]
-  },
-  
-  // SEO
-  seo: {
-    metaTitle: String,
-    metaDescription: String,
-    keywords: [String],
-    canonicalUrl: String
-  },
-  
-  // Status
-  status: {
-    type: String,
-    enum: ['draft', 'published', 'archived'],
-    default: 'draft'
-  },
-  isFeatured: {
-    type: Boolean,
-    default: false
-  },
-  
-  // Timestamps
-  publishedAt: Date,
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  updatedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }
-}, {
-  timestamps: true
-});
+);
 
 // Auto-generate slug
-productSchema.pre('save', function(next) {
-  if (this.isModified('name')) {
+productSchema.pre("save", function (next) {
+  if (this.isModified("name")) {
     this.slug = slugify(this.name, { lower: true, strict: true });
   }
   next();
@@ -376,263 +478,299 @@ productSchema.pre('save', function(next) {
 
 ```javascript
 // models/CertifiedRefurbished.js
-const certifiedRefurbishedSchema = new mongoose.Schema({
-  // Basic Info
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  brand: {
-    type: String,
-    enum: ['JCB', 'Ashok Leyland', 'Switch EV', 'Other'],
-    required: true
-  },
-  model: String,
-  manufacturingYear: Number,
-  
-  // Usage Details
-  usageHours: Number,      // For equipment
-  kilometersDriven: Number, // For vehicles
-  fuelType: {
-    type: String,
-    enum: ['Diesel', 'Petrol', 'CNG', 'Electric', 'Hybrid']
-  },
-  ownershipNumber: {
-    type: Number,
-    default: 1
-  },
-  
-  // Condition Report
-  conditionReport: {
-    engine: {
-      rating: { type: Number, min: 1, max: 5 },
-      notes: String
+const certifiedRefurbishedSchema = new mongoose.Schema(
+  {
+    // Basic Info
+    name: {
+      type: String,
+      required: true,
+      trim: true,
     },
-    transmission: {
-      rating: { type: Number, min: 1, max: 5 },
-      notes: String
+    brand: {
+      type: String,
+      enum: ["JCB", "Ashok Leyland", "Switch EV", "Other"],
+      required: true,
     },
-    body: {
-      rating: { type: Number, min: 1, max: 5 },
-      notes: String
+    model: String,
+    manufacturingYear: Number,
+
+    // Usage Details
+    usageHours: Number, // For equipment
+    kilometersDriven: Number, // For vehicles
+    fuelType: {
+      type: String,
+      enum: ["Diesel", "Petrol", "CNG", "Electric", "Hybrid"],
     },
-    tyres: {
-      rating: { type: Number, min: 1, max: 5 },
-      notes: String
+    ownershipNumber: {
+      type: Number,
+      default: 1,
     },
-    hydraulics: {
-      rating: { type: Number, min: 1, max: 5 },
-      notes: String
+
+    // Condition Report
+    conditionReport: {
+      engine: {
+        rating: { type: Number, min: 1, max: 5 },
+        notes: String,
+      },
+      transmission: {
+        rating: { type: Number, min: 1, max: 5 },
+        notes: String,
+      },
+      body: {
+        rating: { type: Number, min: 1, max: 5 },
+        notes: String,
+      },
+      tyres: {
+        rating: { type: Number, min: 1, max: 5 },
+        notes: String,
+      },
+      hydraulics: {
+        rating: { type: Number, min: 1, max: 5 },
+        notes: String,
+      },
+      electrical: {
+        rating: { type: Number, min: 1, max: 5 },
+        notes: String,
+      },
     },
-    electrical: {
-      rating: { type: Number, min: 1, max: 5 },
-      notes: String
-    }
-  },
-  
-  // 150-Point Inspection
-  inspection: {
-    isCompleted: Boolean,
-    completedAt: Date,
-    completedBy: {
+
+    // 150-Point Inspection
+    inspection: {
+      isCompleted: Boolean,
+      completedAt: Date,
+      completedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+      score: Number, // Out of 150
+      reportUrl: String,
+    },
+
+    // Pricing
+    price: {
+      asking: Number,
+      negotiable: Boolean,
+      emiAvailable: Boolean,
+    },
+
+    // Media
+    images: [
+      {
+        url: String,
+        publicId: String,
+        alt: String,
+        isPrimary: Boolean,
+        order: Number,
+      },
+    ],
+
+    // Brochure/Documentation
+    brochure: {
+      filename: String,
+      originalName: String,
+      path: String,
+      size: Number,
+      uploadedAt: Date,
+    },
+
+    // Warranty
+    warranty: {
+      available: Boolean,
+      months: Number,
+      coverage: String,
+    },
+
+    // Location
+    location: {
+      dealer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Dealer",
+      },
+      city: String,
+      state: String,
+    },
+
+    // Status
+    status: {
+      type: String,
+      enum: ["available", "reserved", "sold", "archived"],
+      default: "available",
+    },
+
+    // SEO
+    seo: {
+      metaTitle: String,
+      metaDescription: String,
+    },
+
+    createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
+      ref: "User",
     },
-    score: Number, // Out of 150
-    reportUrl: String
   },
-  
-  // Pricing
-  price: {
-    asking: Number,
-    negotiable: Boolean,
-    emiAvailable: Boolean
+  {
+    timestamps: true,
   },
-  
-  // Media
-  images: [{
-    url: String,
-    publicId: String,
-    alt: String,
-    isPrimary: Boolean,
-    order: Number
-  }],
-  
-  // Brochure/Documentation
-  brochure: {
-    filename: String,
-    originalName: String,
-    path: String,
-    size: Number,
-    uploadedAt: Date
-  },
-  
-  // Warranty
-  warranty: {
-    available: Boolean,
-    months: Number,
-    coverage: String
-  },
-  
-  // Location
-  location: {
-    dealer: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Dealer'
-    },
-    city: String,
-    state: String
-  },
-  
-  // Status
-  status: {
-    type: String,
-    enum: ['available', 'reserved', 'sold', 'archived'],
-    default: 'available'
-  },
-  
-  // SEO
-  seo: {
-    metaTitle: String,
-    metaDescription: String
-  },
-  
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }
-}, {
-  timestamps: true
-});
+);
 ```
 
 ### 5. Lead Schema
 
 ```javascript
 // models/Lead.js
-const leadSchema = new mongoose.Schema({
-  // Contact Info
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  email: {
-    type: String,
-    lowercase: true,
-    trim: true
-  },
-  phone: {
-    type: String,
-    required: true
-  },
-  alternatePhone: String,
-  
-  // Lead Source
-  source: {
-    type: String,
-    enum: ['website', 'walk_in', 'referral', 'campaign', 'social_media', 'other'],
-    default: 'website'
-  },
-  
-  // UTM Tracking
-  utm: {
-    source: String,
-    medium: String,
-    campaign: String,
-    term: String,
-    content: String
-  },
-  
-  // Interest
-  interestedIn: {
-    product: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Product'
-    },
-    certifiedRefurbished: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'CertifiedRefurbished'
-    },
-    category: String,
-    brand: String
-  },
-  
-  // Location
-  location: {
-    city: String,
-    district: String,
-    state: String,
-    pincode: String
-  },
-  
-  // Status & Assignment
-  status: {
-    type: String,
-    enum: ['new', 'contacted', 'qualified', 'negotiation', 'won', 'lost', 'junk'],
-    default: 'new'
-  },
-  priority: {
-    type: String,
-    enum: ['low', 'medium', 'high', 'urgent'],
-    default: 'medium'
-  },
-  assignedTo: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  
-  // Notes & Activity
-  notes: [{
-    content: String,
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  
-  activities: [{
-    type: {
+const leadSchema = new mongoose.Schema(
+  {
+    // Contact Info
+    name: {
       type: String,
-      enum: ['call', 'email', 'meeting', 'whatsapp', 'site_visit', 'demo', 'follow_up', 'status_change']
+      required: true,
+      trim: true,
     },
-    description: String,
-    outcome: String,
-    scheduledAt: Date,
-    completedAt: Date,
-    createdBy: {
+    email: {
+      type: String,
+      lowercase: true,
+      trim: true,
+    },
+    phone: {
+      type: String,
+      required: true,
+    },
+    alternatePhone: String,
+
+    // Lead Source
+    source: {
+      type: String,
+      enum: [
+        "website",
+        "walk_in",
+        "referral",
+        "campaign",
+        "social_media",
+        "other",
+      ],
+      default: "website",
+    },
+
+    // UTM Tracking
+    utm: {
+      source: String,
+      medium: String,
+      campaign: String,
+      term: String,
+      content: String,
+    },
+
+    // Interest
+    interestedIn: {
+      product: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+      },
+      certifiedRefurbished: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "CertifiedRefurbished",
+      },
+      category: String,
+      brand: String,
+    },
+
+    // Location
+    location: {
+      city: String,
+      district: String,
+      state: String,
+      pincode: String,
+    },
+
+    // Status & Assignment
+    status: {
+      type: String,
+      enum: [
+        "new",
+        "contacted",
+        "qualified",
+        "negotiation",
+        "won",
+        "lost",
+        "junk",
+      ],
+      default: "new",
+    },
+    priority: {
+      type: String,
+      enum: ["low", "medium", "high", "urgent"],
+      default: "medium",
+    },
+    assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
+      ref: "User",
     },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  
-  // Follow-up
-  nextFollowUp: Date,
-  
-  // Linked Records
-  financeApplication: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'FinanceApplication'
+
+    // Notes & Activity
+    notes: [
+      {
+        content: String,
+        createdBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+
+    activities: [
+      {
+        type: {
+          type: String,
+          enum: [
+            "call",
+            "email",
+            "meeting",
+            "whatsapp",
+            "site_visit",
+            "demo",
+            "follow_up",
+            "status_change",
+          ],
+        },
+        description: String,
+        outcome: String,
+        scheduledAt: Date,
+        completedAt: Date,
+        createdBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+
+    // Follow-up
+    nextFollowUp: Date,
+
+    // Linked Records
+    financeApplication: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "FinanceApplication",
+    },
+
+    // Conversion
+    convertedAt: Date,
+    lostReason: String,
   },
-  
-  // Conversion
-  convertedAt: Date,
-  lostReason: String
-}, {
-  timestamps: true
-});
+  {
+    timestamps: true,
+  },
+);
 
 // Indexes for search
-leadSchema.index({ name: 'text', email: 'text', phone: 'text' });
+leadSchema.index({ name: "text", email: "text", phone: "text" });
 leadSchema.index({ status: 1, assignedTo: 1 });
 leadSchema.index({ createdAt: -1 });
 ```
@@ -641,209 +779,237 @@ leadSchema.index({ createdAt: -1 });
 
 ```javascript
 // models/FinanceApplication.js
-const financeApplicationSchema = new mongoose.Schema({
-  // Applicant Info
-  applicant: {
-    name: { type: String, required: true },
-    email: String,
-    phone: { type: String, required: true },
-    alternatePhone: String,
-    dateOfBirth: Date,
-    gender: { type: String, enum: ['male', 'female', 'other'] },
-    panNumber: String,
-    aadhaarNumber: String
-  },
-  
-  // Address
-  address: {
-    current: {
-      line1: String,
-      line2: String,
-      city: String,
-      district: String,
-      state: String,
-      pincode: String
+const financeApplicationSchema = new mongoose.Schema(
+  {
+    // Applicant Info
+    applicant: {
+      name: { type: String, required: true },
+      email: String,
+      phone: { type: String, required: true },
+      alternatePhone: String,
+      dateOfBirth: Date,
+      gender: { type: String, enum: ["male", "female", "other"] },
+      panNumber: String,
+      aadhaarNumber: String,
     },
-    permanent: {
-      line1: String,
-      line2: String,
-      city: String,
-      district: String,
-      state: String,
-      pincode: String
+
+    // Address
+    address: {
+      current: {
+        line1: String,
+        line2: String,
+        city: String,
+        district: String,
+        state: String,
+        pincode: String,
+      },
+      permanent: {
+        line1: String,
+        line2: String,
+        city: String,
+        district: String,
+        state: String,
+        pincode: String,
+      },
+      sameAsCurrent: Boolean,
     },
-    sameAsCurrent: Boolean
-  },
-  
-  // Employment
-  employment: {
-    type: { type: String, enum: ['salaried', 'self_employed', 'business', 'farmer', 'other'] },
-    companyName: String,
-    designation: String,
-    monthlyIncome: Number,
-    yearsInBusiness: Number
-  },
-  
-  // Loan Details
-  loan: {
-    amount: Number,
-    tenure: Number, // in months
-    downPayment: Number,
-    emiPreference: Number
-  },
-  
-  // Product Interest
-  product: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product'
-  },
-  certifiedRefurbished: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'CertifiedRefurbished'
-  },
-  
-  // Documents
-  documents: [{
-    type: {
-      type: String,
-      enum: ['aadhaar_front', 'aadhaar_back', 'pan_card', 'income_proof', 'bank_statement', 'photo', 'address_proof', 'other']
+
+    // Employment
+    employment: {
+      type: {
+        type: String,
+        enum: ["salaried", "self_employed", "business", "farmer", "other"],
+      },
+      companyName: String,
+      designation: String,
+      monthlyIncome: Number,
+      yearsInBusiness: Number,
     },
-    url: String,        // Cloudinary URL
-    publicId: String,
-    uploadedAt: Date,
-    verified: Boolean,
-    verifiedBy: {
+
+    // Loan Details
+    loan: {
+      amount: Number,
+      tenure: Number, // in months
+      downPayment: Number,
+      emiPreference: Number,
+    },
+
+    // Product Interest
+    product: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    }
-  }],
-  
-  // CIBIL
-  cibilCheck: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'CibilCheck'
+      ref: "Product",
+    },
+    certifiedRefurbished: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CertifiedRefurbished",
+    },
+
+    // Documents
+    documents: [
+      {
+        type: {
+          type: String,
+          enum: [
+            "aadhaar_front",
+            "aadhaar_back",
+            "pan_card",
+            "income_proof",
+            "bank_statement",
+            "photo",
+            "address_proof",
+            "other",
+          ],
+        },
+        url: String, // Cloudinary URL
+        publicId: String,
+        uploadedAt: Date,
+        verified: Boolean,
+        verifiedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+      },
+    ],
+
+    // CIBIL
+    cibilCheck: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CibilCheck",
+    },
+
+    // Status
+    status: {
+      type: String,
+      enum: [
+        "pending",
+        "documents_required",
+        "under_review",
+        "approved",
+        "rejected",
+        "disbursed",
+        "cancelled",
+      ],
+      default: "pending",
+    },
+
+    // Processing
+    processing: {
+      assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      reviewedAt: Date,
+      approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      approvedAt: Date,
+      rejectionReason: String,
+      remarks: String,
+    },
+
+    // Linked Lead
+    lead: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Lead",
+    },
+
+    // Bank Details (for disbursement)
+    bankDetails: {
+      bankName: String,
+      accountNumber: String,
+      ifscCode: String,
+      accountHolderName: String,
+    },
   },
-  
-  // Status
-  status: {
-    type: String,
-    enum: ['pending', 'documents_required', 'under_review', 'approved', 'rejected', 'disbursed', 'cancelled'],
-    default: 'pending'
+  {
+    timestamps: true,
   },
-  
-  // Processing
-  processing: {
-    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    reviewedAt: Date,
-    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    approvedAt: Date,
-    rejectionReason: String,
-    remarks: String
-  },
-  
-  // Linked Lead
-  lead: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Lead'
-  },
-  
-  // Bank Details (for disbursement)
-  bankDetails: {
-    bankName: String,
-    accountNumber: String,
-    ifscCode: String,
-    accountHolderName: String
-  }
-}, {
-  timestamps: true
-});
+);
 ```
 
 ### 7. CIBIL Check Schema
 
 ```javascript
 // models/CibilCheck.js
-const cibilCheckSchema = new mongoose.Schema({
-  // Customer Info
-  customer: {
-    name: { type: String, required: true },
-    phone: { type: String, required: true },
-    email: String,
-    panNumber: String,
-    dateOfBirth: Date
-  },
-  
-  // CIBIL Result
-  score: {
-    type: Number,
-    min: 300,
-    max: 900
-  },
-  band: {
-    type: String,
-    enum: ['Excellent', 'Good', 'Fair', 'Poor', 'No History'],
-    // Excellent: 750-900, Good: 700-749, Fair: 650-699, Poor: 300-649
-  },
-  
-  // Documents (Masked for privacy)
-  documents: {
-    aadhaar: {
-      number: String,      // Store last 4 digits only: XXXX-XXXX-1234
-      frontUrl: String,
-      backUrl: String,
-      verified: Boolean
+const cibilCheckSchema = new mongoose.Schema(
+  {
+    // Customer Info
+    customer: {
+      name: { type: String, required: true },
+      phone: { type: String, required: true },
+      email: String,
+      panNumber: String,
+      dateOfBirth: Date,
     },
-    pan: {
-      number: String,      // Masked: XXXXX1234X
-      url: String,
-      verified: Boolean
-    }
+
+    // CIBIL Result
+    score: {
+      type: Number,
+      min: 300,
+      max: 900,
+    },
+    band: {
+      type: String,
+      enum: ["Excellent", "Good", "Fair", "Poor", "No History"],
+      // Excellent: 750-900, Good: 700-749, Fair: 650-699, Poor: 300-649
+    },
+
+    // Documents (Masked for privacy)
+    documents: {
+      aadhaar: {
+        number: String, // Store last 4 digits only: XXXX-XXXX-1234
+        frontUrl: String,
+        backUrl: String,
+        verified: Boolean,
+      },
+      pan: {
+        number: String, // Masked: XXXXX1234X
+        url: String,
+        verified: Boolean,
+      },
+    },
+
+    // API Response (from CIBIL/credit bureau)
+    apiResponse: {
+      requestId: String,
+      responseCode: String,
+      rawResponse: mongoose.Schema.Types.Mixed, // Store complete response
+      fetchedAt: Date,
+    },
+
+    // Status
+    status: {
+      type: String,
+      enum: ["pending", "completed", "failed", "expired"],
+      default: "pending",
+    },
+
+    // Linked Records
+    financeApplication: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "FinanceApplication",
+    },
+    lead: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Lead",
+    },
+
+    // Audit
+    checkedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    expiresAt: Date, // CIBIL scores typically valid for 30-90 days
   },
-  
-  // API Response (from CIBIL/credit bureau)
-  apiResponse: {
-    requestId: String,
-    responseCode: String,
-    rawResponse: mongoose.Schema.Types.Mixed, // Store complete response
-    fetchedAt: Date
+  {
+    timestamps: true,
   },
-  
-  // Status
-  status: {
-    type: String,
-    enum: ['pending', 'completed', 'failed', 'expired'],
-    default: 'pending'
-  },
-  
-  // Linked Records
-  financeApplication: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'FinanceApplication'
-  },
-  lead: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Lead'
-  },
-  
-  // Audit
-  checkedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  expiresAt: Date // CIBIL scores typically valid for 30-90 days
-}, {
-  timestamps: true
-});
+);
 
 // Calculate band based on score
-cibilCheckSchema.pre('save', function(next) {
+cibilCheckSchema.pre("save", function (next) {
   if (this.score) {
-    if (this.score >= 750) this.band = 'Excellent';
-    else if (this.score >= 700) this.band = 'Good';
-    else if (this.score >= 650) this.band = 'Fair';
-    else if (this.score >= 300) this.band = 'Poor';
-    else this.band = 'No History';
+    if (this.score >= 750) this.band = "Excellent";
+    else if (this.score >= 700) this.band = "Good";
+    else if (this.score >= 650) this.band = "Fair";
+    else if (this.score >= 300) this.band = "Poor";
+    else this.band = "No History";
   }
   next();
 });
@@ -853,302 +1019,338 @@ cibilCheckSchema.pre('save', function(next) {
 
 ```javascript
 // models/Dealer.js
-const dealerSchema = new mongoose.Schema({
-  // Basic Info
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  code: {
-    type: String,
-    unique: true
-  },
-  type: {
-    type: String,
-    enum: ['authorized', 'associate', 'service_center'],
-    default: 'authorized'
-  },
-  brands: [{
-    type: String,
-    enum: ['JCB', 'Ashok Leyland', 'Switch EV']
-  }],
-  
-  // Contact
-  contact: {
-    phone: { type: String, required: true },
-    alternatePhone: String,
-    whatsapp: String,
-    email: String,
-    website: String
-  },
-  
-  // Address
-  address: {
-    line1: String,
-    line2: String,
-    landmark: String,
-    city: { type: String, required: true },
-    district: String,
-    state: { type: String, required: true },
-    pincode: String
-  },
-  
-  // Geo Location (for map)
-  location: {
+const dealerSchema = new mongoose.Schema(
+  {
+    // Basic Info
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    code: {
+      type: String,
+      unique: true,
+    },
     type: {
       type: String,
-      enum: ['Point'],
-      default: 'Point'
+      enum: ["authorized", "associate", "service_center"],
+      default: "authorized",
     },
-    coordinates: [Number] // [longitude, latitude]
+    brands: [
+      {
+        type: String,
+        enum: ["JCB", "Ashok Leyland", "Switch EV"],
+      },
+    ],
+
+    // Contact
+    contact: {
+      phone: { type: String, required: true },
+      alternatePhone: String,
+      whatsapp: String,
+      email: String,
+      website: String,
+    },
+
+    // Address
+    address: {
+      line1: String,
+      line2: String,
+      landmark: String,
+      city: { type: String, required: true },
+      district: String,
+      state: { type: String, required: true },
+      pincode: String,
+    },
+
+    // Geo Location (for map)
+    location: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: [Number], // [longitude, latitude]
+    },
+
+    // Operating Hours
+    operatingHours: {
+      weekdays: { open: String, close: String },
+      saturday: { open: String, close: String },
+      sunday: { open: String, close: String, isClosed: Boolean },
+    },
+
+    // Services Offered
+    services: [
+      {
+        type: String,
+        enum: [
+          "sales",
+          "service",
+          "spare_parts",
+          "finance",
+          "insurance",
+          "exchange",
+        ],
+      },
+    ],
+
+    // Manager Info
+    manager: {
+      name: String,
+      phone: String,
+      email: String,
+    },
+
+    // Media
+    images: [
+      {
+        url: String,
+        publicId: String,
+        alt: String,
+        isPrimary: Boolean,
+      },
+    ],
+
+    // Status
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    // Ratings (from customer feedback)
+    ratings: {
+      average: { type: Number, min: 0, max: 5 },
+      count: Number,
+    },
   },
-  
-  // Operating Hours
-  operatingHours: {
-    weekdays: { open: String, close: String },
-    saturday: { open: String, close: String },
-    sunday: { open: String, close: String, isClosed: Boolean }
+  {
+    timestamps: true,
   },
-  
-  // Services Offered
-  services: [{
-    type: String,
-    enum: ['sales', 'service', 'spare_parts', 'finance', 'insurance', 'exchange']
-  }],
-  
-  // Manager Info
-  manager: {
-    name: String,
-    phone: String,
-    email: String
-  },
-  
-  // Media
-  images: [{
-    url: String,
-    publicId: String,
-    alt: String,
-    isPrimary: Boolean
-  }],
-  
-  // Status
-  isActive: {
-    type: Boolean,
-    default: true
-  },
-  
-  // Ratings (from customer feedback)
-  ratings: {
-    average: { type: Number, min: 0, max: 5 },
-    count: Number
-  }
-}, {
-  timestamps: true
-});
+);
 
 // Geo index for location-based queries
-dealerSchema.index({ location: '2dsphere' });
-dealerSchema.index({ 'address.city': 1, 'address.state': 1 });
+dealerSchema.index({ location: "2dsphere" });
+dealerSchema.index({ "address.city": 1, "address.state": 1 });
 ```
 
 ### 9. Media Library Schemas
 
 ```javascript
 // models/MediaItem.js
-const mediaItemSchema = new mongoose.Schema({
-  // File Info
-  filename: {
-    type: String,
-    required: true
+const mediaItemSchema = new mongoose.Schema(
+  {
+    // File Info
+    filename: {
+      type: String,
+      required: true,
+    },
+    originalName: String,
+    type: {
+      type: String,
+      enum: ["image", "video"],
+      required: true,
+    },
+    mimeType: String,
+    size: Number,
+
+    // Cloudinary
+    url: { type: String, required: true },
+    publicId: { type: String, required: true },
+    thumbnailUrl: String,
+
+    // Metadata
+    title: {
+      en: String, // English
+      hi: String, // Hindi
+    },
+    description: {
+      en: String,
+      hi: String,
+    },
+    alt: String,
+    tags: [String],
+
+    // Organization
+    album: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Album",
+    },
+    category: {
+      type: String,
+      enum: ["gallery", "product", "banner", "event", "team", "other"],
+      default: "gallery",
+    },
+    order: {
+      type: Number,
+      default: 0,
+    },
+
+    // Dimensions (for images)
+    dimensions: {
+      width: Number,
+      height: Number,
+    },
+
+    // Duration (for videos)
+    duration: Number,
+
+    // Status
+    isPublic: {
+      type: Boolean,
+      default: true,
+    },
+
+    uploadedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
-  originalName: String,
-  type: {
-    type: String,
-    enum: ['image', 'video'],
-    required: true
+  {
+    timestamps: true,
   },
-  mimeType: String,
-  size: Number,
-  
-  // Cloudinary
-  url: { type: String, required: true },
-  publicId: { type: String, required: true },
-  thumbnailUrl: String,
-  
-  // Metadata
-  title: {
-    en: String,  // English
-    hi: String   // Hindi
-  },
-  description: {
-    en: String,
-    hi: String
-  },
-  alt: String,
-  tags: [String],
-  
-  // Organization
-  album: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Album'
-  },
-  category: {
-    type: String,
-    enum: ['gallery', 'product', 'banner', 'event', 'team', 'other'],
-    default: 'gallery'
-  },
-  order: {
-    type: Number,
-    default: 0
-  },
-  
-  // Dimensions (for images)
-  dimensions: {
-    width: Number,
-    height: Number
-  },
-  
-  // Duration (for videos)
-  duration: Number,
-  
-  // Status
-  isPublic: {
-    type: Boolean,
-    default: true
-  },
-  
-  uploadedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }
-}, {
-  timestamps: true
-});
+);
 
 // models/Album.js
-const albumSchema = new mongoose.Schema({
-  name: {
-    en: { type: String, required: true },
-    hi: String
+const albumSchema = new mongoose.Schema(
+  {
+    name: {
+      en: { type: String, required: true },
+      hi: String,
+    },
+    description: {
+      en: String,
+      hi: String,
+    },
+    slug: {
+      type: String,
+      unique: true,
+    },
+    coverImage: {
+      url: String,
+      publicId: String,
+    },
+    order: {
+      type: Number,
+      default: 0,
+    },
+    isPublic: {
+      type: Boolean,
+      default: true,
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
-  description: {
-    en: String,
-    hi: String
+  {
+    timestamps: true,
   },
-  slug: {
-    type: String,
-    unique: true
-  },
-  coverImage: {
-    url: String,
-    publicId: String
-  },
-  order: {
-    type: Number,
-    default: 0
-  },
-  isPublic: {
-    type: Boolean,
-    default: true
-  },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }
-}, {
-  timestamps: true
-});
+);
 ```
 
 ### 10. Offer & Scheme Schema
 
 ```javascript
 // models/OfferScheme.js
-const offerSchemeSchema = new mongoose.Schema({
-  // Basic Info
-  title: {
-    en: { type: String, required: true },
-    hi: String
-  },
-  description: {
-    en: String,
-    hi: String
-  },
-  type: {
-    type: String,
-    enum: ['discount', 'cashback', 'finance', 'exchange', 'accessory', 'service', 'combo', 'seasonal'],
-    required: true
-  },
-  
-  // Discount Details
-  discount: {
-    type: { type: String, enum: ['percentage', 'flat'] },
-    value: Number,
-    maxAmount: Number
-  },
-  
-  // Validity
-  validity: {
-    startDate: { type: Date, required: true },
-    endDate: { type: Date, required: true }
-  },
-  
-  // Applicability
-  applicableTo: {
-    allProducts: Boolean,
-    products: [{
+const offerSchemeSchema = new mongoose.Schema(
+  {
+    // Basic Info
+    title: {
+      en: { type: String, required: true },
+      hi: String,
+    },
+    description: {
+      en: String,
+      hi: String,
+    },
+    type: {
+      type: String,
+      enum: [
+        "discount",
+        "cashback",
+        "finance",
+        "exchange",
+        "accessory",
+        "service",
+        "combo",
+        "seasonal",
+      ],
+      required: true,
+    },
+
+    // Discount Details
+    discount: {
+      type: { type: String, enum: ["percentage", "flat"] },
+      value: Number,
+      maxAmount: Number,
+    },
+
+    // Validity
+    validity: {
+      startDate: { type: Date, required: true },
+      endDate: { type: Date, required: true },
+    },
+
+    // Applicability
+    applicableTo: {
+      allProducts: Boolean,
+      products: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+        },
+      ],
+      brands: [String],
+      categories: [String],
+      segments: [String],
+    },
+
+    // Terms & Conditions
+    terms: [String],
+
+    // Media
+    bannerImage: {
+      url: String,
+      publicId: String,
+    },
+    thumbnailImage: {
+      url: String,
+      publicId: String,
+    },
+
+    // Display
+    displayOrder: {
+      type: Number,
+      default: 0,
+    },
+    showOnHomepage: {
+      type: Boolean,
+      default: false,
+    },
+
+    // Status
+    status: {
+      type: String,
+      enum: ["draft", "active", "expired", "archived"],
+      default: "draft",
+    },
+
+    createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Product'
-    }],
-    brands: [String],
-    categories: [String],
-    segments: [String]
+      ref: "User",
+    },
   },
-  
-  // Terms & Conditions
-  terms: [String],
-  
-  // Media
-  bannerImage: {
-    url: String,
-    publicId: String
+  {
+    timestamps: true,
   },
-  thumbnailImage: {
-    url: String,
-    publicId: String
-  },
-  
-  // Display
-  displayOrder: {
-    type: Number,
-    default: 0
-  },
-  showOnHomepage: {
-    type: Boolean,
-    default: false
-  },
-  
-  // Status
-  status: {
-    type: String,
-    enum: ['draft', 'active', 'expired', 'archived'],
-    default: 'draft'
-  },
-  
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }
-}, {
-  timestamps: true
-});
+);
 
 // Auto-update status based on dates
-offerSchemeSchema.pre('save', function(next) {
+offerSchemeSchema.pre("save", function (next) {
   const now = new Date();
   if (this.validity.endDate < now) {
-    this.status = 'expired';
+    this.status = "expired";
   }
   next();
 });
@@ -1158,184 +1360,201 @@ offerSchemeSchema.pre('save', function(next) {
 
 ```javascript
 // models/ContentPage.js
-const contentPageSchema = new mongoose.Schema({
-  // Basic Info
-  title: {
-    en: { type: String, required: true },
-    hi: String
+const contentPageSchema = new mongoose.Schema(
+  {
+    // Basic Info
+    title: {
+      en: { type: String, required: true },
+      hi: String,
+    },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    type: {
+      type: String,
+      enum: ["page", "blog", "news", "faq", "policy"],
+      default: "page",
+    },
+
+    // Content
+    content: {
+      en: { type: String, required: true }, // HTML/Markdown content
+      hi: String,
+    },
+    excerpt: {
+      en: String,
+      hi: String,
+    },
+
+    // Featured Image
+    featuredImage: {
+      url: String,
+      publicId: String,
+      alt: String,
+    },
+
+    // SEO
+    seo: {
+      metaTitle: String,
+      metaDescription: String,
+      keywords: [String],
+      canonicalUrl: String,
+      noIndex: Boolean,
+    },
+
+    // Organization
+    category: String,
+    tags: [String],
+    order: Number,
+
+    // Parent (for nested pages)
+    parent: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ContentPage",
+    },
+
+    // Status
+    status: {
+      type: String,
+      enum: ["draft", "published", "archived"],
+      default: "draft",
+    },
+    publishedAt: Date,
+
+    // Display
+    showInNavigation: Boolean,
+    showInFooter: Boolean,
+
+    // Author
+    author: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
-  slug: {
-    type: String,
-    required: true,
-    unique: true
+  {
+    timestamps: true,
   },
-  type: {
-    type: String,
-    enum: ['page', 'blog', 'news', 'faq', 'policy'],
-    default: 'page'
-  },
-  
-  // Content
-  content: {
-    en: { type: String, required: true }, // HTML/Markdown content
-    hi: String
-  },
-  excerpt: {
-    en: String,
-    hi: String
-  },
-  
-  // Featured Image
-  featuredImage: {
-    url: String,
-    publicId: String,
-    alt: String
-  },
-  
-  // SEO
-  seo: {
-    metaTitle: String,
-    metaDescription: String,
-    keywords: [String],
-    canonicalUrl: String,
-    noIndex: Boolean
-  },
-  
-  // Organization
-  category: String,
-  tags: [String],
-  order: Number,
-  
-  // Parent (for nested pages)
-  parent: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'ContentPage'
-  },
-  
-  // Status
-  status: {
-    type: String,
-    enum: ['draft', 'published', 'archived'],
-    default: 'draft'
-  },
-  publishedAt: Date,
-  
-  // Display
-  showInNavigation: Boolean,
-  showInFooter: Boolean,
-  
-  // Author
-  author: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  updatedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }
-}, {
-  timestamps: true
-});
+);
 ```
 
 ### 12. Analytics Schema
 
 ```javascript
 // models/Analytics.js
-const analyticsSchema = new mongoose.Schema({
-  // Date (for daily aggregation)
-  date: {
-    type: Date,
-    required: true
+const analyticsSchema = new mongoose.Schema(
+  {
+    // Date (for daily aggregation)
+    date: {
+      type: Date,
+      required: true,
+    },
+
+    // Traffic
+    traffic: {
+      totalVisits: { type: Number, default: 0 },
+      uniqueVisitors: { type: Number, default: 0 },
+      pageViews: { type: Number, default: 0 },
+    },
+
+    // Page Analytics
+    pages: [
+      {
+        path: String,
+        views: Number,
+        avgTimeOnPage: Number,
+        bounceRate: Number,
+      },
+    ],
+
+    // Source Analytics
+    sources: {
+      direct: Number,
+      organic: Number,
+      referral: Number,
+      social: Number,
+      paid: Number,
+    },
+
+    // Device Analytics
+    devices: {
+      desktop: Number,
+      mobile: Number,
+      tablet: Number,
+    },
+
+    // Geographic
+    locations: [
+      {
+        state: String,
+        city: String,
+        visits: Number,
+      },
+    ],
   },
-  
-  // Traffic
-  traffic: {
-    totalVisits: { type: Number, default: 0 },
-    uniqueVisitors: { type: Number, default: 0 },
-    pageViews: { type: Number, default: 0 }
+  {
+    timestamps: true,
   },
-  
-  // Page Analytics
-  pages: [{
-    path: String,
-    views: Number,
-    avgTimeOnPage: Number,
-    bounceRate: Number
-  }],
-  
-  // Source Analytics
-  sources: {
-    direct: Number,
-    organic: Number,
-    referral: Number,
-    social: Number,
-    paid: Number
-  },
-  
-  // Device Analytics
-  devices: {
-    desktop: Number,
-    mobile: Number,
-    tablet: Number
-  },
-  
-  // Geographic
-  locations: [{
-    state: String,
-    city: String,
-    visits: Number
-  }]
-}, {
-  timestamps: true
-});
+);
 
 // Unique index for daily records
 analyticsSchema.index({ date: 1 }, { unique: true });
 
 // Visitor Session Schema (for tracking)
-const visitorSessionSchema = new mongoose.Schema({
-  sessionId: { type: String, required: true, unique: true },
-  ip: String,
-  userAgent: String,
-  device: { type: String, enum: ['desktop', 'mobile', 'tablet'] },
-  
-  // First visit info
-  landingPage: String,
-  referrer: String,
-  utm: {
-    source: String,
-    medium: String,
-    campaign: String
+const visitorSessionSchema = new mongoose.Schema(
+  {
+    sessionId: { type: String, required: true, unique: true },
+    ip: String,
+    userAgent: String,
+    device: { type: String, enum: ["desktop", "mobile", "tablet"] },
+
+    // First visit info
+    landingPage: String,
+    referrer: String,
+    utm: {
+      source: String,
+      medium: String,
+      campaign: String,
+    },
+
+    // Location
+    location: {
+      city: String,
+      state: String,
+      country: String,
+    },
+
+    // Pages visited
+    pages: [
+      {
+        path: String,
+        visitedAt: Date,
+        timeOnPage: Number,
+      },
+    ],
+
+    // Session times
+    startedAt: { type: Date, default: Date.now },
+    lastActivityAt: { type: Date, default: Date.now },
+
+    // Conversion events
+    events: [
+      {
+        type: String,
+        data: mongoose.Schema.Types.Mixed,
+        occurredAt: Date,
+      },
+    ],
   },
-  
-  // Location
-  location: {
-    city: String,
-    state: String,
-    country: String
+  {
+    timestamps: true,
   },
-  
-  // Pages visited
-  pages: [{
-    path: String,
-    visitedAt: Date,
-    timeOnPage: Number
-  }],
-  
-  // Session times
-  startedAt: { type: Date, default: Date.now },
-  lastActivityAt: { type: Date, default: Date.now },
-  
-  // Conversion events
-  events: [{
-    type: String,
-    data: mongoose.Schema.Types.Mixed,
-    occurredAt: Date
-  }]
-}, {
-  timestamps: true
-});
+);
 
 // TTL index - auto-delete after 90 days
 visitorSessionSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 });
@@ -1345,137 +1564,171 @@ visitorSessionSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 });
 
 ```javascript
 // models/Banner.js
-const bannerSchema = new mongoose.Schema({
-  // Basic Info
-  title: {
-    en: { type: String, required: true },
-    hi: String
-  },
-  subtitle: {
-    en: String,
-    hi: String
-  },
-  
-  // Placement
-  placement: {
-    type: String,
-    enum: ['home_hero', 'home_secondary', 'product_page', 'category_page', 'popup', 'sidebar'],
-    required: true
-  },
-  
-  // Media
-  image: {
-    desktop: {
-      url: String,
-      publicId: String
+const bannerSchema = new mongoose.Schema(
+  {
+    // Basic Info
+    title: {
+      en: { type: String, required: true },
+      hi: String,
     },
-    mobile: {
-      url: String,
-      publicId: String
-    }
-  },
-  video: {
-    url: String,
-    publicId: String
-  },
-  
-  // Link
-  link: {
-    url: String,
-    openInNewTab: Boolean,
-    linkType: { type: String, enum: ['internal', 'external', 'product', 'category'] }
-  },
-  
-  // CTA Button
-  cta: {
-    text: {
+    subtitle: {
       en: String,
-      hi: String
+      hi: String,
     },
-    style: { type: String, enum: ['primary', 'secondary', 'outline'] }
+
+    // Placement
+    placement: {
+      type: String,
+      enum: [
+        "home_hero",
+        "home_secondary",
+        "product_page",
+        "category_page",
+        "popup",
+        "sidebar",
+      ],
+      required: true,
+    },
+
+    // Media
+    image: {
+      desktop: {
+        url: String,
+        publicId: String,
+      },
+      mobile: {
+        url: String,
+        publicId: String,
+      },
+    },
+    video: {
+      url: String,
+      publicId: String,
+    },
+
+    // Link
+    link: {
+      url: String,
+      openInNewTab: Boolean,
+      linkType: {
+        type: String,
+        enum: ["internal", "external", "product", "category"],
+      },
+    },
+
+    // CTA Button
+    cta: {
+      text: {
+        en: String,
+        hi: String,
+      },
+      style: { type: String, enum: ["primary", "secondary", "outline"] },
+    },
+
+    // Display Settings
+    display: {
+      order: { type: Number, default: 0 },
+      showOnMobile: { type: Boolean, default: true },
+      showOnDesktop: { type: Boolean, default: true },
+    },
+
+    // Schedule
+    schedule: {
+      startDate: Date,
+      endDate: Date,
+      isAlwaysActive: { type: Boolean, default: true },
+    },
+
+    // Status
+    status: {
+      type: String,
+      enum: ["draft", "active", "scheduled", "expired", "archived"],
+      default: "draft",
+    },
+
+    // Analytics
+    analytics: {
+      impressions: { type: Number, default: 0 },
+      clicks: { type: Number, default: 0 },
+    },
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
-  
-  // Display Settings
-  display: {
-    order: { type: Number, default: 0 },
-    showOnMobile: { type: Boolean, default: true },
-    showOnDesktop: { type: Boolean, default: true }
+  {
+    timestamps: true,
   },
-  
-  // Schedule
-  schedule: {
-    startDate: Date,
-    endDate: Date,
-    isAlwaysActive: { type: Boolean, default: true }
-  },
-  
-  // Status
-  status: {
-    type: String,
-    enum: ['draft', 'active', 'scheduled', 'expired', 'archived'],
-    default: 'draft'
-  },
-  
-  // Analytics
-  analytics: {
-    impressions: { type: Number, default: 0 },
-    clicks: { type: Number, default: 0 }
-  },
-  
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }
-}, {
-  timestamps: true
-});
+);
 ```
 
 ### 14. Setting Schema
 
 ```javascript
 // models/Setting.js
-const settingSchema = new mongoose.Schema({
-  // Setting Key
-  key: {
-    type: String,
-    required: true,
-    unique: true
+const settingSchema = new mongoose.Schema(
+  {
+    // Setting Key
+    key: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+
+    // Setting Value (flexible)
+    value: mongoose.Schema.Types.Mixed,
+
+    // Categorization
+    category: {
+      type: String,
+      enum: [
+        "general",
+        "contact",
+        "social",
+        "seo",
+        "email",
+        "notifications",
+        "integrations",
+        "appearance",
+      ],
+      required: true,
+    },
+
+    // Metadata
+    label: String,
+    description: String,
+    inputType: {
+      type: String,
+      enum: [
+        "text",
+        "textarea",
+        "number",
+        "boolean",
+        "select",
+        "multiselect",
+        "image",
+        "json",
+      ],
+      default: "text",
+    },
+    options: [String], // For select/multiselect
+
+    // Visibility
+    isPublic: {
+      type: Boolean,
+      default: false, // Public settings can be fetched without auth
+    },
+
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
-  
-  // Setting Value (flexible)
-  value: mongoose.Schema.Types.Mixed,
-  
-  // Categorization
-  category: {
-    type: String,
-    enum: ['general', 'contact', 'social', 'seo', 'email', 'notifications', 'integrations', 'appearance'],
-    required: true
+  {
+    timestamps: true,
   },
-  
-  // Metadata
-  label: String,
-  description: String,
-  inputType: {
-    type: String,
-    enum: ['text', 'textarea', 'number', 'boolean', 'select', 'multiselect', 'image', 'json'],
-    default: 'text'
-  },
-  options: [String], // For select/multiselect
-  
-  // Visibility
-  isPublic: {
-    type: Boolean,
-    default: false // Public settings can be fetched without auth
-  },
-  
-  updatedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }
-}, {
-  timestamps: true
-});
+);
 
 // Default Settings to Seed
 /*
@@ -1503,9 +1756,10 @@ const settingSchema = new mongoose.Schema({
 ## API Endpoints
 
 ### Base URL
+
 ```
 Production: https://api.patliputramotors.com/api/v1
-Development: http://localhost:5000/api/v1
+Development: https://api.patliputragroup.com/api/v1
 ```
 
 ### Standard Response Format
@@ -1540,9 +1794,11 @@ Development: http://localhost:5000/api/v1
 ## 1. Authentication APIs
 
 ### POST /auth/login
+
 Login user and get JWT token.
 
 **Request:**
+
 ```json
 {
   "email": "admin@patliputra.com",
@@ -1551,6 +1807,7 @@ Login user and get JWT token.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1571,9 +1828,11 @@ Login user and get JWT token.
 ```
 
 ### POST /auth/refresh
+
 Refresh access token using refresh token.
 
 **Request:**
+
 ```json
 {
   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -1581,25 +1840,31 @@ Refresh access token using refresh token.
 ```
 
 ### POST /auth/logout
+
 Logout and invalidate tokens.
 
 **Headers:**
+
 ```
 Authorization: Bearer <accessToken>
 ```
 
 ### GET /auth/me
+
 Get current user profile.
 
 **Headers:**
+
 ```
 Authorization: Bearer <accessToken>
 ```
 
 ### PUT /auth/change-password
+
 Change current user's password.
 
 **Request:**
+
 ```json
 {
   "currentPassword": "oldpassword",
@@ -1609,9 +1874,11 @@ Change current user's password.
 ```
 
 ### POST /auth/forgot-password
+
 Request password reset email.
 
 **Request:**
+
 ```json
 {
   "email": "user@example.com"
@@ -1619,9 +1886,11 @@ Request password reset email.
 ```
 
 ### POST /auth/reset-password
+
 Reset password with token.
 
 **Request:**
+
 ```json
 {
   "token": "reset_token_from_email",
@@ -1635,14 +1904,17 @@ Reset password with token.
 ## 2. Dashboard APIs
 
 ### GET /dashboard/stats
+
 Get dashboard statistics.
 
 **Query Parameters:**
+
 - `dateRange`: `today` | `yesterday` | `week` | `month` | `year` | `custom`
 - `startDate`: ISO date (for custom range)
 - `endDate`: ISO date (for custom range)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1686,13 +1958,16 @@ Get dashboard statistics.
 ```
 
 ### GET /dashboard/charts/leads
+
 Get leads chart data.
 
 **Query Parameters:**
+
 - `period`: `7d` | `30d` | `90d` | `12m`
 - `groupBy`: `day` | `week` | `month`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1713,18 +1988,23 @@ Get leads chart data.
 ```
 
 ### GET /dashboard/charts/finance
+
 Get finance application chart data.
 
 ### GET /dashboard/charts/brands
+
 Get brand-wise distribution.
 
 ### GET /dashboard/recent-leads
+
 Get recent leads for quick view.
 
 **Query Parameters:**
+
 - `limit`: Number (default: 5)
 
 ### GET /dashboard/recent-activities
+
 Get recent system activities.
 
 ---
@@ -1732,9 +2012,11 @@ Get recent system activities.
 ## 3. Products APIs
 
 ### GET /products
+
 Get all products with filtering and pagination.
 
 **Query Parameters:**
+
 - `page`: Number (default: 1)
 - `limit`: Number (default: 10)
 - `search`: String (search in name, model)
@@ -1748,6 +2030,7 @@ Get all products with filtering and pagination.
 - `sortOrder`: String (asc | desc)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1781,12 +2064,15 @@ Get all products with filtering and pagination.
 ```
 
 ### GET /products/:id
+
 Get single product by ID.
 
 ### POST /products
+
 Create new product.
 
 **Request (multipart/form-data):**
+
 ```
 name: "JCB 3DX Backhoe Loader"
 brand: "JCB"
@@ -1804,27 +2090,35 @@ brochure: File (uploaded to server)
 ```
 
 ### PUT /products/:id
+
 Update product.
 
 ### DELETE /products/:id
+
 Delete product (soft delete - moves to archived).
 
 ### POST /products/:id/images
+
 Upload additional images to product.
 
 ### DELETE /products/:id/images/:imageId
+
 Remove image from product.
 
 ### POST /products/:id/brochure
+
 Upload/replace brochure PDF.
 
 ### DELETE /products/:id/brochure
+
 Remove brochure.
 
 ### PUT /products/:id/status
+
 Update product status.
 
 **Request:**
+
 ```json
 {
   "status": "published"
@@ -1832,9 +2126,11 @@ Update product status.
 ```
 
 ### PUT /products/reorder
+
 Reorder products.
 
 **Request:**
+
 ```json
 {
   "items": [
@@ -1849,9 +2145,11 @@ Reorder products.
 ## 4. Certified Refurbished APIs
 
 ### GET /certified-refurbished
+
 Get all certified refurbished vehicles.
 
 **Query Parameters:**
+
 - `page`, `limit`, `search`
 - `brand`: String
 - `status`: available | reserved | sold | archived
@@ -1861,12 +2159,15 @@ Get all certified refurbished vehicles.
 - `sortBy`, `sortOrder`
 
 ### GET /certified-refurbished/:id
+
 Get single vehicle.
 
 ### POST /certified-refurbished
+
 Create new certified refurbished listing.
 
 **Request (multipart/form-data):**
+
 ```
 name: "JCB 3DX 2020"
 brand: "JCB"
@@ -1888,15 +2189,19 @@ brochure: File
 ```
 
 ### PUT /certified-refurbished/:id
+
 Update vehicle.
 
 ### DELETE /certified-refurbished/:id
+
 Delete vehicle.
 
 ### PUT /certified-refurbished/:id/inspection
+
 Update inspection details.
 
 **Request:**
+
 ```json
 {
   "isCompleted": true,
@@ -1910,9 +2215,11 @@ Update inspection details.
 ## 5. Leads APIs
 
 ### GET /leads
+
 Get all leads with filtering.
 
 **Query Parameters:**
+
 - `page`, `limit`, `search`
 - `status`: new | contacted | qualified | negotiation | won | lost | junk
 - `priority`: low | medium | high | urgent
@@ -1924,12 +2231,15 @@ Get all leads with filtering.
 - `sortBy`, `sortOrder`
 
 ### GET /leads/:id
+
 Get single lead with full activity history.
 
 ### POST /leads
+
 Create new lead.
 
 **Request:**
+
 ```json
 {
   "name": "Ramesh Kumar",
@@ -1953,15 +2263,19 @@ Create new lead.
 ```
 
 ### PUT /leads/:id
+
 Update lead.
 
 ### DELETE /leads/:id
+
 Delete lead.
 
 ### PUT /leads/:id/status
+
 Update lead status.
 
 **Request:**
+
 ```json
 {
   "status": "qualified",
@@ -1970,9 +2284,11 @@ Update lead status.
 ```
 
 ### PUT /leads/:id/assign
+
 Assign lead to user.
 
 **Request:**
+
 ```json
 {
   "assignedTo": "user_id"
@@ -1980,9 +2296,11 @@ Assign lead to user.
 ```
 
 ### POST /leads/:id/notes
+
 Add note to lead.
 
 **Request:**
+
 ```json
 {
   "content": "Customer prefers financing option"
@@ -1990,9 +2308,11 @@ Add note to lead.
 ```
 
 ### POST /leads/:id/activities
+
 Add activity to lead.
 
 **Request:**
+
 ```json
 {
   "type": "call",
@@ -2003,12 +2323,15 @@ Add activity to lead.
 ```
 
 ### PUT /leads/:id/activities/:activityId
+
 Update activity (mark as completed).
 
 ### POST /leads/:id/follow-up
+
 Schedule follow-up.
 
 **Request:**
+
 ```json
 {
   "date": "2024-01-22T14:00:00Z",
@@ -2017,9 +2340,11 @@ Schedule follow-up.
 ```
 
 ### GET /leads/export
+
 Export leads to CSV/Excel.
 
 **Query Parameters:**
+
 - All filter parameters from GET /leads
 - `format`: csv | xlsx
 
@@ -2028,9 +2353,11 @@ Export leads to CSV/Excel.
 ## 6. Finance Application APIs
 
 ### GET /finance
+
 Get all finance applications.
 
 **Query Parameters:**
+
 - `page`, `limit`, `search`
 - `status`: pending | documents_required | under_review | approved | rejected | disbursed | cancelled
 - `assignedTo`: User ID
@@ -2039,12 +2366,15 @@ Get all finance applications.
 - `sortBy`, `sortOrder`
 
 ### GET /finance/:id
+
 Get single application with all details.
 
 ### POST /finance
+
 Create new finance application.
 
 **Request (multipart/form-data):**
+
 ```
 applicant[name]: "Suresh Yadav"
 applicant[phone]: "+91 9876543210"
@@ -2063,15 +2393,19 @@ documents: File[] (Aadhaar, PAN, etc.)
 ```
 
 ### PUT /finance/:id
+
 Update application.
 
 ### DELETE /finance/:id
+
 Delete application.
 
 ### PUT /finance/:id/status
+
 Update application status.
 
 **Request:**
+
 ```json
 {
   "status": "approved",
@@ -2080,18 +2414,22 @@ Update application status.
 ```
 
 ### POST /finance/:id/documents
+
 Upload additional documents.
 
 **Request (multipart/form-data):**
+
 ```
 type: "bank_statement"
 document: File
 ```
 
 ### PUT /finance/:id/documents/:docId/verify
+
 Verify document.
 
 **Request:**
+
 ```json
 {
   "verified": true
@@ -2099,9 +2437,11 @@ Verify document.
 ```
 
 ### PUT /finance/:id/assign
+
 Assign application to user.
 
 ### GET /finance/export
+
 Export finance applications.
 
 ---
@@ -2109,9 +2449,11 @@ Export finance applications.
 ## 7. CIBIL Check APIs
 
 ### GET /cibil
+
 Get all CIBIL checks.
 
 **Query Parameters:**
+
 - `page`, `limit`, `search`
 - `band`: Excellent | Good | Fair | Poor | No History
 - `status`: pending | completed | failed | expired
@@ -2119,12 +2461,15 @@ Get all CIBIL checks.
 - `sortBy`, `sortOrder`
 
 ### GET /cibil/:id
+
 Get single CIBIL check.
 
 ### POST /cibil/check
+
 Initiate new CIBIL check.
 
 **Request:**
+
 ```json
 {
   "customer": {
@@ -2139,6 +2484,7 @@ Initiate new CIBIL check.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -2151,9 +2497,11 @@ Initiate new CIBIL check.
 ```
 
 ### GET /cibil/:id/result
+
 Get CIBIL check result.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -2172,9 +2520,11 @@ Get CIBIL check result.
 ```
 
 ### POST /cibil/:id/documents
+
 Upload identity documents.
 
 **Request (multipart/form-data):**
+
 ```
 aadhaarFront: File
 aadhaarBack: File
@@ -2182,9 +2532,11 @@ panCard: File
 ```
 
 ### GET /cibil/stats
+
 Get CIBIL check statistics.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -2208,9 +2560,11 @@ Get CIBIL check statistics.
 ## 8. Dealer APIs
 
 ### GET /dealers
+
 Get all dealers.
 
 **Query Parameters:**
+
 - `page`, `limit`, `search`
 - `city`, `state`, `district`
 - `brand`: String
@@ -2221,12 +2575,15 @@ Get all dealers.
 - `sortBy`, `sortOrder`
 
 ### GET /dealers/:id
+
 Get single dealer.
 
 ### POST /dealers
+
 Create new dealer.
 
 **Request (multipart/form-data):**
+
 ```json
 {
   "name": "Patliputra Motors Patna",
@@ -2263,18 +2620,23 @@ images: File[]
 ```
 
 ### PUT /dealers/:id
+
 Update dealer.
 
 ### DELETE /dealers/:id
+
 Delete dealer (soft delete).
 
 ### PUT /dealers/:id/status
+
 Toggle dealer active status.
 
 ### GET /dealers/nearby
+
 Find dealers near a location.
 
 **Query Parameters:**
+
 - `lat`: Latitude (required)
 - `lng`: Longitude (required)
 - `radius`: Radius in km (default: 50)
@@ -2288,15 +2650,19 @@ Find dealers near a location.
 ### Albums
 
 ### GET /media/albums
+
 Get all albums.
 
 ### GET /media/albums/:id
+
 Get album with media items.
 
 ### POST /media/albums
+
 Create new album.
 
 **Request:**
+
 ```json
 {
   "name": {
@@ -2311,20 +2677,25 @@ Create new album.
 ```
 
 ### PUT /media/albums/:id
+
 Update album.
 
 ### DELETE /media/albums/:id
+
 Delete album (and optionally its media).
 
 ### PUT /media/albums/reorder
+
 Reorder albums.
 
 ### Media Items
 
 ### GET /media
+
 Get all media items.
 
 **Query Parameters:**
+
 - `page`, `limit`, `search`
 - `type`: image | video
 - `category`: gallery | product | banner | event | team | other
@@ -2333,12 +2704,15 @@ Get all media items.
 - `sortBy`, `sortOrder`
 
 ### GET /media/:id
+
 Get single media item.
 
 ### POST /media/upload
+
 Upload new media.
 
 **Request (multipart/form-data):**
+
 ```
 files: File[] (uploaded to Cloudinary)
 album: "album_id"
@@ -2349,15 +2723,19 @@ tags: "factory,production"
 ```
 
 ### PUT /media/:id
+
 Update media metadata.
 
 ### DELETE /media/:id
+
 Delete media (removes from Cloudinary).
 
 ### PUT /media/reorder
+
 Reorder media items.
 
 **Request:**
+
 ```json
 {
   "items": [
@@ -2368,9 +2746,11 @@ Reorder media items.
 ```
 
 ### POST /media/bulk-delete
+
 Delete multiple media items.
 
 **Request:**
+
 ```json
 {
   "ids": ["id1", "id2", "id3"]
@@ -2382,9 +2762,11 @@ Delete multiple media items.
 ## 10. Offers & Schemes APIs
 
 ### GET /offers
+
 Get all offers and schemes.
 
 **Query Parameters:**
+
 - `page`, `limit`, `search`
 - `type`: discount | cashback | finance | exchange | accessory | service | combo | seasonal
 - `status`: draft | active | expired | archived
@@ -2394,15 +2776,19 @@ Get all offers and schemes.
 - `sortBy`, `sortOrder`
 
 ### GET /offers/active
+
 Get currently active offers (public API).
 
 ### GET /offers/:id
+
 Get single offer.
 
 ### POST /offers
+
 Create new offer.
 
 **Request (multipart/form-data):**
+
 ```json
 {
   "title": {
@@ -2438,15 +2824,19 @@ thumbnailImage: File
 ```
 
 ### PUT /offers/:id
+
 Update offer.
 
 ### DELETE /offers/:id
+
 Delete offer.
 
 ### PUT /offers/:id/status
+
 Update offer status.
 
 ### PUT /offers/reorder
+
 Reorder offers display order.
 
 ---
@@ -2454,9 +2844,11 @@ Reorder offers display order.
 ## 11. Content Pages APIs
 
 ### GET /content-pages
+
 Get all content pages.
 
 **Query Parameters:**
+
 - `page`, `limit`, `search`
 - `type`: page | blog | news | faq | policy
 - `status`: draft | published | archived
@@ -2465,15 +2857,19 @@ Get all content pages.
 - `sortBy`, `sortOrder`
 
 ### GET /content-pages/slug/:slug
+
 Get page by slug (public API).
 
 ### GET /content-pages/:id
+
 Get single page.
 
 ### POST /content-pages
+
 Create new content page.
 
 **Request (multipart/form-data):**
+
 ```json
 {
   "title": {
@@ -2501,15 +2897,19 @@ featuredImage: File
 ```
 
 ### PUT /content-pages/:id
+
 Update page.
 
 ### DELETE /content-pages/:id
+
 Delete page.
 
 ### PUT /content-pages/:id/status
+
 Update page status.
 
 ### PUT /content-pages/reorder
+
 Reorder pages.
 
 ---
@@ -2517,13 +2917,16 @@ Reorder pages.
 ## 12. Analytics APIs
 
 ### GET /analytics/overview
+
 Get analytics overview.
 
 **Query Parameters:**
+
 - `startDate`: ISO date (required)
 - `endDate`: ISO date (required)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -2564,25 +2967,32 @@ Get analytics overview.
 ```
 
 ### GET /analytics/traffic
+
 Get traffic data over time.
 
 **Query Parameters:**
+
 - `startDate`, `endDate`
 - `granularity`: hourly | daily | weekly | monthly
 
 ### GET /analytics/pages
+
 Get page-level analytics.
 
 ### GET /analytics/sources
+
 Get traffic source breakdown.
 
 ### GET /analytics/locations
+
 Get geographic distribution.
 
 ### POST /analytics/track
+
 Track page view (public API).
 
 **Request:**
+
 ```json
 {
   "sessionId": "session_uuid",
@@ -2597,9 +3007,11 @@ Track page view (public API).
 ```
 
 ### POST /analytics/event
+
 Track custom event (public API).
 
 **Request:**
+
 ```json
 {
   "sessionId": "session_uuid",
@@ -2612,6 +3024,7 @@ Track custom event (public API).
 ```
 
 ### GET /analytics/export
+
 Export analytics data.
 
 ---
@@ -2619,27 +3032,34 @@ Export analytics data.
 ## 13. Banner APIs
 
 ### GET /banners
+
 Get all banners.
 
 **Query Parameters:**
+
 - `page`, `limit`
 - `placement`: home_hero | home_secondary | product_page | category_page | popup | sidebar
 - `status`: draft | active | scheduled | expired | archived
 - `sortBy`, `sortOrder`
 
 ### GET /banners/active
+
 Get active banners by placement (public API).
 
 **Query Parameters:**
+
 - `placement`: Required
 
 ### GET /banners/:id
+
 Get single banner.
 
 ### POST /banners
+
 Create new banner.
 
 **Request (multipart/form-data):**
+
 ```json
 {
   "title": {
@@ -2676,21 +3096,27 @@ video: File (optional)
 ```
 
 ### PUT /banners/:id
+
 Update banner.
 
 ### DELETE /banners/:id
+
 Delete banner.
 
 ### PUT /banners/:id/status
+
 Update banner status.
 
 ### PUT /banners/reorder
+
 Reorder banners.
 
 ### POST /banners/:id/analytics
+
 Track banner impression/click.
 
 **Request:**
+
 ```json
 {
   "type": "impression" | "click"
@@ -2702,21 +3128,27 @@ Track banner impression/click.
 ## 14. Settings APIs
 
 ### GET /settings
+
 Get all settings (admin only).
 
 **Query Parameters:**
+
 - `category`: general | contact | social | seo | email | notifications | integrations | appearance
 
 ### GET /settings/public
+
 Get public settings (no auth required).
 
 ### GET /settings/:key
+
 Get single setting by key.
 
 ### PUT /settings/:key
+
 Update setting.
 
 **Request:**
+
 ```json
 {
   "value": "new_value"
@@ -2724,9 +3156,11 @@ Update setting.
 ```
 
 ### PUT /settings/bulk
+
 Update multiple settings.
 
 **Request:**
+
 ```json
 {
   "settings": [
@@ -2737,9 +3171,11 @@ Update multiple settings.
 ```
 
 ### POST /settings/:key/image
+
 Upload image for setting (logo, favicon, etc.).
 
 **Request (multipart/form-data):**
+
 ```
 image: File
 ```
@@ -2751,9 +3187,11 @@ image: File
 ### Users
 
 ### GET /users
+
 Get all users.
 
 **Query Parameters:**
+
 - `page`, `limit`, `search`
 - `role`: String
 - `isActive`: Boolean
@@ -2762,12 +3200,15 @@ Get all users.
 **Access:** master_admin, admin (limited)
 
 ### GET /users/:id
+
 Get single user.
 
 ### POST /users
+
 Create new user.
 
 **Request:**
+
 ```json
 {
   "name": "New User",
@@ -2785,18 +3226,23 @@ Create new user.
 **Access:** master_admin only
 
 ### PUT /users/:id
+
 Update user.
 
 ### DELETE /users/:id
+
 Delete user (soft delete - deactivate).
 
 ### PUT /users/:id/status
+
 Toggle user active status.
 
 ### PUT /users/:id/role
+
 Change user role.
 
 **Request:**
+
 ```json
 {
   "role": "admin",
@@ -2805,14 +3251,22 @@ Change user role.
 ```
 
 ### PUT /users/:id/permissions
+
 Update user-specific permissions.
 
 **Request:**
+
 ```json
 {
   "permissions": {
     "products": { "view": true, "create": true, "edit": true, "delete": false },
-    "leads": { "view": true, "create": true, "edit": true, "delete": true, "export": true }
+    "leads": {
+      "view": true,
+      "create": true,
+      "edit": true,
+      "delete": true,
+      "export": true
+    }
   }
 }
 ```
@@ -2820,22 +3274,36 @@ Update user-specific permissions.
 ### Roles
 
 ### GET /roles
+
 Get all roles.
 
 ### GET /roles/:id
+
 Get single role.
 
 ### POST /roles
+
 Create custom role.
 
 **Request:**
+
 ```json
 {
   "name": "branch_manager",
   "displayName": "Branch Manager",
   "permissions": {
-    "dashboard": { "view": true, "create": false, "edit": false, "delete": false },
-    "products": { "view": true, "create": false, "edit": false, "delete": false },
+    "dashboard": {
+      "view": true,
+      "create": false,
+      "edit": false,
+      "delete": false
+    },
+    "products": {
+      "view": true,
+      "create": false,
+      "edit": false,
+      "delete": false
+    },
     "leads": { "view": true, "create": true, "edit": true, "delete": false },
     "finance": { "view": true, "create": true, "edit": true, "delete": false },
     "dealers": { "view": true, "create": false, "edit": false, "delete": false }
@@ -2846,9 +3314,11 @@ Create custom role.
 **Access:** master_admin only
 
 ### PUT /roles/:id
+
 Update custom role.
 
 ### DELETE /roles/:id
+
 Delete custom role (only non-system roles).
 
 ---
@@ -2859,40 +3329,40 @@ Delete custom role (only non-system roles).
 
 ```javascript
 // middleware/auth.js
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
 exports.protect = async (req, res, next) => {
   try {
     let token;
-    
-    if (req.headers.authorization?.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
+
+    if (req.headers.authorization?.startsWith("Bearer")) {
+      token = req.headers.authorization.split(" ")[1];
     }
-    
+
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: 'Not authorized to access this route'
+        message: "Not authorized to access this route",
       });
     }
-    
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).populate('customRole');
-    
+    const user = await User.findById(decoded.id).populate("customRole");
+
     if (!user || !user.isActive) {
       return res.status(401).json({
         success: false,
-        message: 'User not found or inactive'
+        message: "User not found or inactive",
       });
     }
-    
+
     req.user = user;
     next();
   } catch (error) {
     return res.status(401).json({
       success: false,
-      message: 'Not authorized to access this route'
+      message: "Not authorized to access this route",
     });
   }
 };
@@ -2902,13 +3372,13 @@ exports.protect = async (req, res, next) => {
 
 ```javascript
 // middleware/rbac.js
-const { ROLE_PERMISSIONS } = require('../config/permissions');
+const { ROLE_PERMISSIONS } = require("../config/permissions");
 
 // Check specific permission on a module
 exports.checkPermission = (module, action) => {
   return (req, res, next) => {
     const { user } = req;
-    
+
     // Get permissions from role or custom role
     let permissions;
     if (user.customRole) {
@@ -2919,39 +3389,39 @@ exports.checkPermission = (module, action) => {
     } else {
       permissions = ROLE_PERMISSIONS[user.role];
     }
-    
+
     if (!permissions) {
       return res.status(403).json({
         success: false,
-        message: 'Role not configured'
+        message: "Role not configured",
       });
     }
-    
+
     const modulePermissions = permissions[module];
     if (!modulePermissions || !modulePermissions[action]) {
       return res.status(403).json({
         success: false,
-        message: `You don't have permission to ${action} ${module}`
+        message: `You don't have permission to ${action} ${module}`,
       });
     }
-    
+
     next();
   };
 };
 
 // Check if user can view module
-exports.canView = (module) => exports.checkPermission(module, 'view');
-exports.canCreate = (module) => exports.checkPermission(module, 'create');
-exports.canEdit = (module) => exports.checkPermission(module, 'edit');
-exports.canDelete = (module) => exports.checkPermission(module, 'delete');
-exports.canExport = (module) => exports.checkPermission(module, 'export');
+exports.canView = (module) => exports.checkPermission(module, "view");
+exports.canCreate = (module) => exports.checkPermission(module, "create");
+exports.canEdit = (module) => exports.checkPermission(module, "edit");
+exports.canDelete = (module) => exports.checkPermission(module, "delete");
+exports.canExport = (module) => exports.checkPermission(module, "export");
 
 // Master admin only
 exports.masterAdminOnly = (req, res, next) => {
-  if (req.user.role !== 'master_admin') {
+  if (req.user.role !== "master_admin") {
     return res.status(403).json({
       success: false,
-      message: 'This action requires master admin privileges'
+      message: "This action requires master admin privileges",
     });
   }
   next();
@@ -2959,10 +3429,10 @@ exports.masterAdminOnly = (req, res, next) => {
 
 // Admin or above
 exports.adminOnly = (req, res, next) => {
-  if (!['master_admin', 'admin'].includes(req.user.role)) {
+  if (!["master_admin", "admin"].includes(req.user.role)) {
     return res.status(403).json({
       success: false,
-      message: 'This action requires admin privileges'
+      message: "This action requires admin privileges",
     });
   }
   next();
@@ -2973,83 +3443,90 @@ exports.adminOnly = (req, res, next) => {
 
 ```javascript
 // middleware/upload.js
-const multer = require('multer');
-const path = require('path');
-const { v4: uuidv4 } = require('uuid');
+const multer = require("multer");
+const path = require("path");
+const { v4: uuidv4 } = require("uuid");
 
 // Cloudinary storage for images
-const cloudinaryStorage = require('multer-storage-cloudinary').CloudinaryStorage;
-const cloudinary = require('../config/cloudinary');
+const cloudinaryStorage =
+  require("multer-storage-cloudinary").CloudinaryStorage;
+const cloudinary = require("../config/cloudinary");
 
 const imageStorage = new cloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'patliputra-motors',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-    transformation: [{ quality: 'auto', fetch_format: 'auto' }]
-  }
+    folder: "patliputra-motors",
+    allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
+    transformation: [{ quality: "auto", fetch_format: "auto" }],
+  },
 });
 
 // Local storage for brochures/PDFs
 const brochureStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, process.env.BROCHURE_UPLOAD_PATH || './uploads/brochures');
+    cb(null, process.env.BROCHURE_UPLOAD_PATH || "./uploads/brochures");
   },
   filename: (req, file, cb) => {
     const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
     cb(null, uniqueName);
-  }
+  },
 });
 
 // File filters
 const imageFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|gif|webp/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+  const extname = allowedTypes.test(
+    path.extname(file.originalname).toLowerCase(),
+  );
   const mimetype = allowedTypes.test(file.mimetype);
-  
+
   if (extname && mimetype) {
     cb(null, true);
   } else {
-    cb(new Error('Only image files are allowed'), false);
+    cb(new Error("Only image files are allowed"), false);
   }
 };
 
 const brochureFilter = (req, file, cb) => {
   const allowedTypes = /pdf/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = file.mimetype === 'application/pdf';
-  
+  const extname = allowedTypes.test(
+    path.extname(file.originalname).toLowerCase(),
+  );
+  const mimetype = file.mimetype === "application/pdf";
+
   if (extname && mimetype) {
     cb(null, true);
   } else {
-    cb(new Error('Only PDF files are allowed for brochures'), false);
+    cb(new Error("Only PDF files are allowed for brochures"), false);
   }
 };
 
 exports.uploadImages = multer({
   storage: imageStorage,
   fileFilter: imageFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
 });
 
 exports.uploadBrochure = multer({
   storage: brochureStorage,
   fileFilter: brochureFilter,
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
 });
 
 exports.uploadDocuments = multer({
   storage: imageStorage,
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|pdf/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const extname = allowedTypes.test(
+      path.extname(file.originalname).toLowerCase(),
+    );
     if (extname) {
       cb(null, true);
     } else {
-      cb(new Error('Only images and PDFs are allowed'), false);
+      cb(new Error("Only images and PDFs are allowed"), false);
     }
   },
-  limits: { fileSize: 5 * 1024 * 1024 }
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 ```
 
@@ -3061,12 +3538,17 @@ exports.uploadDocuments = multer({
 
 ```javascript
 // routes/productRoutes.js
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const productController = require('../controllers/productController');
-const { protect } = require('../middleware/auth');
-const { canView, canCreate, canEdit, canDelete } = require('../middleware/rbac');
-const { uploadImages, uploadBrochure } = require('../middleware/upload');
+const productController = require("../controllers/productController");
+const { protect } = require("../middleware/auth");
+const {
+  canView,
+  canCreate,
+  canEdit,
+  canDelete,
+} = require("../middleware/rbac");
+const { uploadImages, uploadBrochure } = require("../middleware/upload");
 
 // Public routes (if needed)
 // router.get('/public', productController.getPublicProducts);
@@ -3075,32 +3557,50 @@ const { uploadImages, uploadBrochure } = require('../middleware/upload');
 router.use(protect);
 
 router
-  .route('/')
-  .get(canView('products'), productController.getProducts)
+  .route("/")
+  .get(canView("products"), productController.getProducts)
   .post(
-    canCreate('products'),
-    uploadImages.array('images', 10),
-    uploadBrochure.single('brochure'),
-    productController.createProduct
+    canCreate("products"),
+    uploadImages.array("images", 10),
+    uploadBrochure.single("brochure"),
+    productController.createProduct,
   );
 
 router
-  .route('/:id')
-  .get(canView('products'), productController.getProduct)
+  .route("/:id")
+  .get(canView("products"), productController.getProduct)
   .put(
-    canEdit('products'),
-    uploadImages.array('images', 10),
-    uploadBrochure.single('brochure'),
-    productController.updateProduct
+    canEdit("products"),
+    uploadImages.array("images", 10),
+    uploadBrochure.single("brochure"),
+    productController.updateProduct,
   )
-  .delete(canDelete('products'), productController.deleteProduct);
+  .delete(canDelete("products"), productController.deleteProduct);
 
-router.put('/:id/status', canEdit('products'), productController.updateStatus);
-router.post('/:id/images', canEdit('products'), uploadImages.array('images', 10), productController.addImages);
-router.delete('/:id/images/:imageId', canEdit('products'), productController.removeImage);
-router.post('/:id/brochure', canEdit('products'), uploadBrochure.single('brochure'), productController.uploadBrochure);
-router.delete('/:id/brochure', canEdit('products'), productController.removeBrochure);
-router.put('/reorder', canEdit('products'), productController.reorderProducts);
+router.put("/:id/status", canEdit("products"), productController.updateStatus);
+router.post(
+  "/:id/images",
+  canEdit("products"),
+  uploadImages.array("images", 10),
+  productController.addImages,
+);
+router.delete(
+  "/:id/images/:imageId",
+  canEdit("products"),
+  productController.removeImage,
+);
+router.post(
+  "/:id/brochure",
+  canEdit("products"),
+  uploadBrochure.single("brochure"),
+  productController.uploadBrochure,
+);
+router.delete(
+  "/:id/brochure",
+  canEdit("products"),
+  productController.removeBrochure,
+);
+router.put("/reorder", canEdit("products"), productController.reorderProducts);
 
 module.exports = router;
 ```
@@ -3111,23 +3611,21 @@ module.exports = router;
 
 ```javascript
 // services/cloudinaryService.js
-const cloudinary = require('../config/cloudinary');
+const cloudinary = require("../config/cloudinary");
 
-exports.uploadImage = async (file, folder = 'general') => {
+exports.uploadImage = async (file, folder = "general") => {
   try {
     const result = await cloudinary.uploader.upload(file.path, {
       folder: `patliputra-motors/${folder}`,
-      resource_type: 'auto',
-      transformation: [
-        { quality: 'auto', fetch_format: 'auto' }
-      ]
+      resource_type: "auto",
+      transformation: [{ quality: "auto", fetch_format: "auto" }],
     });
-    
+
     return {
       url: result.secure_url,
       publicId: result.public_id,
       width: result.width,
-      height: result.height
+      height: result.height,
     };
   } catch (error) {
     throw new Error(`Image upload failed: ${error.message}`);
@@ -3144,21 +3642,19 @@ exports.deleteImage = async (publicId) => {
   }
 };
 
-exports.uploadVideo = async (file, folder = 'videos') => {
+exports.uploadVideo = async (file, folder = "videos") => {
   try {
     const result = await cloudinary.uploader.upload(file.path, {
       folder: `patliputra-motors/${folder}`,
-      resource_type: 'video',
-      eager: [
-        { format: 'mp4', transformation: [{ quality: 'auto' }] }
-      ]
+      resource_type: "video",
+      eager: [{ format: "mp4", transformation: [{ quality: "auto" }] }],
     });
-    
+
     return {
       url: result.secure_url,
       publicId: result.public_id,
       duration: result.duration,
-      thumbnailUrl: result.secure_url.replace(/\.[^/.]+$/, '.jpg')
+      thumbnailUrl: result.secure_url.replace(/\.[^/.]+$/, ".jpg"),
     };
   } catch (error) {
     throw new Error(`Video upload failed: ${error.message}`);
@@ -3167,9 +3663,9 @@ exports.uploadVideo = async (file, folder = 'videos') => {
 
 exports.getOptimizedUrl = (publicId, options = {}) => {
   return cloudinary.url(publicId, {
-    fetch_format: 'auto',
-    quality: 'auto',
-    ...options
+    fetch_format: "auto",
+    quality: "auto",
+    ...options,
   });
 };
 ```
@@ -3197,22 +3693,22 @@ exports.checkCibilScore = async (customerData) => {
     //     'Authorization': `Bearer ${CIBIL_API_KEY}`
     //   }
     // });
-    
+
     // Mock response for development
     const mockScore = Math.floor(Math.random() * (850 - 400) + 400);
-    
+
     return {
       success: true,
       requestId: `CIBIL_${Date.now()}`,
       score: mockScore,
-      responseCode: 'SUCCESS',
-      fetchedAt: new Date()
+      responseCode: "SUCCESS",
+      fetchedAt: new Date(),
     };
   } catch (error) {
     return {
       success: false,
       error: error.message,
-      responseCode: 'ERROR'
+      responseCode: "ERROR",
     };
   }
 };
@@ -3223,7 +3719,7 @@ exports.verifyPAN = async (panNumber, name, dob) => {
   return {
     valid: true,
     name: name,
-    maskedPan: `XXXXX${panNumber.slice(-5)}`
+    maskedPan: `XXXXX${panNumber.slice(-5)}`,
   };
 };
 
@@ -3232,7 +3728,7 @@ exports.verifyAadhaar = async (aadhaarNumber) => {
   // Mock implementation
   return {
     valid: true,
-    maskedNumber: `XXXX-XXXX-${aadhaarNumber.slice(-4)}`
+    maskedNumber: `XXXX-XXXX-${aadhaarNumber.slice(-4)}`,
   };
 };
 ```
@@ -3241,23 +3737,23 @@ exports.verifyAadhaar = async (aadhaarNumber) => {
 
 ## Error Codes Reference
 
-| Code | Message | HTTP Status |
-|------|---------|-------------|
-| AUTH_001 | Invalid credentials | 401 |
-| AUTH_002 | Token expired | 401 |
-| AUTH_003 | User not found | 404 |
-| AUTH_004 | Account disabled | 403 |
-| RBAC_001 | Permission denied | 403 |
-| RBAC_002 | Role not found | 404 |
-| VAL_001 | Validation error | 400 |
-| VAL_002 | Invalid file type | 400 |
-| VAL_003 | File too large | 400 |
-| DB_001 | Database error | 500 |
-| DB_002 | Duplicate entry | 409 |
-| DB_003 | Record not found | 404 |
-| UPLOAD_001 | Upload failed | 500 |
-| CIBIL_001 | CIBIL check failed | 500 |
-| CIBIL_002 | Invalid PAN | 400 |
+| Code       | Message             | HTTP Status |
+| ---------- | ------------------- | ----------- |
+| AUTH_001   | Invalid credentials | 401         |
+| AUTH_002   | Token expired       | 401         |
+| AUTH_003   | User not found      | 404         |
+| AUTH_004   | Account disabled    | 403         |
+| RBAC_001   | Permission denied   | 403         |
+| RBAC_002   | Role not found      | 404         |
+| VAL_001    | Validation error    | 400         |
+| VAL_002    | Invalid file type   | 400         |
+| VAL_003    | File too large      | 400         |
+| DB_001     | Database error      | 500         |
+| DB_002     | Duplicate entry     | 409         |
+| DB_003     | Record not found    | 404         |
+| UPLOAD_001 | Upload failed       | 500         |
+| CIBIL_001  | CIBIL check failed  | 500         |
+| CIBIL_002  | Invalid PAN         | 400         |
 
 ---
 
@@ -3267,21 +3763,22 @@ exports.verifyAadhaar = async (aadhaarNumber) => {
 
 ```typescript
 // src/lib/api.ts (update)
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "https://api.patliputragroup.com/api/v1";
 
 // Axios instance with interceptors
-import axios from 'axios';
+import axios from "axios";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    "Content-Type": "application/json",
+  },
 });
 
 // Request interceptor - add auth token
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('admin_token');
+  const token = localStorage.getItem("admin_token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -3294,12 +3791,12 @@ api.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401) {
       // Token expired - try refresh or logout
-      localStorage.removeItem('admin_token');
-      localStorage.removeItem('admin_user');
-      window.location.href = '/admin/login';
+      localStorage.removeItem("admin_token");
+      localStorage.removeItem("admin_user");
+      window.location.href = "/admin/login";
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;
@@ -3309,74 +3806,80 @@ export default api;
 
 ```typescript
 // src/hooks/useProducts.ts
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '@/lib/api';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "@/lib/api";
 
 export function useProducts(params?: ProductsQueryParams) {
   return useQuery({
-    queryKey: ['products', params],
+    queryKey: ["products", params],
     queryFn: async () => {
-      const { data } = await api.get('/products', { params });
+      const { data } = await api.get("/products", { params });
       return data;
-    }
+    },
   });
 }
 
 export function useProduct(id: string) {
   return useQuery({
-    queryKey: ['products', id],
+    queryKey: ["products", id],
     queryFn: async () => {
       const { data } = await api.get(`/products/${id}`);
       return data;
     },
-    enabled: !!id
+    enabled: !!id,
   });
 }
 
 export function useCreateProduct() {
   const queryClient = useQueryClient();
-  F
+  F;
   return useMutation({
     mutationFn: async (formData: FormData) => {
-      const { data } = await api.post('/products', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      const { data } = await api.post("/products", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-    }
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
   });
 }
 
 export function useUpdateProduct() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: async ({ id, formData }: { id: string; formData: FormData }) => {
+    mutationFn: async ({
+      id,
+      formData,
+    }: {
+      id: string;
+      formData: FormData;
+    }) => {
       const { data } = await api.put(`/products/${id}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { "Content-Type": "multipart/form-data" },
       });
       return data;
     },
     onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      queryClient.invalidateQueries({ queryKey: ['products', id] });
-    }
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["products", id] });
+    },
   });
 }
 
 export function useDeleteProduct() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (id: string) => {
       const { data } = await api.delete(`/products/${id}`);
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-    }
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
   });
 }
 ```
@@ -3389,7 +3892,7 @@ export function useDeleteProduct() {
 
 1. **MongoDB**: Use MongoDB Atlas for production or self-hosted MongoDB with replica sets
 2. **Cloudinary**: Create separate folders for production/staging
-3. **Brochure Storage**: 
+3. **Brochure Storage**:
    - Development: Local file system
    - Production: Consider S3, GCS, or dedicated file server
 4. **CORS**: Configure allowed origins for production
