@@ -48,18 +48,29 @@ export function DashboardPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [statsData, leadsData, leadsTimeData, financeData, traffic] = await Promise.all([
+        // Fetch all dashboard data in parallel, handle individual failures
+        const results = await Promise.allSettled([
           dashboardApi.getStats(),
           dashboardApi.getRecentLeads(),
           dashboardApi.getLeadsOverTime(),
           dashboardApi.getFinanceStatus(),
           dashboardApi.getWebsiteTraffic(),
         ]);
-        setStats(statsData);
-        setRecentLeads(leadsData);
-        setLeadsOverTime(leadsTimeData);
-        setFinanceStatus(financeData);
-        setTrafficData(traffic);
+
+        if (results[0].status === 'fulfilled') setStats(results[0].value);
+        else console.error('Failed to fetch stats:', results[0].reason);
+
+        if (results[1].status === 'fulfilled') setRecentLeads(results[1].value);
+        else console.error('Failed to fetch recent leads:', results[1].reason);
+
+        if (results[2].status === 'fulfilled') setLeadsOverTime(results[2].value);
+        else console.error('Failed to fetch leads over time:', results[2].reason);
+
+        if (results[3].status === 'fulfilled') setFinanceStatus(results[3].value);
+        else console.error('Failed to fetch finance status:', results[3].reason);
+
+        if (results[4].status === 'fulfilled') setTrafficData(results[4].value);
+        else console.error('Failed to fetch traffic:', results[4].reason);
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
       } finally {
