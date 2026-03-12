@@ -166,6 +166,7 @@ export function ProductsPage() {
           {isLoading ? (
             <DataTableSkeleton columns={6} rows={5} />
           ) : (
+            <>
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
@@ -180,7 +181,7 @@ export function ProductsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {products.length === 0 ? (
+                  {paginatedProducts.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         No products found
@@ -206,19 +207,14 @@ export function ProductsPage() {
                             </div>
                           </div>
                         </TableCell>
-
                         <TableCell>
                           <Badge variant="outline">{product.brand}</Badge>
                         </TableCell>
-
                         <TableCell>{product.category}</TableCell>
-
                         <TableCell>₹{product.price?.toLocaleString()}</TableCell>
-
                         <TableCell>
                           <StatusBadge status={product.isActive ? 'active' : 'inactive'} />
                         </TableCell>
-
                         <TableCell>
                           <div className="flex gap-1">
                             {product.isNewLaunch && <Badge variant="outline">New</Badge>}
@@ -226,7 +222,6 @@ export function ProductsPage() {
                             {product.isFeatured && <Badge variant="outline">Featured</Badge>}
                           </div>
                         </TableCell>
-
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -270,7 +265,6 @@ export function ProductsPage() {
               </Table>
             </div>
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between pt-4">
                 <p className="text-sm text-muted-foreground">
@@ -301,6 +295,7 @@ export function ProductsPage() {
                 </div>
               </div>
             )}
+            </>
           )}
         </CardContent>
       </Card>
