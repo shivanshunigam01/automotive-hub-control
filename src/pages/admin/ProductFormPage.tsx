@@ -518,11 +518,12 @@ export function ProductFormPage() {
               </CardContent>
             </Card>
 
-            {/* TCO Section */}
+            {/* TCO Section - hidden, not in use currently
             <TCOSection
               tcoItems={formData.tcoItems || []}
               onChange={(tcoItems) => setFormData({ ...formData, tcoItems })}
             />
+            */}
 
             {/* Brochure Upload */}
             <Card>

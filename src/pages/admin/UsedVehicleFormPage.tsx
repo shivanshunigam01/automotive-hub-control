@@ -397,6 +397,7 @@ export function UsedVehicleFormPage() {
                   </div>
                 </div>
 
+                {/* Price field hidden - not in use currently
                 <div className="space-y-2">
                   <Label>Price (₹) *</Label>
                   <Input
@@ -409,6 +410,7 @@ export function UsedVehicleFormPage() {
                     required
                   />
                 </div>
+                */}
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
