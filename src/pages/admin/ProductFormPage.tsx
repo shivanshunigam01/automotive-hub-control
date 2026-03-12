@@ -396,15 +396,27 @@ export function ProductFormPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="category">Category *</Label>
-                    <Input
-                      id="category"
+                    <Select
                       value={formData.category}
-                      onChange={(e) =>
-                        setFormData({ ...formData, category: e.target.value })
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, category: value })
                       }
-                      placeholder="e.g., Backhoe Loader"
-                      required
-                    />
+                    >
+                      <SelectTrigger id="category">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Backhoe Loader">Backhoe Loader</SelectItem>
+                        <SelectItem value="Excavator">Excavator</SelectItem>
+                        <SelectItem value="Mini Excavator">Mini Excavator</SelectItem>
+                        <SelectItem value="Skid Steel Loader">Skid Steel Loader</SelectItem>
+                        <SelectItem value="Wheel Loader">Wheel Loader</SelectItem>
+                        <SelectItem value="Telehandler">Telehandler</SelectItem>
+                        <SelectItem value="Compactor">Compactor</SelectItem>
+                        <SelectItem value="Agrimax">Agrimax</SelectItem>
+                        <SelectItem value="Genset">Genset</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
