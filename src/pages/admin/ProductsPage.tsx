@@ -49,6 +49,7 @@ export function ProductsPage() {
   );
 
   useEffect(() => {
+    setCurrentPage(1);
     fetchProducts();
   }, [searchQuery, statusFilter]);
 
