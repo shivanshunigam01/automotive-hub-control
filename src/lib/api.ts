@@ -272,12 +272,33 @@ export interface ComparisonAnalytics {
   }>;
 }
 
+const TOKEN_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
+
+function isTokenExpired(): boolean {
+  const savedAt = localStorage.getItem('admin_token_time');
+  if (!savedAt) return true;
+  return Date.now() - parseInt(savedAt, 10) > TOKEN_EXPIRY_MS;
+}
+
+function clearSession() {
+  localStorage.removeItem('admin_token');
+  localStorage.removeItem('admin_user');
+  localStorage.removeItem('admin_token_time');
+}
+
 // API Helper
 async function apiRequest<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
   const token = localStorage.getItem('admin_token');
+
+  // Auto-logout if token expired
+  if (token && isTokenExpired()) {
+    clearSession();
+    window.location.href = '/admin/login';
+    throw new Error('Session expired. Please login again.');
+  }
 
   const headers: HeadersInit = {
     ...(token && { Authorization: `Bearer ${token}` }),
@@ -293,6 +314,12 @@ async function apiRequest<T>(
     ...options,
     headers,
   });
+
+  if (response.status === 401) {
+    clearSession();
+    window.location.href = '/admin/login';
+    throw new Error('Session expired. Please login again.');
+  }
 
   if (!response.ok) {
     throw new Error(`API Error: ${response.status}`);
@@ -317,16 +344,16 @@ export const authApi = {
       body: JSON.stringify({ email, password }),
     });
 
-    // Save token
+    // Save token + timestamp
     localStorage.setItem('admin_token', response.token);
     localStorage.setItem('admin_user', JSON.stringify(response.user));
+    localStorage.setItem('admin_token_time', Date.now().toString());
 
     return response;
   },
 
   logout: () => {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
+    clearSession();
   },
 
   isAuthenticated: () => {
