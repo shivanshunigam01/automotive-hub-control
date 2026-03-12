@@ -29,7 +29,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { DataTableSkeleton } from '@/components/admin/DataTableSkeleton';
-import { productsApi, type Product } from '@/lib/api';
+import { productsApi, type Product, formatImageUrl } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 export function ProductsPage() {
