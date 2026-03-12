@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Filter, MoreHorizontal, Pencil, Trash2, Eye } from 'lucide-react';
+import { Plus, Search, Filter, MoreHorizontal, Pencil, Trash2, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,14 +32,24 @@ import { DataTableSkeleton } from '@/components/admin/DataTableSkeleton';
 import { productsApi, type Product, formatImageUrl } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
+const ITEMS_PER_PAGE = 20;
+
 export function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
+  const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE);
+  const paginatedProducts = products.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   useEffect(() => {
+    setCurrentPage(1);
     fetchProducts();
   }, [searchQuery, statusFilter]);
 
@@ -156,6 +166,7 @@ export function ProductsPage() {
           {isLoading ? (
             <DataTableSkeleton columns={6} rows={5} />
           ) : (
+            <>
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
@@ -170,14 +181,14 @@ export function ProductsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {products.length === 0 ? (
+                  {paginatedProducts.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         No products found
                       </TableCell>
                     </TableRow>
                   ) : (
-                    products.map((product) => (
+                    paginatedProducts.map((product) => (
                       <TableRow key={product.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
@@ -196,19 +207,14 @@ export function ProductsPage() {
                             </div>
                           </div>
                         </TableCell>
-
                         <TableCell>
                           <Badge variant="outline">{product.brand}</Badge>
                         </TableCell>
-
                         <TableCell>{product.category}</TableCell>
-
                         <TableCell>₹{product.price?.toLocaleString()}</TableCell>
-
                         <TableCell>
                           <StatusBadge status={product.isActive ? 'active' : 'inactive'} />
                         </TableCell>
-
                         <TableCell>
                           <div className="flex gap-1">
                             {product.isNewLaunch && <Badge variant="outline">New</Badge>}
@@ -216,7 +222,6 @@ export function ProductsPage() {
                             {product.isFeatured && <Badge variant="outline">Featured</Badge>}
                           </div>
                         </TableCell>
-
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -259,6 +264,38 @@ export function ProductsPage() {
                 </TableBody>
               </Table>
             </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-4">
+                <p className="text-sm text-muted-foreground">
+                  Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, products.length)} of {products.length}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Previous
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
+            </>
           )}
         </CardContent>
       </Card>
