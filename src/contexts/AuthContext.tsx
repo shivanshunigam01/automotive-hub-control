@@ -33,14 +33,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
     const storedUser = localStorage.getItem('admin_user');
+    const tokenTime = localStorage.getItem('admin_token_time');
+    const TOKEN_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
 
-    if (token && storedUser) {
+    const isExpired = !tokenTime || Date.now() - parseInt(tokenTime, 10) > TOKEN_EXPIRY_MS;
+
+    if (token && storedUser && !isExpired) {
       try {
         setUser(JSON.parse(storedUser));
       } catch {
         localStorage.removeItem('admin_token');
         localStorage.removeItem('admin_user');
+        localStorage.removeItem('admin_token_time');
       }
+    } else if (token) {
+      // Token exists but expired — clear it
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_user');
+      localStorage.removeItem('admin_token_time');
     }
 
     setIsLoading(false);
