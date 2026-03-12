@@ -39,7 +39,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { TCOSection, type TCOItem } from "@/components/admin/TCOSection";
-import { productsApi, type Product } from "@/lib/api";
+import { productsApi, type Product, formatImageUrl } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 // type ProductFormData = Omit<Product, 'id' | 'createdAt' | 'updatedAt'> & {
@@ -227,7 +227,7 @@ export function ProductFormPage() {
           price: product.price?.toString() ?? "0", // ✅ FIX
           shortDescription: product.shortDescription,
           specifications: product.specifications,
-          images: product.images,
+          images: product.images.map(formatImageUrl),
           isNewLaunch: product.isNewLaunch,
           isBestseller: product.isBestseller,
           isFeatured: product.isFeatured,

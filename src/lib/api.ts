@@ -1,6 +1,12 @@
 // API Configuration - Replace BASE_URL with actual API endpoint
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
+export function formatImageUrl(url: string | undefined): string {
+  if (!url) return '/placeholder.svg';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) return url;
+  return `${API_BASE_URL}/${url.replace(/\\/g, '/')}`;
+}
+
 import type { UserRole, ModulePermissions } from './rbac';
 
 // Types

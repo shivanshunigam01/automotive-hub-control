@@ -29,7 +29,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { DataTableSkeleton } from '@/components/admin/DataTableSkeleton';
-import { productsApi, type Product } from '@/lib/api';
+import { productsApi, type Product, formatImageUrl } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 export function ProductsPage() {
@@ -183,7 +183,7 @@ export function ProductsPage() {
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
                               <img
-                                src={product.images?.[0] || '/placeholder.svg'}
+                                src={formatImageUrl(product.images?.[0])}
                                 alt={product.name}
                                 className="h-8 w-8 object-contain"
                               />
