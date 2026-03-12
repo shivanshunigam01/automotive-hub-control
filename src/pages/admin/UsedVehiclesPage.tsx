@@ -195,6 +195,7 @@ setVehicles(mapped);
           {isLoading ? (
             <DataTableSkeleton columns={7} rows={5} />
           ) : (
+            <>
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
@@ -209,14 +210,14 @@ setVehicles(mapped);
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredVehicles.length === 0 ? (
+                  {paginatedVehicles.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         No vehicles found
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredVehicles.map((vehicle) => (
+                    paginatedVehicles.map((vehicle) => (
                       <TableRow key={vehicle.id} className="table-row-hover">
                         <TableCell>
                           <div className="flex items-center gap-3">
@@ -312,6 +313,38 @@ setVehicles(mapped);
                 </TableBody>
               </Table>
             </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-4">
+                <p className="text-sm text-muted-foreground">
+                  Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredVehicles.length)} of {filteredVehicles.length}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Previous
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
+            </>
           )}
         </CardContent>
       </Card>
