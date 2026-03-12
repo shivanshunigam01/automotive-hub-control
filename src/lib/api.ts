@@ -344,16 +344,16 @@ export const authApi = {
       body: JSON.stringify({ email, password }),
     });
 
-    // Save token
+    // Save token + timestamp
     localStorage.setItem('admin_token', response.token);
     localStorage.setItem('admin_user', JSON.stringify(response.user));
+    localStorage.setItem('admin_token_time', Date.now().toString());
 
     return response;
   },
 
   logout: () => {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
+    clearSession();
   },
 
   isAuthenticated: () => {
