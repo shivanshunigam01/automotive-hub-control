@@ -48,10 +48,13 @@ function normalizeCondition(value?: string): ConditionLevel {
 
 
 
+const ITEMS_PER_PAGE = 20;
+
 export function UsedVehiclesPage() {
   const [vehicles, setVehicles] = useState<UsedVehicle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
   useEffect(() => {

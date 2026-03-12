@@ -32,12 +32,21 @@ import { DataTableSkeleton } from '@/components/admin/DataTableSkeleton';
 import { productsApi, type Product, formatImageUrl } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
+const ITEMS_PER_PAGE = 20;
+
 export function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
+
+  const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE);
+  const paginatedProducts = products.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   useEffect(() => {
     fetchProducts();
