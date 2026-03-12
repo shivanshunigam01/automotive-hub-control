@@ -420,6 +420,7 @@ export function ProductFormPage() {
                   </div>
                 </div>
 
+                {/* Price field hidden - not in use currently
                 <div className="space-y-2">
                   <Label htmlFor="price">Price (₹) *</Label>
                   <Input
@@ -429,18 +430,16 @@ export function ProductFormPage() {
                     value={formData.price}
                     onChange={(e) => {
                       const value = e.target.value;
-
-                      // allow empty while typing
                       if (value === "") {
                         setFormData({ ...formData, price: "" });
                         return;
                       }
-
                       setFormData({ ...formData, price: value });
                     }}
                     placeholder="0"
                   />
                 </div>
+                */}
 
                 <div className="space-y-2">
                   <Label htmlFor="description">Short Description</Label>
