@@ -141,7 +141,13 @@ setVehicles(mapped);
   const filteredVehicles = vehicles.filter(
     (v) =>
     (v.brand || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-(v.model || "").toLowerCase().includes(searchQuery.toLowerCase())
+    (v.model || "").toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredVehicles.length / ITEMS_PER_PAGE);
+  const paginatedVehicles = filteredVehicles.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
   );
 
   return (
