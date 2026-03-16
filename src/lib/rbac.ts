@@ -61,6 +61,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     mediaLibrary: FULL,
     offersSchemes: FULL,
     contentPages: FULL,
+    careers: FULL,
   },
   admin: {
     dashboard: FULL,
@@ -77,6 +78,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     mediaLibrary: FULL,
     offersSchemes: FULL,
     contentPages: FULL,
+    careers: FULL,
   },
   sales_user: {
     dashboard: READ_ONLY,
@@ -93,6 +95,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     mediaLibrary: NONE,
     offersSchemes: NONE,
     contentPages: NONE,
+    careers: NONE,
   },
 };
 
