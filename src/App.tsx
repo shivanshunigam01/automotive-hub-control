@@ -67,6 +67,7 @@ const App = () => (
               <Route path="media-library" element={<MediaLibraryPage />} />
               <Route path="offers-schemes" element={<OffersSchemesPage />} />
               <Route path="content-pages" element={<ContentPagesPage />} />
+              <Route path="careers" element={<CareersPage />} />
             </Route>
             
             {/* 404 */}

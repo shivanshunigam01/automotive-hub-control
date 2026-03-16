@@ -54,6 +54,7 @@ const allMenuItems: MenuItem[] = [
   { icon: Image, label: 'Banners', path: '/admin/banners', module: 'banners' },
   { icon: Settings, label: 'Settings', path: '/admin/settings', module: 'settings' },
   { icon: UserCog, label: 'Users', path: '/admin/users', module: 'users' },
+  { icon: Briefcase, label: 'Careers', path: '/admin/careers', module: 'careers' },
 ];
 
 export function AdminSidebar() {
