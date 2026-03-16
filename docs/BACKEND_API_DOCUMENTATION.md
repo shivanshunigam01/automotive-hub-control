@@ -35,7 +35,8 @@ backend/
 │   │   ├── analyticsController.js
 │   │   ├── bannerController.js
 │   │   ├── settingController.js
-│   │   └── userController.js
+│   │   ├── userController.js
+│   │   └── careerController.js
 │   ├── middleware/
 │   │   ├── auth.js              # JWT verification
 │   │   ├── rbac.js              # Role-based access control
