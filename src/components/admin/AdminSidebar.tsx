@@ -36,7 +36,7 @@ interface MenuItem {
   icon: typeof LayoutDashboard;
   label: string;
   path: string;
-  module: 'dashboard' | 'products' | 'certifiedRefurbished' | 'leads' | 'finance' | 'cibil' | 'analytics' | 'banners' | 'settings' | 'dealers' | 'users' | 'mediaLibrary' | 'offersSchemes' | 'contentPages';
+  module: 'dashboard' | 'products' | 'certifiedRefurbished' | 'leads' | 'finance' | 'cibil' | 'analytics' | 'banners' | 'settings' | 'dealers' | 'users' | 'mediaLibrary' | 'offersSchemes' | 'contentPages' | 'careers';
 }
 
 const allMenuItems: MenuItem[] = [
