@@ -3924,3 +3924,347 @@ This documentation covers the complete backend API for the Patliputra Motors adm
 - **Standard API response format** for consistent frontend integration
 
 Use this documentation to generate the complete backend codebase with any AI code generator or as a reference for manual implementation.
+
+---
+
+## Careers Module (Job Openings & Applications)
+
+### Mongoose Models
+
+#### `models/JobOpening.js`
+
+```javascript
+const mongoose = require('mongoose');
+
+const jobOpeningSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    location: { type: String, required: true, trim: true },
+    experience: { type: String, required: true, trim: true },
+    employmentType: {
+      type: String,
+      enum: ['Full Time', 'Part Time', 'Contract', 'Internship'],
+      default: 'Full Time',
+    },
+    description: { type: String, required: true },
+    qualifications: [{ type: String }],
+    isActive: { type: Boolean, default: true },
+    priority: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+);
+
+jobOpeningSchema.index({ title: 'text', location: 'text' });
+
+module.exports = mongoose.model('JobOpening', jobOpeningSchema);
+```
+
+#### `models/JobApplication.js`
+
+```javascript
+const mongoose = require('mongoose');
+
+const jobApplicationSchema = new mongoose.Schema(
+  {
+    jobId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'JobOpening',
+      required: true,
+    },
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, trim: true, lowercase: true },
+    mobile: { type: String, required: true, trim: true },
+    resumeUrl: { type: String, required: true }, // Cloudinary URL or file server URL
+    whyShouldWeHire: { type: String, default: '' },
+    status: {
+      type: String,
+      enum: ['new', 'reviewed', 'shortlisted', 'rejected', 'hired'],
+      default: 'new',
+    },
+  },
+  { timestamps: true }
+);
+
+jobApplicationSchema.index({ jobId: 1, status: 1 });
+jobApplicationSchema.index({ name: 'text', email: 'text' });
+
+module.exports = mongoose.model('JobApplication', jobApplicationSchema);
+```
+
+---
+
+### Controller — `controllers/careerController.js`
+
+```javascript
+const JobOpening = require('../models/JobOpening');
+const JobApplication = require('../models/JobApplication');
+const { uploadToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
+
+// ═══════════════════════════════════════
+// JOB OPENINGS
+// ═══════════════════════════════════════
+
+// GET /api/careers/openings
+exports.getAllOpenings = async (req, res, next) => {
+  try {
+    const { search, is_active } = req.query;
+    const filter = {};
+
+    if (is_active !== undefined) filter.isActive = is_active === 'true';
+    if (search) filter.$text = { $search: search };
+
+    const openings = await JobOpening.find(filter).sort({ priority: -1, createdAt: -1 });
+    res.json({ data: openings });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// GET /api/careers/openings/active  (PUBLIC — no auth)
+exports.getActiveOpenings = async (req, res, next) => {
+  try {
+    const openings = await JobOpening.find({ isActive: true }).sort({ priority: -1, createdAt: -1 });
+    res.json({ data: openings });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// GET /api/careers/openings/:id
+exports.getOpeningById = async (req, res, next) => {
+  try {
+    const opening = await JobOpening.findById(req.params.id);
+    if (!opening) return res.status(404).json({ message: 'Job opening not found' });
+    res.json({ data: opening });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// POST /api/careers/openings
+exports.createOpening = async (req, res, next) => {
+  try {
+    const opening = await JobOpening.create(req.body);
+    res.status(201).json({ data: opening });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// PUT /api/careers/openings/:id
+exports.updateOpening = async (req, res, next) => {
+  try {
+    const opening = await JobOpening.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!opening) return res.status(404).json({ message: 'Job opening not found' });
+    res.json({ data: opening });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// DELETE /api/careers/openings/:id
+exports.deleteOpening = async (req, res, next) => {
+  try {
+    const opening = await JobOpening.findByIdAndDelete(req.params.id);
+    if (!opening) return res.status(404).json({ message: 'Job opening not found' });
+    // Also delete associated applications
+    await JobApplication.deleteMany({ jobId: req.params.id });
+    res.json({ message: 'Job opening and associated applications deleted' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ═══════════════════════════════════════
+// JOB APPLICATIONS
+// ═══════════════════════════════════════
+
+// GET /api/careers/applications  (Admin)
+exports.getAllApplications = async (req, res, next) => {
+  try {
+    const { job_id, status, search } = req.query;
+    const filter = {};
+
+    if (job_id) filter.jobId = job_id;
+    if (status) filter.status = status;
+    if (search) filter.$text = { $search: search };
+
+    const applications = await JobApplication.find(filter)
+      .populate('jobId', 'title')
+      .sort({ createdAt: -1 });
+
+    // Map jobTitle from populated jobId
+    const result = applications.map((app) => ({
+      ...app.toObject(),
+      _id: app._id,
+      jobTitle: app.jobId?.title || 'Unknown',
+      jobId: app.jobId?._id || app.jobId,
+    }));
+
+    res.json({ data: result });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// POST /api/careers/applications  (PUBLIC — user panel form submission)
+// Expects multipart/form-data with resume file
+exports.submitApplication = async (req, res, next) => {
+  try {
+    const { jobId, name, email, mobile, whyShouldWeHire } = req.body;
+
+    // Validate job exists and is active
+    const job = await JobOpening.findById(jobId);
+    if (!job || !job.isActive) {
+      return res.status(400).json({ message: 'Job opening not found or inactive' });
+    }
+
+    // Upload resume to Cloudinary (or local storage)
+    let resumeUrl = '';
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.path, {
+        folder: 'careers/resumes',
+        resource_type: 'raw', // for PDFs/docs
+      });
+      resumeUrl = result.secure_url;
+    } else if (req.body.resumeUrl) {
+      resumeUrl = req.body.resumeUrl;
+    } else {
+      return res.status(400).json({ message: 'Resume file is required' });
+    }
+
+    const application = await JobApplication.create({
+      jobId,
+      name,
+      email,
+      mobile,
+      resumeUrl,
+      whyShouldWeHire: whyShouldWeHire || '',
+    });
+
+    res.status(201).json({ data: application, message: 'Application submitted successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// PATCH /api/careers/applications/:id/status  (Admin)
+exports.updateApplicationStatus = async (req, res, next) => {
+  try {
+    const { status } = req.body;
+    const validStatuses = ['new', 'reviewed', 'shortlisted', 'rejected', 'hired'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const application = await JobApplication.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+    if (!application) return res.status(404).json({ message: 'Application not found' });
+    res.json({ data: application });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// DELETE /api/careers/applications/:id  (Admin)
+exports.deleteApplication = async (req, res, next) => {
+  try {
+    const application = await JobApplication.findByIdAndDelete(req.params.id);
+    if (!application) return res.status(404).json({ message: 'Application not found' });
+    res.json({ message: 'Application deleted' });
+  } catch (err) {
+    next(err);
+  }
+};
+```
+
+---
+
+### Routes — `routes/careerRoutes.js`
+
+```javascript
+const express = require('express');
+const router = express.Router();
+const careerController = require('../controllers/careerController');
+const { authenticate } = require('../middleware/auth');
+const { authorize } = require('../middleware/rbac');
+const upload = require('../middleware/upload');
+
+// ════════════ PUBLIC ROUTES (User Panel) ════════════
+
+// Get active job openings (for careers page)
+router.get('/openings/active', careerController.getActiveOpenings);
+
+// Submit job application (with resume upload)
+router.post(
+  '/applications',
+  upload.single('resume'),
+  careerController.submitApplication
+);
+
+// ════════════ ADMIN ROUTES (Protected) ════════════
+
+// Job Openings CRUD
+router.get('/openings', authenticate, authorize('careers', 'view'), careerController.getAllOpenings);
+router.get('/openings/:id', authenticate, authorize('careers', 'view'), careerController.getOpeningById);
+router.post('/openings', authenticate, authorize('careers', 'create'), careerController.createOpening);
+router.put('/openings/:id', authenticate, authorize('careers', 'edit'), careerController.updateOpening);
+router.delete('/openings/:id', authenticate, authorize('careers', 'delete'), careerController.deleteOpening);
+
+// Job Applications (Admin)
+router.get('/applications', authenticate, authorize('careers', 'view'), careerController.getAllApplications);
+router.patch('/applications/:id/status', authenticate, authorize('careers', 'edit'), careerController.updateApplicationStatus);
+router.delete('/applications/:id', authenticate, authorize('careers', 'delete'), careerController.deleteApplication);
+
+module.exports = router;
+```
+
+---
+
+### App.js Integration
+
+Add the following to your `app.js` (or `server.js`):
+
+```javascript
+// ── Import career routes ──
+const careerRoutes = require('./routes/careerRoutes');
+
+// ── Mount career routes ──
+app.use('/api/careers', careerRoutes);
+```
+
+---
+
+### API Endpoints Summary
+
+| Method   | Endpoint                              | Auth     | Description                          |
+| -------- | ------------------------------------- | -------- | ------------------------------------ |
+| `GET`    | `/api/careers/openings/active`        | Public   | Get active openings for user panel   |
+| `POST`   | `/api/careers/applications`           | Public   | Submit application (multipart/form)  |
+| `GET`    | `/api/careers/openings`               | Admin    | List all openings (with search)      |
+| `GET`    | `/api/careers/openings/:id`           | Admin    | Get single opening                   |
+| `POST`   | `/api/careers/openings`               | Admin    | Create opening                       |
+| `PUT`    | `/api/careers/openings/:id`           | Admin    | Update opening                       |
+| `DELETE` | `/api/careers/openings/:id`           | Admin    | Delete opening + its applications    |
+| `GET`    | `/api/careers/applications`           | Admin    | List all applications (filterable)   |
+| `PATCH`  | `/api/careers/applications/:id/status`| Admin    | Update application status            |
+| `DELETE` | `/api/careers/applications/:id`       | Admin    | Delete an application                |
+
+### Public Application Form Fields (User Panel)
+
+The user panel form submits via `POST /api/careers/applications` (multipart/form-data):
+
+| Field              | Type   | Required | Description                    |
+| ------------------ | ------ | -------- | ------------------------------ |
+| `jobId`            | String | Yes      | MongoDB ObjectId of the job    |
+| `name`             | String | Yes      | Applicant full name            |
+| `email`            | String | Yes      | Applicant email                |
+| `mobile`           | String | Yes      | Applicant mobile number        |
+| `resume`           | File   | Yes      | PDF/DOC resume file            |
+| `whyShouldWeHire`  | String | No       | Free-text answer               |
