@@ -33,6 +33,11 @@ const statusConfig: Record<UnifiedStatus, { label: string; className: string }> 
   approved: { label: 'Approved', className: 'status-active' },
   rejected: { label: 'Rejected', className: 'bg-destructive/10 text-destructive border-destructive/20' },
   disbursed: { label: 'Disbursed', className: 'bg-success/10 text-success border-success/20' },
+
+  // Careers
+  reviewed: { label: 'Reviewed', className: 'status-pending' },
+  shortlisted: { label: 'Shortlisted', className: 'bg-info/10 text-info border-info/20' },
+  hired: { label: 'Hired', className: 'bg-success/10 text-success border-success/20' },
 };
 
 interface StatusBadgeProps {

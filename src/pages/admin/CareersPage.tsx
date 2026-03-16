@@ -372,7 +372,7 @@ export function CareersPage() {
             </CardHeader>
             <CardContent>
               {isLoadingApps ? (
-                <DataTableSkeleton />
+                <DataTableSkeleton columns={7} />
               ) : filteredApps.length === 0 ? (
                 <div className="py-12 text-center text-muted-foreground">No applications found.</div>
               ) : (
