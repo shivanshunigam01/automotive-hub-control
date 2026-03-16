@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-export type UnifiedStatus = StatusType | FinanceStatus;
+export type UnifiedStatus = StatusType | FinanceStatus | CareerStatus;
 type StatusType = 
   | 'new' 
   | 'contacted' 
@@ -13,6 +13,7 @@ type StatusType =
   | 'rejected'
   | 'active'
   | 'inactive';
+type CareerStatus = 'reviewed' | 'shortlisted' | 'hired';
 
 const statusConfig: Record<UnifiedStatus, { label: string; className: string }> = {
   // Leads
