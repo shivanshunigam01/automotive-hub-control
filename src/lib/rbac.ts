@@ -189,4 +189,5 @@ export const ALL_MODULES: Array<{ key: keyof ModulePermissions; label: string }>
   { key: 'banners', label: 'Banners' },
   { key: 'settings', label: 'Settings' },
   { key: 'users', label: 'User Management' },
+  { key: 'careers', label: 'Careers' },
 ];
