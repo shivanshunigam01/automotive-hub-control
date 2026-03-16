@@ -252,7 +252,7 @@ export function CareersPage() {
             </CardHeader>
             <CardContent>
               {isLoadingOpenings ? (
-                <DataTableSkeleton />
+                <DataTableSkeleton columns={7} />
               ) : filteredOpenings.length === 0 ? (
                 <div className="py-12 text-center text-muted-foreground">No job openings found.</div>
               ) : (
