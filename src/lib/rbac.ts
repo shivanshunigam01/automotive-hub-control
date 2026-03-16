@@ -164,6 +164,7 @@ export const MENU_MODULE_MAP: MenuItem[] = [
   { path: '/admin/banners', module: 'banners' },
   { path: '/admin/settings', module: 'settings' },
   { path: '/admin/users', module: 'users' },
+  { path: '/admin/careers', module: 'careers' },
 ];
 
 export function getAccessibleMenuItems(role: UserRole): string[] {
