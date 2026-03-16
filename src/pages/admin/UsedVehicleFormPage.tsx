@@ -4,8 +4,6 @@ import {
   ArrowLeft,
   Save,
   Upload,
-  FileText,
-  ExternalLink,
   Trash2,
   X,
   Image as ImageIcon,
@@ -26,16 +24,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
 type UsedVehicleFormData = {
   vehicleType: string;
   brand: string;
   model: string;
   year: string;
-  kilometers: string;
   hours: string;
   price: string;
-  ownership: string;
   fuelType: string;
   location: string;
 
@@ -48,18 +43,14 @@ type UsedVehicleFormData = {
   hasReturnPolicy: boolean;
 
   images: string[];
-  inspectionReportUrl?: string; // full URL for UI
 };
-
 const initialForm: UsedVehicleFormData = {
   vehicleType: "other",
   brand: "",
   model: "",
   year: "",
-  kilometers: "",
   hours: "",
   price: "",
-  ownership: "",
   fuelType: "",
   location: "",
   conditionNotes: "",
@@ -69,7 +60,6 @@ const initialForm: UsedVehicleFormData = {
   hasWarranty: false,
   hasReturnPolicy: false,
   images: [],
-  inspectionReportUrl: "",
 };
 export const VEHICLE_TYPES = [
   { value: "tipper", label: "Tipper" },
@@ -98,12 +88,12 @@ export function UsedVehicleFormPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [inspectionReportFile, setInspectionReportFile] = useState<File | null>(
-    null,
-  );
+  // const [inspectionReportFile, setInspectionReportFile] = useState<File | null>(
+  //   null,
+  // );
 
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const reportInputRef = useRef<HTMLInputElement>(null);
+  // const imageInputRef = useRef<HTMLInputElement>(null);
+  // const reportInputRef = useRef<HTMLInputElement>(null);
 
   const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "https://api.patliputragroup.com";
@@ -125,10 +115,10 @@ export function UsedVehicleFormPage() {
         brand: vehicle.brand || "",
         model: vehicle.model || "",
         year: String(vehicle.year || ""),
-        kilometers: String(vehicle.kilometers || ""),
+        // kilometers: String(vehicle.kilometers || ""),
         hours: String(vehicle.hours || ""),
         price: String(vehicle.price || ""),
-        ownership: vehicle.ownership || "",
+        // ownership: vehicle.ownership || "",
         fuelType: (vehicle as any).fuel_type || vehicle.fuelType || "",
         location: (vehicle as any).location || "",
         conditionNotes: (vehicle as any).condition_report?.notes || "",
@@ -140,9 +130,9 @@ export function UsedVehicleFormPage() {
         hasReturnPolicy: (vehicle as any).has_return_policy ?? false,
 
         images: (vehicle as any).gallery_images || vehicle.images || [],
-        inspectionReportUrl: (vehicle as any).inspection_report_url
-          ? `${API_BASE_URL}${String((vehicle as any).inspection_report_url).replace(/\\/g, "/")}`
-          : "",
+        // inspectionReportUrl: (vehicle as any).inspection_report_url
+        //   ? `${API_BASE_URL}${String((vehicle as any).inspection_report_url).replace(/\\/g, "/")}`
+        //   : "",
       });
     } catch {
       toast({
@@ -167,35 +157,35 @@ export function UsedVehicleFormPage() {
       images: [...prev.images, ...previewUrls],
     }));
 
-    if (imageInputRef.current) imageInputRef.current.value = "";
+    // if (imageInputRef.current) imageInputRef.current.value = "";
   }
 
-  function handleInspectionReportUpload(
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // function handleInspectionReportUpload(
+  //   e: React.ChangeEvent<HTMLInputElement>,
+  // ) {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
 
-    if (file.type !== "application/pdf") {
-      toast({
-        title: "Invalid file",
-        description: "Please upload a PDF file",
-        variant: "destructive",
-      });
-      return;
-    }
+  //   if (file.type !== "application/pdf") {
+  //     toast({
+  //       title: "Invalid file",
+  //       description: "Please upload a PDF file",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
 
-    setInspectionReportFile(file);
+  //   setInspectionReportFile(file);
 
-    // local preview url (only for UI until saved)
-    const previewUrl = URL.createObjectURL(file);
-    setFormData((prev) => ({
-      ...prev,
-      inspectionReportUrl: previewUrl,
-    }));
+  //   // local preview url (only for UI until saved)
+  //   const previewUrl = URL.createObjectURL(file);
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     inspectionReportUrl: previewUrl,
+  //   }));
 
-    if (reportInputRef.current) reportInputRef.current.value = "";
-  }
+  //   if (reportInputRef.current) reportInputRef.current.value = "";
+  // }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -209,11 +199,11 @@ export function UsedVehicleFormPage() {
       fd.append("brand", formData.brand);
       fd.append("model", formData.model);
       fd.append("year", String(Number(formData.year || 0)));
-      fd.append("kilometers", String(Number(formData.kilometers || 0)));
+      // fd.append("kilometers", String(Number(formData.kilometers || 0)));
       fd.append("hours", String(Number(formData.hours || 0)));
       fd.append("price", String(Number(formData.price || 0)));
 
-      fd.append("ownership", formData.ownership);
+      // fd.append("ownership", formData.ownership);
       fd.append("fuel_type", formData.fuelType);
       fd.append("location", formData.location);
 
@@ -233,10 +223,10 @@ export function UsedVehicleFormPage() {
       // ✅ images
       imageFiles.forEach((f) => fd.append("images", f));
 
-      // ✅ pdf
-      if (inspectionReportFile) {
-        fd.append("inspectionReport", inspectionReportFile);
-      }
+      // // ✅ pdf
+      // if (inspectionReportFile) {
+      //   fd.append("inspectionReport", inspectionReportFile);
+      // }
 
       if (isEditing) {
         await usedVehiclesApi.update(id!, fd);
@@ -372,17 +362,7 @@ export function UsedVehicleFormPage() {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Kilometers</Label>
-                    <Input
-                      type="number"
-                      value={formData.kilometers}
-                      onChange={(e) =>
-                        setFormData({ ...formData, kilometers: e.target.value })
-                      }
-                      placeholder="0"
-                    />
-                  </div>
+              
 
                   <div className="space-y-2">
                     <Label>Hours</Label>
@@ -413,16 +393,7 @@ export function UsedVehicleFormPage() {
                 */}
 
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Ownership</Label>
-                    <Input
-                      value={formData.ownership}
-                      onChange={(e) =>
-                        setFormData({ ...formData, ownership: e.target.value })
-                      }
-                      placeholder="First Owner"
-                    />
-                  </div>
+                 
 
                   <div className="space-y-2">
                     <Label>Fuel Type</Label>
@@ -465,149 +436,10 @@ export function UsedVehicleFormPage() {
             </Card>
 
             {/* Inspection Report */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-accent" />
-                  Inspection Report (PDF)
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <input
-                  ref={reportInputRef}
-                  type="file"
-                  accept=".pdf,application/pdf"
-                  className="hidden"
-                  onChange={handleInspectionReportUpload}
-                />
-
-                {!formData.inspectionReportUrl ? (
-                  <div
-                    className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-accent/50 hover:bg-muted/50 transition-colors"
-                    onClick={() => reportInputRef.current?.click()}
-                  >
-                    <FileText className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      Upload inspection report PDF
-                    </p>
-                    <Button type="button" variant="outline" className="mt-4">
-                      <Upload className="mr-2 h-4 w-4" />
-                      Upload PDF
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 rounded-lg bg-accent/10 flex items-center justify-center">
-                        <FileText className="h-6 w-6 text-accent" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium truncate max-w-[250px]">
-                          {formData.inspectionReportUrl.split(/[\\/]/).pop() ||
-                            "report.pdf"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          PDF Document
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => reportInputRef.current?.click()}
-                      >
-                        <Upload className="h-4 w-4" />
-                      </Button>
-
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() =>
-                          window.open(formData.inspectionReportUrl, "_blank")
-                        }
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            inspectionReportUrl: "",
-                          }));
-                          setInspectionReportFile(null);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          
 
             {/* Images */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ImageIcon className="h-5 w-5 text-accent" />
-                  Images
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <input
-                  ref={imageInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={handleImageUpload}
-                />
-
-                <div
-                  className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-accent/50 hover:bg-muted/50 transition-colors"
-                  onClick={() => imageInputRef.current?.click()}
-                >
-                  <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    Click to upload images
-                  </p>
-                  <Button type="button" variant="outline" className="mt-4">
-                    <Upload className="mr-2 h-4 w-4" />
-                    Upload Images
-                  </Button>
-                </div>
-
-                {formData.images.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                    {formData.images.map((img, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={img}
-                          className="w-full h-32 object-cover rounded-lg"
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-2 right-2"
-                          onClick={() => removeImage(index)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+        
           </div>
 
           {/* Sidebar */}
