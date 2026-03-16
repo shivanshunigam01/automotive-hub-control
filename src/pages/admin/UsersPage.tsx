@@ -203,6 +203,7 @@ function openEditDialog(user: AdminUser) {
         mediaLibrary: userPermissions['mediaLibrary'] || { view: false, create: false, edit: false, delete: false, export: false },
         offersSchemes: userPermissions['offersSchemes'] || { view: false, create: false, edit: false, delete: false, export: false },
         contentPages: userPermissions['contentPages'] || { view: false, create: false, edit: false, delete: false, export: false },
+        careers: userPermissions['careers'] || { view: false, create: false, edit: false, delete: false, export: false },
       };
       await usersApi.update(selectedUserForPermissions.id, { 
         permissions: completePermissions

@@ -23,6 +23,7 @@ import { UsersPage } from "@/pages/admin/UsersPage";
 import { MediaLibraryPage } from "@/pages/admin/MediaLibraryPage";
 import { OffersSchemesPage } from "@/pages/admin/OffersSchemesPage";
 import { ContentPagesPage } from "@/pages/admin/ContentPagesPage";
+import { CareersPage } from "@/pages/admin/CareersPage";
 import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
 
 import NotFound from "./pages/NotFound";
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="media-library" element={<MediaLibraryPage />} />
               <Route path="offers-schemes" element={<OffersSchemesPage />} />
               <Route path="content-pages" element={<ContentPagesPage />} />
+              <Route path="careers" element={<CareersPage />} />
             </Route>
             
             {/* 404 */}

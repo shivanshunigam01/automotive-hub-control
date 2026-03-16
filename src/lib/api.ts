@@ -1309,3 +1309,91 @@ export const settingsApi = {
     return res.data;
   },
 };
+
+// ================= CAREERS TYPES =================
+export interface JobOpening {
+  _id: string;
+  title: string;
+  location: string;
+  experience: string;
+  employmentType: 'Full Time' | 'Part Time' | 'Contract' | 'Internship';
+  description: string;
+  qualifications: string[];
+  isActive: boolean;
+  priority: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface JobApplication {
+  _id: string;
+  jobId: string;
+  jobTitle?: string;
+  name: string;
+  email: string;
+  mobile: string;
+  resumeUrl: string;
+  whyShouldWeHire: string;
+  status: 'new' | 'reviewed' | 'shortlisted' | 'rejected' | 'hired';
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ================= CAREERS API =================
+export const careersApi = {
+  // Job Openings
+  getAllOpenings: async (params?: { search?: string; isActive?: boolean }): Promise<JobOpening[]> => {
+    const query = new URLSearchParams();
+    if (params?.search) query.append('search', params.search);
+    if (params?.isActive !== undefined) query.append('is_active', String(params.isActive));
+    const res = await apiRequest<{ data: JobOpening[] }>(`/careers/openings?${query.toString()}`);
+    return res.data;
+  },
+
+  getOpeningById: async (id: string): Promise<JobOpening> => {
+    const res = await apiRequest<{ data: JobOpening }>(`/careers/openings/${id}`);
+    return res.data;
+  },
+
+  createOpening: async (data: Partial<JobOpening>): Promise<JobOpening> => {
+    const res = await apiRequest<{ data: JobOpening }>('/careers/openings', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return res.data;
+  },
+
+  updateOpening: async (id: string, data: Partial<JobOpening>): Promise<JobOpening> => {
+    const res = await apiRequest<{ data: JobOpening }>(`/careers/openings/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    return res.data;
+  },
+
+  deleteOpening: async (id: string): Promise<void> => {
+    await apiRequest(`/careers/openings/${id}`, { method: 'DELETE' });
+  },
+
+  // Job Applications
+  getAllApplications: async (params?: { jobId?: string; status?: string; search?: string }): Promise<JobApplication[]> => {
+    const query = new URLSearchParams();
+    if (params?.jobId) query.append('job_id', params.jobId);
+    if (params?.status) query.append('status', params.status);
+    if (params?.search) query.append('search', params.search);
+    const res = await apiRequest<{ data: JobApplication[] }>(`/careers/applications?${query.toString()}`);
+    return res.data;
+  },
+
+  updateApplicationStatus: async (id: string, status: JobApplication['status']): Promise<JobApplication> => {
+    const res = await apiRequest<{ data: JobApplication }>(`/careers/applications/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+    return res.data;
+  },
+
+  deleteApplication: async (id: string): Promise<void> => {
+    await apiRequest(`/careers/applications/${id}`, { method: 'DELETE' });
+  },
+};

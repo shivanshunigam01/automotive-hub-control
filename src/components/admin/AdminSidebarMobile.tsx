@@ -15,6 +15,7 @@ import {
   FolderOpen,
   Tag,
   FileText,
+  Briefcase,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,6 +38,7 @@ const menuItems = [
   { icon: Image, label: 'Banners', path: '/admin/banners', module: 'banners' as const },
   { icon: Settings, label: 'Settings', path: '/admin/settings', module: 'settings' as const },
   { icon: UserCog, label: 'Users', path: '/admin/users', module: 'users' as const },
+  { icon: Briefcase, label: 'Careers', path: '/admin/careers', module: 'careers' as const },
 ];
 
 export function AdminSidebarMobile() {

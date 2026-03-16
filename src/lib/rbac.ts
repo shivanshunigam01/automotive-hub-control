@@ -33,6 +33,7 @@ export interface ModulePermissions {
   mediaLibrary: Permission;
   offersSchemes: Permission;
   contentPages: Permission;
+  careers: Permission;
 }
 
 // Full permission
@@ -60,6 +61,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     mediaLibrary: FULL,
     offersSchemes: FULL,
     contentPages: FULL,
+    careers: FULL,
   },
   admin: {
     dashboard: FULL,
@@ -76,6 +78,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     mediaLibrary: FULL,
     offersSchemes: FULL,
     contentPages: FULL,
+    careers: FULL,
   },
   sales_user: {
     dashboard: READ_ONLY,
@@ -92,6 +95,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     mediaLibrary: NONE,
     offersSchemes: NONE,
     contentPages: NONE,
+    careers: NONE,
   },
 };
 
@@ -160,6 +164,7 @@ export const MENU_MODULE_MAP: MenuItem[] = [
   { path: '/admin/banners', module: 'banners' },
   { path: '/admin/settings', module: 'settings' },
   { path: '/admin/users', module: 'users' },
+  { path: '/admin/careers', module: 'careers' },
 ];
 
 export function getAccessibleMenuItems(role: UserRole): string[] {
@@ -184,4 +189,5 @@ export const ALL_MODULES: Array<{ key: keyof ModulePermissions; label: string }>
   { key: 'banners', label: 'Banners' },
   { key: 'settings', label: 'Settings' },
   { key: 'users', label: 'User Management' },
+  { key: 'careers', label: 'Careers' },
 ];
