@@ -33,6 +33,7 @@ export interface ModulePermissions {
   mediaLibrary: Permission;
   offersSchemes: Permission;
   contentPages: Permission;
+  careers: Permission;
 }
 
 // Full permission
