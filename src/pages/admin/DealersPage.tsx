@@ -357,6 +357,25 @@ export function DealersPage() {
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="brand">Brand *</Label>
+              <Select
+                value={formData.brand}
+                onValueChange={(value) => setFormData({ ...formData, brand: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Brand" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BRANDS.map((brand) => (
+                    <SelectItem key={brand} value={brand}>
+                      {brand}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="name">Dealer Name *</Label>
