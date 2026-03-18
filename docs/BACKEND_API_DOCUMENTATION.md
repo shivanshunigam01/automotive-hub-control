@@ -54,6 +54,7 @@ backend/
 │   │   ├── Dealer.js
 │   │   ├── MediaItem.js
 │   │   ├── Album.js
+│   │   ├── Timeline.js
 │   │   ├── OfferScheme.js
 │   │   ├── ContentPage.js
 │   │   ├── Analytics.js
