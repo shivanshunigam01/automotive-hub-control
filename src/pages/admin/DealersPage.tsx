@@ -34,7 +34,10 @@ import { dealersApi, type Dealer } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/usePermissions';
 
+const BRANDS = ['JCB', 'Ashok Leyland', 'Switch EV'] as const;
+
 const emptyDealer: Omit<Dealer, '_id' | 'createdAt' | 'updatedAt'> = {
+  brand: '',
   name: '',
   address: '',
   city: '',

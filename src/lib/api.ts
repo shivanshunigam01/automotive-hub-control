@@ -162,6 +162,7 @@ export interface CibilCheck {
 
 export interface Dealer {
   _id: string;
+  brand: string;
   name: string;
   address: string;
   city: string;
