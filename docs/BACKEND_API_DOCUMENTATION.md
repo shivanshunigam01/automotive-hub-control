@@ -77,7 +77,8 @@ backend/
 │   │   ├── analyticsRoutes.js
 │   │   ├── bannerRoutes.js
 │   │   ├── settingRoutes.js
-│   │   └── userRoutes.js
+│   │   ├── userRoutes.js
+│   │   └── timelineRoutes.js
 │   ├── services/
 │   │   ├── cloudinaryService.js
 │   │   ├── cibilService.js
