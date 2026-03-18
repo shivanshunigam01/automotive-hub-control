@@ -103,6 +103,7 @@ export function DealersPage() {
   function openEditDialog(dealer: Dealer) {
     setEditingDealer(dealer);
     setFormData({
+      brand: dealer.brand,
       name: dealer.name,
       address: dealer.address,
       city: dealer.city,
