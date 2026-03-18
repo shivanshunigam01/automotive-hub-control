@@ -248,6 +248,7 @@ export function DealersPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Dealer</TableHead>
+                    <TableHead>Brand</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Contact</TableHead>
                     <TableHead>Coordinates</TableHead>
