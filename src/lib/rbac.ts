@@ -63,6 +63,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     offersSchemes: FULL,
     contentPages: FULL,
     careers: FULL,
+    timeline: FULL,
   },
   admin: {
     dashboard: FULL,
