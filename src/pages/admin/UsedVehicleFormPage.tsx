@@ -439,7 +439,71 @@ export function UsedVehicleFormPage() {
           
 
             {/* Images */}
-        
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ImageIcon className="h-5 w-5 text-accent" />
+                  Images
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Upload vehicle images (JPG, PNG, WebP)
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="vehicle-image-input"
+                />
+
+                <div
+                  className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-accent/50 hover:bg-muted/50 transition-colors"
+                  onClick={() =>
+                    document.getElementById("vehicle-image-input")?.click()
+                  }
+                >
+                  <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Drag and drop images here, or click to browse
+                  </p>
+                  <Button type="button" variant="outline" className="mt-4">
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Images
+                  </Button>
+                </div>
+
+                {formData.images.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    {formData.images.map((img, index) => {
+                      const src =
+                        img.startsWith("blob:") || img.startsWith("http")
+                          ? img
+                          : `${API_BASE_URL}${img}`;
+                      return (
+                        <div key={index} className="relative group">
+                          <img
+                            src={src}
+                            className="w-full h-32 object-cover rounded-lg"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => removeImage(index)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
           {/* Sidebar */}
