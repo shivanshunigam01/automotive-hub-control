@@ -81,6 +81,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     offersSchemes: FULL,
     contentPages: FULL,
     careers: FULL,
+    timeline: FULL,
   },
   sales_user: {
     dashboard: READ_ONLY,
