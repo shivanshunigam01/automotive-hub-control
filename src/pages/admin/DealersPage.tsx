@@ -34,7 +34,10 @@ import { dealersApi, type Dealer } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/usePermissions';
 
+const BRANDS = ['JCB', 'Ashok Leyland', 'Switch EV'] as const;
+
 const emptyDealer: Omit<Dealer, '_id' | 'createdAt' | 'updatedAt'> = {
+  brand: '',
   name: '',
   address: '',
   city: '',
@@ -100,6 +103,7 @@ export function DealersPage() {
   function openEditDialog(dealer: Dealer) {
     setEditingDealer(dealer);
     setFormData({
+      brand: dealer.brand,
       name: dealer.name,
       address: dealer.address,
       city: dealer.city,
@@ -244,6 +248,7 @@ export function DealersPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Dealer</TableHead>
+                    <TableHead>Brand</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Contact</TableHead>
                     <TableHead>Coordinates</TableHead>
@@ -254,7 +259,7 @@ export function DealersPage() {
                 <TableBody>
                   {filteredDealers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         No dealers found
                       </TableCell>
                     </TableRow>
@@ -268,6 +273,9 @@ export function DealersPage() {
                             </div>
                             <span className="font-medium">{dealer.name}</span>
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{dealer.brand || 'N/A'}</Badge>
                         </TableCell>
                         <TableCell>
                           <div className="text-sm">
@@ -353,6 +361,25 @@ export function DealersPage() {
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="brand">Brand *</Label>
+              <Select
+                value={formData.brand}
+                onValueChange={(value) => setFormData({ ...formData, brand: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Brand" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BRANDS.map((brand) => (
+                    <SelectItem key={brand} value={brand}>
+                      {brand}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="name">Dealer Name *</Label>
