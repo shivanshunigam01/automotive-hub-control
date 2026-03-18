@@ -24,6 +24,7 @@ import { MediaLibraryPage } from "@/pages/admin/MediaLibraryPage";
 import { OffersSchemesPage } from "@/pages/admin/OffersSchemesPage";
 import { ContentPagesPage } from "@/pages/admin/ContentPagesPage";
 import { CareersPage } from "@/pages/admin/CareersPage";
+import { TimelinePage } from "@/pages/admin/TimelinePage";
 import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
 
 import NotFound from "./pages/NotFound";
