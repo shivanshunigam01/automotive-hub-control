@@ -99,6 +99,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     offersSchemes: NONE,
     contentPages: NONE,
     careers: NONE,
+    timeline: NONE,
   },
 };
 
