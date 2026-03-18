@@ -4269,3 +4269,212 @@ The user panel form submits via `POST /api/careers/applications` (multipart/form
 | `mobile`           | String | Yes      | Applicant mobile number        |
 | `resume`           | File   | Yes      | PDF/DOC resume file            |
 | `whyShouldWeHire`  | String | No       | Free-text answer               |
+
+---
+
+## 18. Company Timeline Module
+
+### Model: `Timeline.js`
+
+```javascript
+const mongoose = require('mongoose');
+
+const timelineSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: [true, 'Title is required'],
+      trim: true,
+    },
+    description: {
+      type: String,
+      default: '',
+    },
+    year: {
+      type: Number,
+      required: [true, 'Year is required'],
+    },
+    image: {
+      type: String,
+      default: '',
+    },
+    imageType: {
+      type: String,
+      enum: ['milestone', 'achievement', 'expansion', 'partnership', 'award', 'launch', 'other'],
+      default: 'milestone',
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    displayOrder: {
+      type: Number,
+      default: 0,
+    },
+  },
+  { timestamps: true }
+);
+
+timelineSchema.index({ year: -1, displayOrder: 1 });
+
+module.exports = mongoose.model('Timeline', timelineSchema);
+```
+
+### Controller: `timelineController.js`
+
+```javascript
+const Timeline = require('../models/Timeline');
+const cloudinary = require('../config/cloudinary');
+const asyncHandler = require('../utils/asyncHandler');
+
+// ✅ GET ALL (Admin)
+exports.getAll = asyncHandler(async (req, res) => {
+  const events = await Timeline.find().sort({ year: -1, displayOrder: 1 });
+  res.json({ data: events });
+});
+
+// ✅ GET ACTIVE (Public - for user panel)
+exports.getActive = asyncHandler(async (req, res) => {
+  const events = await Timeline.find({ isActive: true }).sort({ year: -1, displayOrder: 1 });
+  res.json({ data: events });
+});
+
+// ✅ GET BY ID
+exports.getById = asyncHandler(async (req, res) => {
+  const event = await Timeline.findById(req.params.id);
+  if (!event) return res.status(404).json({ message: 'Timeline event not found' });
+  res.json({ data: event });
+});
+
+// ✅ CREATE (with Cloudinary image upload)
+exports.create = asyncHandler(async (req, res) => {
+  const { title, description, year, imageType, isActive, displayOrder } = req.body;
+
+  let imageUrl = '';
+  if (req.file) {
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'patliputra/timeline',
+      transformation: [{ width: 800, height: 600, crop: 'limit', quality: 'auto' }],
+    });
+    imageUrl = result.secure_url;
+  }
+
+  const event = await Timeline.create({
+    title,
+    description,
+    year: Number(year),
+    image: imageUrl,
+    imageType,
+    isActive: isActive === 'true' || isActive === true,
+    displayOrder: Number(displayOrder) || 0,
+  });
+
+  res.status(201).json({ data: event });
+});
+
+// ✅ UPDATE
+exports.update = asyncHandler(async (req, res) => {
+  const event = await Timeline.findById(req.params.id);
+  if (!event) return res.status(404).json({ message: 'Timeline event not found' });
+
+  const { title, description, year, imageType, isActive, displayOrder, existingImage } = req.body;
+
+  event.title = title || event.title;
+  event.description = description !== undefined ? description : event.description;
+  event.year = year ? Number(year) : event.year;
+  event.imageType = imageType || event.imageType;
+  event.isActive = isActive === 'true' || isActive === true;
+  event.displayOrder = displayOrder !== undefined ? Number(displayOrder) : event.displayOrder;
+
+  if (req.file) {
+    // Delete old image from Cloudinary if exists
+    if (event.image) {
+      const publicId = event.image.split('/').slice(-2).join('/').split('.')[0];
+      await cloudinary.uploader.destroy(publicId).catch(() => {});
+    }
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'patliputra/timeline',
+      transformation: [{ width: 800, height: 600, crop: 'limit', quality: 'auto' }],
+    });
+    event.image = result.secure_url;
+  } else if (existingImage) {
+    event.image = existingImage;
+  } else {
+    event.image = '';
+  }
+
+  await event.save();
+  res.json({ data: event });
+});
+
+// ✅ DELETE
+exports.remove = asyncHandler(async (req, res) => {
+  const event = await Timeline.findById(req.params.id);
+  if (!event) return res.status(404).json({ message: 'Timeline event not found' });
+
+  // Delete image from Cloudinary
+  if (event.image) {
+    const publicId = event.image.split('/').slice(-2).join('/').split('.')[0];
+    await cloudinary.uploader.destroy(publicId).catch(() => {});
+  }
+
+  await event.deleteOne();
+  res.json({ message: 'Timeline event deleted' });
+});
+```
+
+### Routes: `timelineRoutes.js`
+
+```javascript
+const express = require('express');
+const router = express.Router();
+const timelineController = require('../controllers/timelineController');
+const { protect } = require('../middleware/auth');
+const upload = require('../middleware/upload');
+
+// 🔓 Public
+router.get('/active', timelineController.getActive);
+
+// 🔐 Admin (protected)
+router.get('/', protect, timelineController.getAll);
+router.get('/:id', protect, timelineController.getById);
+router.post('/', protect, upload.single('image'), timelineController.create);
+router.put('/:id', protect, upload.single('image'), timelineController.update);
+router.delete('/:id', protect, timelineController.remove);
+
+module.exports = router;
+```
+
+### Register in `app.js`
+
+```javascript
+const timelineRoutes = require('./routes/timelineRoutes');
+// ...
+app.use('/api/timeline', timelineRoutes);
+```
+
+---
+
+### API Endpoints Summary
+
+| Method   | Endpoint                  | Auth   | Description                        |
+| -------- | ------------------------- | ------ | ---------------------------------- |
+| `GET`    | `/api/timeline/active`    | Public | Get active events for user panel   |
+| `GET`    | `/api/timeline`           | Admin  | List all timeline events           |
+| `GET`    | `/api/timeline/:id`       | Admin  | Get single event                   |
+| `POST`   | `/api/timeline`           | Admin  | Create event (multipart/form-data) |
+| `PUT`    | `/api/timeline/:id`       | Admin  | Update event (multipart/form-data) |
+| `DELETE` | `/api/timeline/:id`       | Admin  | Delete event + Cloudinary image    |
+
+### Form Fields (multipart/form-data)
+
+| Field          | Type    | Required | Description                                    |
+| -------------- | ------- | -------- | ---------------------------------------------- |
+| `title`        | String  | Yes      | Event title                                    |
+| `description`  | String  | No       | Brief description                              |
+| `year`         | Number  | Yes      | Year of the event                              |
+| `image`        | File    | No       | Image file (uploaded to Cloudinary)             |
+| `existingImage`| String  | No       | Existing image URL (for edits without re-upload)|
+| `imageType`    | String  | No       | milestone/achievement/expansion/partnership/award/launch/other |
+| `isActive`     | Boolean | No       | Whether to show on user panel (default: true)  |
+| `displayOrder` | Number  | No       | Sort order within same year (default: 0)       |
