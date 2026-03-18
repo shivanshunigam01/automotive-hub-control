@@ -275,6 +275,9 @@ export function DealersPage() {
                           </div>
                         </TableCell>
                         <TableCell>
+                          <Badge variant="outline">{dealer.brand || 'N/A'}</Badge>
+                        </TableCell>
+                        <TableCell>
                           <div className="text-sm">
                             <p>{dealer.city}, {dealer.district}</p>
                             <p className="text-muted-foreground">{dealer.state} - {dealer.pincode}</p>
