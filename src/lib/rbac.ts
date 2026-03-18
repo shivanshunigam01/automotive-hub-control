@@ -169,6 +169,7 @@ export const MENU_MODULE_MAP: MenuItem[] = [
   { path: '/admin/settings', module: 'settings' },
   { path: '/admin/users', module: 'users' },
   { path: '/admin/careers', module: 'careers' },
+  { path: '/admin/timeline', module: 'timeline' },
 ];
 
 export function getAccessibleMenuItems(role: UserRole): string[] {
