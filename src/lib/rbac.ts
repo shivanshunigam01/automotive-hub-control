@@ -34,6 +34,7 @@ export interface ModulePermissions {
   offersSchemes: Permission;
   contentPages: Permission;
   careers: Permission;
+  timeline: Permission;
 }
 
 // Full permission
