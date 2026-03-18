@@ -34,6 +34,7 @@ export interface ModulePermissions {
   offersSchemes: Permission;
   contentPages: Permission;
   careers: Permission;
+  timeline: Permission;
 }
 
 // Full permission
@@ -62,6 +63,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     offersSchemes: FULL,
     contentPages: FULL,
     careers: FULL,
+    timeline: FULL,
   },
   admin: {
     dashboard: FULL,
@@ -79,6 +81,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     offersSchemes: FULL,
     contentPages: FULL,
     careers: FULL,
+    timeline: FULL,
   },
   sales_user: {
     dashboard: READ_ONLY,
@@ -96,6 +99,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ModulePermissions> = {
     offersSchemes: NONE,
     contentPages: NONE,
     careers: NONE,
+    timeline: NONE,
   },
 };
 
@@ -165,6 +169,7 @@ export const MENU_MODULE_MAP: MenuItem[] = [
   { path: '/admin/settings', module: 'settings' },
   { path: '/admin/users', module: 'users' },
   { path: '/admin/careers', module: 'careers' },
+  { path: '/admin/timeline', module: 'timeline' },
 ];
 
 export function getAccessibleMenuItems(role: UserRole): string[] {
@@ -190,4 +195,5 @@ export const ALL_MODULES: Array<{ key: keyof ModulePermissions; label: string }>
   { key: 'settings', label: 'Settings' },
   { key: 'users', label: 'User Management' },
   { key: 'careers', label: 'Careers' },
+  { key: 'timeline', label: 'Company Timeline' },
 ];

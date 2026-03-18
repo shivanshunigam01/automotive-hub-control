@@ -19,6 +19,7 @@ import {
   Tag,
   FileText,
   Briefcase,
+  Calendar,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,7 +37,7 @@ interface MenuItem {
   icon: typeof LayoutDashboard;
   label: string;
   path: string;
-  module: 'dashboard' | 'products' | 'certifiedRefurbished' | 'leads' | 'finance' | 'cibil' | 'analytics' | 'banners' | 'settings' | 'dealers' | 'users' | 'mediaLibrary' | 'offersSchemes' | 'contentPages' | 'careers';
+  module: 'dashboard' | 'products' | 'certifiedRefurbished' | 'leads' | 'finance' | 'cibil' | 'analytics' | 'banners' | 'settings' | 'dealers' | 'users' | 'mediaLibrary' | 'offersSchemes' | 'contentPages' | 'careers' | 'timeline';
 }
 
 const allMenuItems: MenuItem[] = [
@@ -55,6 +56,7 @@ const allMenuItems: MenuItem[] = [
   { icon: Settings, label: 'Settings', path: '/admin/settings', module: 'settings' },
   { icon: UserCog, label: 'Users', path: '/admin/users', module: 'users' },
   { icon: Briefcase, label: 'Careers', path: '/admin/careers', module: 'careers' },
+  { icon: Calendar, label: 'Timeline', path: '/admin/timeline', module: 'timeline' },
 ];
 
 export function AdminSidebar() {

@@ -1311,6 +1311,53 @@ export const settingsApi = {
   },
 };
 
+// ================= TIMELINE TYPES =================
+export interface TimelineEvent {
+  _id: string;
+  title: string;
+  description: string;
+  year: number;
+  image: string;
+  imageType: 'milestone' | 'achievement' | 'expansion' | 'partnership' | 'award' | 'launch' | 'other';
+  isActive: boolean;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ================= TIMELINE API =================
+export const timelineApi = {
+  getAll: async (): Promise<TimelineEvent[]> => {
+    const res = await apiRequest<{ data: TimelineEvent[] }>('/timeline');
+    return res.data;
+  },
+
+  getById: async (id: string): Promise<TimelineEvent> => {
+    const res = await apiRequest<{ data: TimelineEvent }>(`/timeline/${id}`);
+    return res.data;
+  },
+
+  create: async (formData: FormData): Promise<TimelineEvent> => {
+    const res = await apiRequest<{ data: TimelineEvent }>('/timeline', {
+      method: 'POST',
+      body: formData,
+    });
+    return res.data;
+  },
+
+  update: async (id: string, formData: FormData): Promise<TimelineEvent> => {
+    const res = await apiRequest<{ data: TimelineEvent }>(`/timeline/${id}`, {
+      method: 'PUT',
+      body: formData,
+    });
+    return res.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await apiRequest(`/timeline/${id}`, { method: 'DELETE' });
+  },
+};
+
 // ================= CAREERS TYPES =================
 export interface JobOpening {
   _id: string;

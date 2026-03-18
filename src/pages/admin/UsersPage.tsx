@@ -204,6 +204,7 @@ function openEditDialog(user: AdminUser) {
         offersSchemes: userPermissions['offersSchemes'] || { view: false, create: false, edit: false, delete: false, export: false },
         contentPages: userPermissions['contentPages'] || { view: false, create: false, edit: false, delete: false, export: false },
         careers: userPermissions['careers'] || { view: false, create: false, edit: false, delete: false, export: false },
+        timeline: userPermissions['timeline'] || { view: false, create: false, edit: false, delete: false, export: false },
       };
       await usersApi.update(selectedUserForPermissions.id, { 
         permissions: completePermissions
