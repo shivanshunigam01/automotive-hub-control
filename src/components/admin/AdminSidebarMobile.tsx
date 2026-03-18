@@ -40,6 +40,7 @@ const menuItems = [
   { icon: Settings, label: 'Settings', path: '/admin/settings', module: 'settings' as const },
   { icon: UserCog, label: 'Users', path: '/admin/users', module: 'users' as const },
   { icon: Briefcase, label: 'Careers', path: '/admin/careers', module: 'careers' as const },
+  { icon: Calendar, label: 'Timeline', path: '/admin/timeline', module: 'timeline' as const },
 ];
 
 export function AdminSidebarMobile() {

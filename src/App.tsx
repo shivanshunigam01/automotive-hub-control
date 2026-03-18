@@ -69,6 +69,7 @@ const App = () => (
               <Route path="offers-schemes" element={<OffersSchemesPage />} />
               <Route path="content-pages" element={<ContentPagesPage />} />
               <Route path="careers" element={<CareersPage />} />
+              <Route path="timeline" element={<TimelinePage />} />
             </Route>
             
             {/* 404 */}
