@@ -6,13 +6,14 @@ import {
   Trash2,
   Upload,
   X,
-  Calendar,
-  GripVertical,
+  Calendar as CalendarIcon,
+  CalendarDays,
 } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -45,6 +46,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -52,13 +59,14 @@ import { DataTableSkeleton } from '@/components/admin/DataTableSkeleton';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/usePermissions';
 import { timelineApi, formatImageUrl, type TimelineEvent } from '@/lib/api';
+import { cn } from '@/lib/utils';
 
 const IMAGE_TYPES = ['milestone', 'achievement', 'expansion', 'partnership', 'award', 'launch', 'other'] as const;
 
 const emptyEvent: Partial<TimelineEvent> = {
   title: '',
   description: '',
-  year: new Date().getFullYear(),
+  date: new Date().toISOString(),
   imageType: 'milestone',
   image: '',
   isActive: true,
@@ -74,6 +82,7 @@ export function TimelinePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const { toast } = useToast();
   const { canCreate, canEdit, canDelete } = usePermissions();
 
@@ -97,6 +106,7 @@ export function TimelinePage() {
     setEditingEvent({ ...emptyEvent });
     setImageFile(null);
     setImagePreview('');
+    setSelectedDate(new Date());
     setIsFormOpen(true);
   }
 
@@ -104,6 +114,7 @@ export function TimelinePage() {
     setEditingEvent({ ...event });
     setImageFile(null);
     setImagePreview(event.image ? formatImageUrl(event.image) : '');
+    setSelectedDate(event.date ? parseISO(event.date) : new Date());
     setIsFormOpen(true);
   }
 
@@ -123,9 +134,16 @@ export function TimelinePage() {
     }
   }
 
+  function handleDateSelect(date: Date | undefined) {
+    if (date) {
+      setSelectedDate(date);
+      setEditingEvent((prev) => prev && { ...prev, date: date.toISOString() });
+    }
+  }
+
   async function handleSave() {
-    if (!editingEvent?.title || !editingEvent?.year) {
-      toast({ title: 'Title and Year are required', variant: 'destructive' });
+    if (!editingEvent?.title || !selectedDate) {
+      toast({ title: 'Title and Date are required', variant: 'destructive' });
       return;
     }
 
@@ -134,7 +152,7 @@ export function TimelinePage() {
       const formData = new FormData();
       formData.append('title', editingEvent.title);
       formData.append('description', editingEvent.description || '');
-      formData.append('year', String(editingEvent.year));
+      formData.append('date', selectedDate.toISOString());
       formData.append('imageType', editingEvent.imageType || 'milestone');
       formData.append('isActive', String(editingEvent.isActive ?? true));
       formData.append('displayOrder', String(editingEvent.displayOrder ?? 0));
@@ -172,13 +190,21 @@ export function TimelinePage() {
     }
   }
 
+  function formatEventDate(dateStr: string) {
+    try {
+      return format(parseISO(dateStr), 'dd MMM yyyy');
+    } catch {
+      return dateStr;
+    }
+  }
+
   const filteredEvents = events
     .filter(
       (e) =>
         e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        String(e.year).includes(searchQuery)
+        formatEventDate(e.date).toLowerCase().includes(searchQuery.toLowerCase())
     )
-    .sort((a, b) => b.year - a.year || a.displayOrder - b.displayOrder);
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime() || a.displayOrder - b.displayOrder);
 
   // Pagination
   const ITEMS_PER_PAGE = 20;
@@ -215,7 +241,7 @@ export function TimelinePage() {
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search by title or year..."
+              placeholder="Search by title or date..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -236,7 +262,7 @@ export function TimelinePage() {
                   <TableRow>
                     <TableHead className="w-16">Image</TableHead>
                     <TableHead>Title</TableHead>
-                    <TableHead>Year</TableHead>
+                    <TableHead>Date</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Order</TableHead>
                     <TableHead>Status</TableHead>
@@ -262,13 +288,13 @@ export function TimelinePage() {
                             />
                           ) : (
                             <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center">
-                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                              <CalendarDays className="h-4 w-4 text-muted-foreground" />
                             </div>
                           )}
                         </TableCell>
                         <TableCell className="font-medium">{event.title}</TableCell>
                         <TableCell>
-                          <Badge variant="outline">{event.year}</Badge>
+                          <Badge variant="outline">{formatEventDate(event.date)}</Badge>
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary" className="capitalize">
@@ -378,17 +404,32 @@ export function TimelinePage() {
               />
             </div>
 
-            {/* Year */}
+            {/* Date Picker */}
             <div className="space-y-2">
-              <Label>Year *</Label>
-              <Input
-                type="number"
-                placeholder="e.g., 2015"
-                value={editingEvent?.year || ''}
-                onChange={(e) =>
-                  setEditingEvent((prev) => prev && { ...prev, year: Number(e.target.value) })
-                }
-              />
+              <Label>Date *</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      'w-full justify-start text-left font-normal',
+                      !selectedDate && 'text-muted-foreground'
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {selectedDate ? format(selectedDate, 'dd MMMM yyyy') : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={handleDateSelect}
+                    initialFocus
+                    className={cn('p-3 pointer-events-auto')}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Description */}

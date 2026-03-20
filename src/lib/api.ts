@@ -1316,7 +1316,7 @@ export interface TimelineEvent {
   _id: string;
   title: string;
   description: string;
-  year: number;
+  date: string;
   image: string;
   imageType: 'milestone' | 'achievement' | 'expansion' | 'partnership' | 'award' | 'launch' | 'other';
   isActive: boolean;
