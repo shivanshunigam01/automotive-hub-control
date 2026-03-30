@@ -61,13 +61,32 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { timelineApi, formatImageUrl, type TimelineEvent } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
-const IMAGE_TYPES = ['milestone', 'achievement', 'expansion', 'partnership', 'award', 'launch', 'other'] as const;
+const IMAGE_TYPES = [
+  'loan-mela', 'rural-activity', 'customer-meet', 'operator-meet',
+  'exchange-mela', 'financer-meet', 'launch-event', 'road-show',
+  'customer-testimony', 'customer-visit', 'group-event', 'others',
+] as const;
+
+const IMAGE_TYPE_LABELS: Record<typeof IMAGE_TYPES[number], string> = {
+  'loan-mela': 'Loan Mela',
+  'rural-activity': 'Rural Activity',
+  'customer-meet': 'Customer Meet',
+  'operator-meet': 'Operator Meet',
+  'exchange-mela': 'Exchange Mela',
+  'financer-meet': 'Financer Meet',
+  'launch-event': 'Launch Event',
+  'road-show': 'Road Show',
+  'customer-testimony': 'Customer Testimony',
+  'customer-visit': 'Customer Visit',
+  'group-event': 'Group Event',
+  'others': 'Others',
+};
 
 const emptyEvent: Partial<TimelineEvent> = {
   title: '',
   description: '',
   date: new Date().toISOString(),
-  imageType: 'milestone',
+  imageType: 'others',
   image: '',
   isActive: true,
   displayOrder: 0,
@@ -153,7 +172,7 @@ export function TimelinePage() {
       formData.append('title', editingEvent.title);
       formData.append('description', editingEvent.description || '');
       formData.append('date', selectedDate.toISOString());
-      formData.append('imageType', editingEvent.imageType || 'milestone');
+      formData.append('imageType', editingEvent.imageType || 'others');
       formData.append('isActive', String(editingEvent.isActive ?? true));
       formData.append('displayOrder', String(editingEvent.displayOrder ?? 0));
 
@@ -297,8 +316,8 @@ export function TimelinePage() {
                           <Badge variant="outline">{formatEventDate(event.date)}</Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="secondary" className="capitalize">
-                            {event.imageType}
+                          <Badge variant="secondary">
+                            {IMAGE_TYPE_LABELS[event.imageType as typeof IMAGE_TYPES[number]] ?? event.imageType}
                           </Badge>
                         </TableCell>
                         <TableCell>{event.displayOrder}</TableCell>
@@ -449,7 +468,7 @@ export function TimelinePage() {
             <div className="space-y-2">
               <Label>Image Type</Label>
               <Select
-                value={editingEvent?.imageType || 'milestone'}
+                value={editingEvent?.imageType || 'others'}
                 onValueChange={(val) =>
                   setEditingEvent((prev) => prev && { ...prev, imageType: val as TimelineEvent['imageType'] })
                 }
@@ -460,7 +479,7 @@ export function TimelinePage() {
                 <SelectContent>
                   {IMAGE_TYPES.map((type) => (
                     <SelectItem key={type} value={type}>
-                      <span className="capitalize">{type}</span>
+                      {IMAGE_TYPE_LABELS[type]}
                     </SelectItem>
                   ))}
                 </SelectContent>

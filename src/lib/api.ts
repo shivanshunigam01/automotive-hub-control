@@ -1318,7 +1318,7 @@ export interface TimelineEvent {
   description: string;
   date: string;
   image: string;
-  imageType: 'milestone' | 'achievement' | 'expansion' | 'partnership' | 'award' | 'launch' | 'other';
+  imageType: 'loan-mela' | 'rural-activity' | 'customer-meet' | 'operator-meet' | 'exchange-mela' | 'financer-meet' | 'launch-event' | 'road-show' | 'customer-testimony' | 'customer-visit' | 'group-event' | 'others';
   isActive: boolean;
   displayOrder: number;
   createdAt: string;
