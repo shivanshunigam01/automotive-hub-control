@@ -23,7 +23,7 @@ export function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="admin-shell min-h-screen">
       {/* Desktop Sidebar */}
       <div className="hidden lg:block">
         <AdminSidebar />
@@ -32,8 +32,10 @@ export function AdminLayout() {
       {/* Main Content */}
       <div className="lg:pl-64 transition-all duration-300">
         <AdminTopbar />
-        <main className="p-6 animate-fade-in">
-          <Outlet />
+        <main className="p-4 md:p-6 animate-fade-in">
+          <div className="admin-panel min-h-[calc(100vh-7rem)] p-4 md:p-6">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

@@ -49,7 +49,8 @@ export function AdminTopbar() {
   const breadcrumbs = getBreadcrumbs();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-card px-6">
+    <header className="sticky top-0 z-30 p-4 pb-0 md:px-6 md:pb-0">
+      <div className="admin-topbar-surface flex h-16 items-center gap-4 rounded-[1.25rem] px-4 md:px-6">
       {/* Mobile Menu */}
       <Sheet>
         <SheetTrigger asChild>
@@ -84,22 +85,22 @@ export function AdminTopbar() {
       <div className="flex-1" />
 
       {/* Search */}
-      <div className="relative w-64 hidden md:block">
+      <div className="relative hidden w-64 md:block">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Search..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9 bg-muted/50 border-0 focus-visible:ring-1"
+          className="h-10 rounded-xl border-white/80 bg-muted/60 pl-9 focus-visible:ring-1"
         />
       </div>
 
       {/* Notifications */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="relative">
+          <Button variant="ghost" size="icon" className="relative rounded-xl text-primary hover:bg-primary/5 hover:text-primary">
             <Bell className="h-5 w-5" />
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-[10px] bg-accent">
+            <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center bg-secondary p-0 text-[10px] text-secondary-foreground">
               3
             </Badge>
           </Button>
@@ -130,6 +131,7 @@ export function AdminTopbar() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      </div>
     </header>
   );
 }

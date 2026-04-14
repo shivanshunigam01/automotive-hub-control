@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { getRoleDisplayName } from '@/lib/rbac';
+import punyaLogo from '@/assets/punya-logo.jpeg';
 
 interface MenuItem {
   icon: typeof LayoutDashboard;
@@ -71,18 +72,29 @@ export function AdminSidebar() {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen bg-sidebar transition-all duration-300 flex flex-col',
+        'admin-sidebar-surface fixed left-0 top-0 z-40 h-screen transition-all duration-300 flex flex-col',
         collapsed ? 'w-16' : 'w-64'
       )}
     >
       {/* Logo Section */}
-      <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
+      <div className="flex h-20 items-center justify-between border-b border-sidebar-border/80 px-4">
         {!collapsed && (
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg gradient-accent flex items-center justify-center">
-              <span className="text-sm font-bold text-accent-foreground">PM</span>
+          <div className="flex items-center gap-3">
+            <div className="admin-brand-tile">
+              <img
+                src={punyaLogo}
+                alt="Punya Autowheels"
+                className="h-10 rounded-lg"
+              />
             </div>
-            <span className="text-lg font-semibold text-sidebar-foreground">Patliputra</span>
+            <div className="min-w-0">
+              <p className="truncate text-base font-bold tracking-[-0.02em] text-sidebar-foreground">
+                Punya Autowheels
+              </p>
+              <p className="text-[11px] uppercase tracking-[0.22em] text-sidebar-muted">
+                Admin Hub
+              </p>
+            </div>
           </div>
         )}
         <Button
@@ -107,7 +119,7 @@ export function AdminSidebar() {
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
                 isActive
-                  ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+                  ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-[0_12px_30px_-18px_rgba(14,165,233,0.85)]'
                   : 'text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground'
               )}
             >
@@ -132,10 +144,11 @@ export function AdminSidebar() {
       </nav>
 
       {/* User Section */}
-      <div className="border-t border-sidebar-border p-4">
+      <div className="border-t border-sidebar-border/80 p-4">
         {!collapsed ? (
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-sidebar-accent flex items-center justify-center">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-sidebar-accent flex items-center justify-center border border-white/10">
               <span className="text-sm font-medium text-sidebar-foreground">
                 {user?.name?.charAt(0) || 'A'}
               </span>
@@ -144,7 +157,7 @@ export function AdminSidebar() {
               <p className="text-sm font-medium text-sidebar-foreground truncate">
                 {user?.name || 'Admin'}
               </p>
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 mt-0.5">
+              <Badge variant="outline" className="mt-1 border-white/15 bg-white/5 px-1.5 py-0 text-[10px] text-sidebar-foreground">
                 {getRoleDisplayName(role)}
               </Badge>
             </div>
@@ -156,6 +169,7 @@ export function AdminSidebar() {
             >
               <LogOut className="h-4 w-4" />
             </Button>
+            </div>
           </div>
         ) : (
           <Tooltip delayDuration={0}>

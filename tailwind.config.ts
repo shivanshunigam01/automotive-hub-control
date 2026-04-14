@@ -13,6 +13,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Manrope', 'system-ui', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -111,9 +114,6 @@ export default {
         "fade-in": "fade-in 0.3s ease-out",
         "slide-in-left": "slide-in-left 0.3s ease-out",
         "slide-in-right": "slide-in-right 0.3s ease-out",
-      },
-      fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
     },
   },

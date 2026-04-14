@@ -23,6 +23,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import punyaLogo from '@/assets/punya-logo.jpeg';
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/admin', module: 'dashboard' as const },
@@ -51,14 +52,25 @@ export function AdminSidebarMobile() {
   const filteredMenuItems = menuItems.filter((item) => canView(item.module));
 
   return (
-    <div className="flex h-full flex-col bg-sidebar">
+    <div className="admin-sidebar-surface flex h-full flex-col">
       {/* Logo Section */}
-      <div className="flex h-16 items-center border-b border-sidebar-border px-4">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg gradient-accent flex items-center justify-center">
-            <span className="text-sm font-bold text-accent-foreground">PM</span>
+      <div className="flex h-20 items-center border-b border-sidebar-border/80 px-4">
+        <div className="flex items-center gap-3">
+          <div className="admin-brand-tile">
+            <img
+              src={punyaLogo}
+              alt="Punya Autowheels"
+              className="h-10 rounded-lg"
+            />
           </div>
-          <span className="text-lg font-semibold text-sidebar-foreground">Patliputra</span>
+          <div>
+            <p className="text-base font-bold tracking-[-0.02em] text-sidebar-foreground">
+              Punya Autowheels
+            </p>
+            <p className="text-[11px] uppercase tracking-[0.22em] text-sidebar-muted">
+              Admin Hub
+            </p>
+          </div>
         </div>
       </div>
 
@@ -75,7 +87,7 @@ export function AdminSidebarMobile() {
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
                 isActive
-                  ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+                  ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-[0_12px_30px_-18px_rgba(14,165,233,0.85)]'
                   : 'text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground'
               )}
             >
@@ -87,9 +99,10 @@ export function AdminSidebarMobile() {
       </nav>
 
       {/* User Section */}
-      <div className="border-t border-sidebar-border p-4">
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-full bg-sidebar-accent flex items-center justify-center">
+      <div className="border-t border-sidebar-border/80 p-4">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full border border-white/10 bg-sidebar-accent flex items-center justify-center">
             <span className="text-sm font-medium text-sidebar-foreground">
               {user?.name?.charAt(0) || 'A'}
             </span>
@@ -98,7 +111,7 @@ export function AdminSidebarMobile() {
             <p className="text-sm font-medium text-sidebar-foreground truncate">
               {user?.name || 'Admin'}
             </p>
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 capitalize">
+            <Badge variant="outline" className="h-4 border-white/15 bg-white/5 px-1.5 py-0 text-[10px] capitalize text-sidebar-foreground">
               {user?.role || 'admin'}
             </Badge>
           </div>
@@ -110,6 +123,7 @@ export function AdminSidebarMobile() {
           >
             <LogOut className="h-4 w-4" />
           </Button>
+          </div>
         </div>
       </div>
     </div>
