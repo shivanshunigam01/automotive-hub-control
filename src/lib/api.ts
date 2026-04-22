@@ -7,6 +7,23 @@ export function formatImageUrl(url: string | undefined): string {
   return `${API_BASE_URL}/${url.replace(/\\/g, '/')}`;
 }
 
+/** Serves /uploads/... from the API host (VITE_FILE_BASE_URL or base URL with /api stripped). */
+export function resolvePublicFileUrl(
+  pathOrUrl: string | null | undefined
+): string {
+  if (!pathOrUrl) return '';
+  if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://'))
+    return pathOrUrl;
+  const rawBase =
+    import.meta.env.VITE_FILE_BASE_URL ||
+    String(import.meta.env.VITE_API_BASE_URL || '').replace(/\/api\/?$/, '') ||
+    '';
+  const base = String(rawBase).replace(/\/$/, '');
+  const p = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`;
+  if (!base) return p;
+  return `${base}${p}`;
+}
+
 import type { UserRole, ModulePermissions } from './rbac';
 
 // Types
@@ -158,6 +175,8 @@ export interface CibilCheck {
   score: number;
   scoreBand: 'Excellent' | 'Good' | 'Average' | 'Poor' | 'Unknown';
   checkedAt: string;
+  /** Public path to saved PDF, e.g. /uploads/cibil-reports/… — admin open/download. */
+  cibilPdfReportUrl?: string | null;
 }
 
 export interface Dealer {

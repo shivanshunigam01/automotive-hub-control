@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Filter, Shield, TrendingUp } from 'lucide-react';
+import { Search, Filter, Shield, TrendingUp, FileDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -18,8 +18,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { DataTableSkeleton } from '@/components/admin/DataTableSkeleton';
-import { cibilApi, type CibilCheck } from '@/lib/api';
+import { cibilApi, resolvePublicFileUrl, type CibilCheck } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 const scoreBandConfig: Record<string, { color: string; bg: string }> = {
@@ -186,7 +187,7 @@ export function CibilPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <DataTableSkeleton columns={6} rows={5} />
+            <DataTableSkeleton columns={7} rows={5} />
           ) : (
             <div className="rounded-md border">
               <Table>
@@ -199,6 +200,7 @@ export function CibilPage() {
                     <TableHead>Score</TableHead>
                     <TableHead>Band</TableHead>
                     <TableHead>Checked At</TableHead>
+                    <TableHead>CIBIL check PDF report</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -245,6 +247,23 @@ export function CibilPage() {
                         </TableCell>
                         <TableCell className="text-muted-foreground">
                           {new Date(check.checkedAt).toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          {check.cibilPdfReportUrl ? (
+                            <Button variant="outline" size="sm" asChild className="gap-1.5">
+                              <a
+                                href={resolvePublicFileUrl(check.cibilPdfReportUrl)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                download
+                              >
+                                <FileDown className="h-4 w-4" />
+                                Download PDF
+                              </a>
+                            </Button>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">—</span>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))
