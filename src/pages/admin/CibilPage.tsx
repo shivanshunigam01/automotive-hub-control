@@ -60,9 +60,15 @@ export function CibilPage() {
   }
 
   const filteredChecks = checks.filter((check) => {
+    const q = searchQuery.toLowerCase();
+    const aadhaarStr = (check.aadhaarNumber ?? "").toString();
+    const digitQ = searchQuery.replace(/\D/g, "");
+    const matchesAadhaar =
+      digitQ.length > 0 && aadhaarStr.includes(digitQ);
     const matchesSearch =
-      check.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      check.mobile.includes(searchQuery);
+      check.customerName.toLowerCase().includes(q) ||
+      check.mobile.includes(searchQuery) ||
+      matchesAadhaar;
     
     if (scoreFilter === 'all') return matchesSearch;
     if (scoreFilter === 'excellent') return matchesSearch && check.score >= 750;
@@ -156,7 +162,7 @@ export function CibilPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by name or mobile..."
+                placeholder="Search by name, mobile, or Aadhaar…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -187,7 +193,7 @@ export function CibilPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <DataTableSkeleton columns={7} rows={5} />
+            <DataTableSkeleton columns={9} rows={5} />
           ) : (
             <div className="rounded-md border">
               <Table>
@@ -196,7 +202,8 @@ export function CibilPage() {
                     <TableHead>Customer</TableHead>
                     <TableHead>Mobile</TableHead>
                     <TableHead>PAN</TableHead>
-                    
+                    <TableHead>Aadhaar</TableHead>
+                    <TableHead>Aadhaar document</TableHead>
                     <TableHead>Score</TableHead>
                     <TableHead>Band</TableHead>
                     <TableHead>Checked At</TableHead>
@@ -206,7 +213,7 @@ export function CibilPage() {
                 <TableBody>
                   {filteredChecks.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                         No CIBIL checks found
                       </TableCell>
                     </TableRow>
@@ -229,9 +236,31 @@ export function CibilPage() {
                        {check.panNumber}
                           </code>
                         </TableCell>
-                        {/* <TableCell>
-                          {new Date(check.dateOfBirth).toLocaleDateString()}
-                        </TableCell> */}
+                        <TableCell>
+                          {check.aadhaarNumber ? (
+                            <code className="text-sm bg-muted px-2 py-1 rounded">
+                              {check.aadhaarNumber}
+                            </code>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {check.aadhaarDocumentUrl ? (
+                            <Button variant="outline" size="sm" asChild className="gap-1.5">
+                              <a
+                                href={resolvePublicFileUrl(check.aadhaarDocumentUrl)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <FileDown className="h-4 w-4" />
+                                View
+                              </a>
+                            </Button>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
                         <TableCell>
                           <span className={`text-2xl font-bold ${scoreBandConfig[check.scoreBand]?.color || ''}`}>
                             {check.score}

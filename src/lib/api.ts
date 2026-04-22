@@ -171,6 +171,10 @@ export interface CibilCheck {
   customerName: string;
   mobile: string;
   panNumber: string;
+  /** 12-digit Aadhaar as stored (admin). */
+  aadhaarNumber?: string | null;
+  /** Public path, e.g. /uploads/cibil-aadhaar/… */
+  aadhaarDocumentUrl?: string | null;
   dateOfBirth?: string;
   score: number;
   scoreBand: 'Excellent' | 'Good' | 'Average' | 'Poor' | 'Unknown';
