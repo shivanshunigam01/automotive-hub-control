@@ -39,17 +39,37 @@ export function CibilPage() {
   const [scoreFilter, setScoreFilter] = useState<string>('all');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage] = useState(20);
+  const [totalChecks, setTotalChecks] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchChecks();
-  }, []);
+  }, [currentPage, searchQuery, scoreFilter, fromDate, toDate]);
 
   async function fetchChecks() {
     setIsLoading(true);
     try {
-      const data = await cibilApi.getAll();
-      setChecks(data);
+      const scoreRanges: Record<string, { min?: number; max?: number }> = {
+        all: {},
+        excellent: { min: 750 },
+        good: { min: 650, max: 749 },
+        fair: { min: 550, max: 649 },
+        poor: { max: 549 },
+      };
+      const score = scoreRanges[scoreFilter] || {};
+      const response = await cibilApi.getPaginated({
+        search: searchQuery.trim() || undefined,
+        scoreMin: score.min,
+        scoreMax: score.max,
+        fromDate: fromDate || undefined,
+        toDate: toDate || undefined,
+        page: currentPage,
+        per_page: perPage,
+      });
+      setChecks(response.items);
+      setTotalChecks(response.total);
     } catch (error) {
       toast({
         title: 'Error',
@@ -61,34 +81,7 @@ export function CibilPage() {
     }
   }
 
-  const filteredChecks = checks.filter((check) => {
-    const q = searchQuery.toLowerCase();
-    const aadhaarStr = (check.aadhaarNumber ?? "").toString();
-    const digitQ = searchQuery.replace(/\D/g, "");
-    const matchesAadhaar =
-      digitQ.length > 0 && aadhaarStr.includes(digitQ);
-    const matchesSearch =
-      check.customerName.toLowerCase().includes(q) ||
-      check.mobile.includes(searchQuery) ||
-      matchesAadhaar;
-
-    const checkedAt = new Date(check.checkedAt);
-    const checkedAtMs = checkedAt.getTime();
-    const fromMs = fromDate ? new Date(`${fromDate}T00:00:00`).getTime() : null;
-    const toMs = toDate ? new Date(`${toDate}T23:59:59.999`).getTime() : null;
-    const matchesDate =
-      Number.isFinite(checkedAtMs) &&
-      (fromMs === null || checkedAtMs >= fromMs) &&
-      (toMs === null || checkedAtMs <= toMs);
-
-    let matchesScore = true;
-    if (scoreFilter === 'excellent') matchesScore = check.score >= 750;
-    if (scoreFilter === 'good') matchesScore = check.score >= 650 && check.score < 750;
-    if (scoreFilter === 'fair') matchesScore = check.score >= 550 && check.score < 650;
-    if (scoreFilter === 'poor') matchesScore = check.score < 550;
-
-    return matchesSearch && matchesScore && matchesDate;
-  });
+  const totalPages = Math.max(1, Math.ceil(totalChecks / perPage));
 
   const averageScore = checks.length > 0
     ? Math.round(checks.reduce((sum, c) => sum + c.score, 0) / checks.length)
@@ -110,7 +103,7 @@ export function CibilPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{checks.length}</p>
+                <p className="text-2xl font-bold">{totalChecks}</p>
                 <p className="text-sm text-muted-foreground">Total Checks</p>
               </div>
               <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center">
@@ -176,11 +169,17 @@ export function CibilPage() {
               <Input
                 placeholder="Search by name, mobile, or Aadhaar…"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setCurrentPage(1);
+                  setSearchQuery(e.target.value);
+                }}
                 className="pl-9"
               />
             </div>
-            <Select value={scoreFilter} onValueChange={setScoreFilter}>
+            <Select value={scoreFilter} onValueChange={(value) => {
+              setCurrentPage(1);
+              setScoreFilter(value);
+            }}>
               <SelectTrigger className="w-[160px]">
                 <Filter className="mr-2 h-4 w-4" />
                 <SelectValue placeholder="Score Range" />
@@ -196,14 +195,20 @@ export function CibilPage() {
             <Input
               type="date"
               value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
+              onChange={(e) => {
+                setCurrentPage(1);
+                setFromDate(e.target.value);
+              }}
               className="w-full md:w-[170px]"
               aria-label="From date"
             />
             <Input
               type="date"
               value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
+              onChange={(e) => {
+                setCurrentPage(1);
+                setToDate(e.target.value);
+              }}
               className="w-full md:w-[170px]"
               aria-label="To date"
             />
@@ -214,7 +219,7 @@ export function CibilPage() {
       {/* CIBIL Checks Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All CIBIL Checks ({filteredChecks.length})</CardTitle>
+          <CardTitle>All CIBIL Checks ({totalChecks})</CardTitle>
           <CardDescription>Customer credit score verification history</CardDescription>
         </CardHeader>
         <CardContent>
@@ -237,14 +242,14 @@ export function CibilPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredChecks.length === 0 ? (
+                  {checks.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                         No CIBIL checks found
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredChecks.map((check) => (
+                    checks.map((check) => (
                       <TableRow key={check.id} className="table-row-hover">
                         <TableCell>
                           <div className="flex items-center gap-3">
@@ -330,6 +335,29 @@ export function CibilPage() {
               </Table>
             </div>
           )}
+          <div className="mt-4 flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage <= 1 || isLoading}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage >= totalPages || isLoading}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

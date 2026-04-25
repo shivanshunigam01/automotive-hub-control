@@ -648,6 +648,8 @@ export const cibilApi = {
     search?: string;
     scoreMin?: number;
     scoreMax?: number;
+    fromDate?: string;
+    toDate?: string;
     page?: number;
     per_page?: number;
   }): Promise<CibilCheck[]> => {
@@ -658,6 +660,8 @@ export const cibilApi = {
       params.append("min_score", String(filters.scoreMin));
     if (filters?.scoreMax !== undefined)
       params.append("max_score", String(filters.scoreMax));
+    if (filters?.fromDate) params.append("from_date", filters.fromDate);
+    if (filters?.toDate) params.append("to_date", filters.toDate);
     if (filters?.page) params.append("page", String(filters.page));
     if (filters?.per_page) params.append("per_page", String(filters.per_page));
 
@@ -666,6 +670,44 @@ export const cibilApi = {
     }>(`/cibil?${params.toString()}`);
 
     return res.data;
+  },
+  getPaginated: async (filters?: {
+    search?: string;
+    scoreMin?: number;
+    scoreMax?: number;
+    fromDate?: string;
+    toDate?: string;
+    page?: number;
+    per_page?: number;
+  }): Promise<{
+    items: CibilCheck[];
+    total: number;
+    page: number;
+    perPage: number;
+  }> => {
+    const params = new URLSearchParams();
+
+    if (filters?.search) params.append("search", filters.search);
+    if (filters?.scoreMin !== undefined)
+      params.append("min_score", String(filters.scoreMin));
+    if (filters?.scoreMax !== undefined)
+      params.append("max_score", String(filters.scoreMax));
+    if (filters?.fromDate) params.append("from_date", filters.fromDate);
+    if (filters?.toDate) params.append("to_date", filters.toDate);
+    if (filters?.page) params.append("page", String(filters.page));
+    if (filters?.per_page) params.append("per_page", String(filters.per_page));
+
+    const res = await apiRequest<{
+      data: CibilCheck[];
+      meta?: { total?: number; page?: number; per_page?: number };
+    }>(`/cibil?${params.toString()}`);
+
+    return {
+      items: res.data ?? [],
+      total: Number(res.meta?.total ?? (res.data?.length || 0)),
+      page: Number(res.meta?.page ?? filters?.page ?? 1),
+      perPage: Number(res.meta?.per_page ?? filters?.per_page ?? 20),
+    };
   },
 
   // ✅ GET SINGLE CIBIL CHECK
