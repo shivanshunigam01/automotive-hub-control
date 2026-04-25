@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DataTableSkeleton } from '@/components/admin/DataTableSkeleton';
 import { cibilApi, resolvePublicFileUrl, type CibilCheck } from '@/lib/api';
+import { exportCibilPageToExcel } from '@/lib/csvExport';
 import { useToast } from '@/hooks/use-toast';
 
 const scoreBandConfig: Record<string, { color: string; bg: string }> = {
@@ -86,6 +87,21 @@ export function CibilPage() {
   const averageScore = checks.length > 0
     ? Math.round(checks.reduce((sum, c) => sum + c.score, 0) / checks.length)
     : 0;
+
+  const handleExportCurrentPage = () => {
+    if (!checks.length) {
+      toast({
+        title: 'No data',
+        description: 'There is no data on this page to export.',
+      });
+      return;
+    }
+    exportCibilPageToExcel(checks, currentPage);
+    toast({
+      title: 'Export started',
+      description: `Downloaded Excel for page ${currentPage}.`,
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -219,8 +235,22 @@ export function CibilPage() {
       {/* CIBIL Checks Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All CIBIL Checks ({totalChecks})</CardTitle>
-          <CardDescription>Customer credit score verification history</CardDescription>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <CardTitle>All CIBIL Checks ({totalChecks})</CardTitle>
+              <CardDescription>Customer credit score verification history</CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={handleExportCurrentPage}
+              disabled={isLoading || checks.length === 0}
+            >
+              <FileDown className="h-4 w-4" />
+              Download Excel (Current Page)
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
