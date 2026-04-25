@@ -37,6 +37,8 @@ export function CibilPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [scoreFilter, setScoreFilter] = useState<string>('all');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -69,13 +71,23 @@ export function CibilPage() {
       check.customerName.toLowerCase().includes(q) ||
       check.mobile.includes(searchQuery) ||
       matchesAadhaar;
-    
-    if (scoreFilter === 'all') return matchesSearch;
-    if (scoreFilter === 'excellent') return matchesSearch && check.score >= 750;
-    if (scoreFilter === 'good') return matchesSearch && check.score >= 650 && check.score < 750;
-    if (scoreFilter === 'fair') return matchesSearch && check.score >= 550 && check.score < 650;
-    if (scoreFilter === 'poor') return matchesSearch && check.score < 550;
-    return matchesSearch;
+
+    const checkedAt = new Date(check.checkedAt);
+    const checkedAtMs = checkedAt.getTime();
+    const fromMs = fromDate ? new Date(`${fromDate}T00:00:00`).getTime() : null;
+    const toMs = toDate ? new Date(`${toDate}T23:59:59.999`).getTime() : null;
+    const matchesDate =
+      Number.isFinite(checkedAtMs) &&
+      (fromMs === null || checkedAtMs >= fromMs) &&
+      (toMs === null || checkedAtMs <= toMs);
+
+    let matchesScore = true;
+    if (scoreFilter === 'excellent') matchesScore = check.score >= 750;
+    if (scoreFilter === 'good') matchesScore = check.score >= 650 && check.score < 750;
+    if (scoreFilter === 'fair') matchesScore = check.score >= 550 && check.score < 650;
+    if (scoreFilter === 'poor') matchesScore = check.score < 550;
+
+    return matchesSearch && matchesScore && matchesDate;
   });
 
   const averageScore = checks.length > 0
@@ -181,6 +193,20 @@ export function CibilPage() {
                 <SelectItem value="poor">Poor (&lt;550)</SelectItem>
               </SelectContent>
             </Select>
+            <Input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="w-full md:w-[170px]"
+              aria-label="From date"
+            />
+            <Input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="w-full md:w-[170px]"
+              aria-label="To date"
+            />
           </div>
         </CardContent>
       </Card>
@@ -275,7 +301,10 @@ export function CibilPage() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {new Date(check.checkedAt).toLocaleString()}
+                          <div className="flex flex-col">
+                            <span>{new Date(check.checkedAt).toLocaleDateString()}</span>
+                            <span className="text-xs">{new Date(check.checkedAt).toLocaleTimeString()}</span>
+                          </div>
                         </TableCell>
                         <TableCell>
                           {check.cibilPdfReportUrl ? (
