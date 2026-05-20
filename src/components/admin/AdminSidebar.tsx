@@ -20,6 +20,7 @@ import {
   FileText,
   Briefcase,
   Calendar,
+  Wrench,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -45,6 +46,7 @@ const allMenuItems: MenuItem[] = [
   { icon: Package, label: 'Products', path: '/admin/products', module: 'products' },
   { icon: Car, label: 'Certified Refurbished', path: '/admin/certified-refurbished', module: 'certifiedRefurbished' },
   { icon: Users, label: 'Leads', path: '/admin/leads', module: 'leads' },
+  { icon: Wrench, label: 'Service Kits', path: '/admin/service-kit-enquiries', module: 'leads' },
   { icon: CreditCard, label: 'Finance', path: '/admin/finance', module: 'finance' },
   { icon: FileCheck, label: 'CIBIL Checks', path: '/admin/cibil', module: 'cibil' },
   { icon: MapPin, label: 'Dealers', path: '/admin/dealers', module: 'dealers' },

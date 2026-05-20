@@ -25,6 +25,7 @@ import { OffersSchemesPage } from "@/pages/admin/OffersSchemesPage";
 import { ContentPagesPage } from "@/pages/admin/ContentPagesPage";
 import { CareersPage } from "@/pages/admin/CareersPage";
 import { TimelinePage } from "@/pages/admin/TimelinePage";
+import { ServiceKitEnquiriesPage } from "@/pages/admin/ServiceKitEnquiriesPage";
 import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
 
 import NotFound from "./pages/NotFound";
@@ -58,6 +59,7 @@ const App = () => (
               <Route path="certified-refurbished/:id" element={<UsedVehicleFormPage  />} />
               <Route path="certified-refurbished/:id/edit" element={<UsedVehicleFormPage  />} />
               <Route path="leads" element={<LeadsPage />} />
+              <Route path="service-kit-enquiries" element={<ServiceKitEnquiriesPage />} />
               <Route path="finance" element={<FinancePage />} />
               <Route path="cibil" element={<CibilPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />

@@ -8,6 +8,8 @@ type StatusType =
   | 'qualified' 
   | 'converted' 
   | 'lost'
+  | 'quoted'
+  | 'closed'
   | 'under_review'
   | 'approved'
   | 'rejected'
@@ -22,6 +24,8 @@ const statusConfig: Record<UnifiedStatus, { label: string; className: string }> 
   qualified: { label: 'Qualified', className: 'bg-accent/10 text-accent border-accent/20' },
   converted: { label: 'Converted', className: 'status-active' },
   lost: { label: 'Lost', className: 'status-closed' },
+  quoted: { label: 'Quoted', className: 'bg-accent/10 text-accent border-accent/20' },
+  closed: { label: 'Closed', className: 'status-active' },
 
   // Common
   active: { label: 'Active', className: 'status-active' },

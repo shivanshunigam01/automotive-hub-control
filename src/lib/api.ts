@@ -569,6 +569,72 @@ export const leadsApi = {
   },
 };
 
+export interface ServiceKitEnquiry {
+  id: string;
+  enquiryNumber: string;
+  kitId: string;
+  kitTitle: string;
+  intervalHours: number;
+  kitItems: Array<{
+    srNo: number;
+    itemNo: string;
+    description: string;
+    quantity: number;
+    mrp: number;
+    value: number;
+  }>;
+  totalMrp: number;
+  totalValue: number;
+  customerName: string;
+  customerMobile: string;
+  customerEmail?: string;
+  customerDistrict?: string;
+  machineModel?: string;
+  message?: string;
+  status: "new" | "contacted" | "quoted" | "closed" | "lost";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const serviceKitEnquiriesApi = {
+  getAll: async (filters?: {
+    status?: string;
+    kit_id?: string;
+    search?: string;
+  }): Promise<ServiceKitEnquiry[]> => {
+    const params = new URLSearchParams();
+    if (filters?.status) params.append("status", filters.status);
+    if (filters?.kit_id) params.append("kit_id", filters.kit_id);
+    if (filters?.search) params.append("search", filters.search);
+    const qs = params.toString();
+    const res = await apiRequest<{ data: ServiceKitEnquiry[] }>(
+      `/service-kit-enquiries${qs ? `?${qs}` : ""}`
+    );
+    return res.data;
+  },
+
+  getById: async (id: string): Promise<ServiceKitEnquiry> => {
+    const res = await apiRequest<{ data: ServiceKitEnquiry }>(
+      `/service-kit-enquiries/${id}`
+    );
+    return res.data;
+  },
+
+  updateStatus: async (
+    id: string,
+    status: ServiceKitEnquiry["status"]
+  ): Promise<ServiceKitEnquiry> => {
+    const res = await apiRequest<{ data: ServiceKitEnquiry }>(
+      `/service-kit-enquiries/${id}/status`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      }
+    );
+    return res.data;
+  },
+};
+
 
 // Used Vehicles API
 export const usedVehiclesApi = {
